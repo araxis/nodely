@@ -1,0 +1,42 @@
+<Project>
+
+  <!-- Common build settings for every project in the Nodely solution. -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+
+    <!-- We write XML docs as the public API matures; silence "missing doc" noise for now. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+    <!-- Warnings-as-errors gets switched on in a later hardening pass once the API is real. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+
+    <Authors>Nodely contributors</Authors>
+    <Product>Nodely</Product>
+    <Copyright>Copyright (c) 2026 Nodely contributors</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryType>git</RepositoryType>
+
+    <!-- Packaging. Set the real repo URL once a remote exists; SourceLink wires up then too. -->
+    <Version>0.3.0</Version>
+    <PackageProjectUrl>https://github.com/araxis/nodely</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/araxis/nodely</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>avalonia;diagram;diagrams;graph;node-editor;flowchart;canvas;workflow</PackageTags>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+
+  <!-- Pack the repo README into each NuGet package. -->
+  <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)README.md')">
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
+
+</Project>

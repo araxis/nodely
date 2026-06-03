@@ -1,0 +1,38 @@
+<Project>
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <!-- Avalonia (UI) — pinned to the latest stable verified on nuget.org (2026-05-28). -->
+  <ItemGroup>
+    <PackageVersion Include="Avalonia" Version="12.0.4" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.0.4" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.0.4" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.0.4" />
+    <PackageVersion Include="Avalonia.Headless.XUnit" Version="12.0.4" />
+    <!-- Avalonia.Diagnostics has no 12.x release yet (latest 11.3.17 as of 2026-06-02); re-add when published. -->
+    <!-- <PackageVersion Include="Avalonia.Diagnostics" Version="12.0.4" /> -->
+  </ItemGroup>
+
+  <!-- App/demo helpers -->
+  <ItemGroup>
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <!-- Polyfills / framework packages (netstandard2.0 only) -->
+  <ItemGroup>
+    <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+    <PackageVersion Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+  <!-- Testing -->
+  <ItemGroup>
+    <!-- xUnit v3: required by Avalonia.Headless.XUnit 12.x (depends on xunit.v3.extensibility.core 3.2.2). -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+  </ItemGroup>
+
+</Project>

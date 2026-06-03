@@ -1,0 +1,129 @@
+# Nodely
+
+**Nodely** is a native **Avalonia** toolkit for building interactive node / graph / diagram editors — a
+first-party port of the proven [Blazor.Diagrams](https://github.com/Blazor-Diagrams/Blazor.Diagrams)
+architecture to Avalonia. Pan/zoom canvas, custom nodes, interactive links, groups, an overview minimap,
+theming, read-only mode, serialization, undo/redo, and auto-layout — with **no SVG, no JS, no WebView**,
+just Avalonia's native rendering.
+
+> Status: **v0.1.0**. Engine + Avalonia UI are complete and tested (96 tests across the headless engine and
+> Avalonia headless UI). See [`CHANGELOG.md`](CHANGELOG.md) and the design notes in [`memory/`](memory/).
+
+## Why
+
+- **Performance first** — virtualized nodes, cached link geometry, immediate-mode grid/overview. A
+  2000-node / ~4000-link graph re-routes + generates all paths in ~15 ms.
+- **Customizable** — define a custom node by subclassing `NodeModel` and registering an Avalonia control.
+- **Clean architecture** — a UI-agnostic engine (`Nodely.Core`) + a thin Avalonia rendering/input layer.
+- **MVVM-agnostic** — works with CommunityToolkit.Mvvm, ReactiveUI, or plain objects.
+
+## Packages
+
+| Package | What |
+|---|---|
+| `Nodely.Core` | UI-agnostic engine: models, behaviors, geometry, routers, path generators, commands. |
+| `Nodely.Avalonia` | Avalonia controls: `DiagramCanvas`, `DiagramNavigator`, theming, adorners. |
+| `Nodely.Algorithms` | Optional: traversal, connected components, layered auto-layout. |
+| `Nodely.Serialization` | Optional: versioned JSON snapshots. |
+
+## Getting started
+
+```csharp
+using Nodely;
+using Nodely.Avalonia.Controls;
+using Nodely.Models;
+using Point = Nodely.Geometry.Point;
+
+var diagram = new NodelyDiagram();
+
+var a = diagram.Nodes.Add(new NodeModel(new Point(80, 80))  { Title = "Start" });
+var b = diagram.Nodes.Add(new NodeModel(new Point(360, 80)) { Title = "End" });
+diagram.Links.Add(new LinkModel(a.AddPort(PortAlignment.Right), b.AddPort(PortAlignment.Left)));
+
+var canvas = new DiagramCanvas { Diagram = diagram };   // drop into any Avalonia layout
+```
+
+Drag empty space to **pan**, scroll to **zoom**, drag a node to **move**, drag from a **port** to another to
+**connect**, **Shift-drag** to marquee-select, **Delete** to remove, **Esc** to clear selection.
+
+## Customizing nodes (the headline)
+
+```csharp
+public sealed class TaskNode : NodeModel
+{
+    public TaskNode(Point p, string title) : base(p) => Title = title;
+    public string Status { get; set; } = "Pending";
+}
+
+canvas.RegisterNode<TaskNode>(node => new Border
+{
+    Background = new SolidColorBrush(Color.FromRgb(0x2D, 0x4A, 0x6B)),
+    Padding = new Thickness(14, 10),
+    Child = new TextBlock { Text = $"{node.Title} — {node.Status}", Foreground = Brushes.White },
+});
+
+diagram.Nodes.Add(new TaskNode(new Point(120, 200), "Build") { Status = "Running" });
+```
+
+Custom **links** are composed: set a per-link `Router` / `PathGenerator`, or change the defaults via
+`diagram.Options.Links`. Custom **ports/anchors/behaviors** are registered explicitly (no reflection scanning).
+
+## More features
+
+```csharp
+// Theming
+canvas.Palette = NodelyPalettes.Light;          // or NodelyPalettes.Dark (default)
+
+// Read-only inspector (pan/zoom/select work; move/connect/delete blocked)
+canvas.IsReadOnly = true;
+
+// View controls
+canvas.ZoomToFit();  canvas.ZoomIn();  canvas.ResetView();
+
+// Overview minimap (bind to the same diagram, place anywhere)
+var navigator = new DiagramNavigator { Diagram = diagram };
+
+// Snap-to-grid
+diagram.Options.GridSize = 24;
+
+// Grouping
+diagram.Options.Groups.Enabled = true;
+diagram.Groups.Group(a, b);
+
+// Auto-layout (Nodely.Algorithms)
+Nodely.Algorithms.LayeredLayout.Arrange(diagram);
+
+// Serialization (Nodely.Serialization)
+string json = Nodely.Serialization.DiagramSerializer.Serialize(diagram);
+Nodely.Serialization.DiagramSerializer.Deserialize(new NodelyDiagram(), json);
+
+// Undo/redo (Nodely.Commands)
+var history = new Nodely.Commands.UndoRedoStack();
+history.Execute(new Nodely.Commands.AddNodeCommand(diagram, new NodeModel()));
+history.Undo();  history.Redo();
+```
+
+## Repository layout
+
+```
+src/        Nodely.Core, Nodely.Avalonia, Nodely.Algorithms, Nodely.Serialization
+samples/    Nodely.Demo (Avalonia desktop gallery)
+tests/      Nodely.Core.Tests (xUnit), Nodely.Avalonia.Tests (Avalonia headless)
+bench/      Nodely.Benchmarks (engine throughput)
+memory/     Design decisions (ADRs), research, the development plan, progress, learnings
+```
+
+## Build & run
+
+Requires the **.NET 10 SDK** (pinned via `global.json`).
+
+```powershell
+dotnet build Nodely.slnx
+dotnet test  Nodely.slnx
+dotnet run --project samples/Nodely.Demo
+dotnet pack  Nodely.slnx -c Release   # produces the NuGet packages
+```
+
+## License
+
+MIT — see [`LICENSE`](LICENSE) and [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).

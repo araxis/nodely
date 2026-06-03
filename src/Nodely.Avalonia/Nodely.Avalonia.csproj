@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>Nodely.Avalonia</PackageId>
+    <Title>Nodely.Avalonia</Title>
+    <Description>Avalonia controls for Nodely: the DiagramCanvas surface, node/port/link rendering, widgets, and theme.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Nodely.Avalonia.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nodely.Core\Nodely.Core.csproj" />
+  </ItemGroup>
+
+</Project>

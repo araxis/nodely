@@ -1,0 +1,23 @@
+# Normalize line endings: store text as LF in the repo, check out native on each OS.
+* text=auto eol=lf
+
+# Explicit text types
+*.cs        text
+*.csproj    text
+*.props     text
+*.targets   text
+*.json      text
+*.slnx      text
+*.md        text
+*.yml       text
+*.config    text
+*.manifest  text
+*.editorconfig text
+
+# Binary assets
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.snk  binary

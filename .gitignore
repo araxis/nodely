@@ -1,0 +1,46 @@
+# .NET / build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Test / coverage
+[Tt]est[Rr]esult*/
+coverage*.json
+coverage*.xml
+coverage*.info
+*.coverage
+*.trx
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.DotSettings.user
+
+# Rider / ReSharper
+_ReSharper*/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+
+# MSBuild binary logs
+*.binlog
+
+# Docusaurus docs site (website/). package-lock.json IS committed (CI uses npm ci).
+website/node_modules/
+website/build/
+website/.docusaurus/
+website/.cache-loader/

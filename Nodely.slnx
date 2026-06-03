@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/bench/">
+    <Project Path="bench/Nodely.Benchmarks/Nodely.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/Nodely.Demo/Nodely.Demo.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Nodely.Algorithms/Nodely.Algorithms.csproj" />
+    <Project Path="src/Nodely.Avalonia/Nodely.Avalonia.csproj" />
+    <Project Path="src/Nodely.Core/Nodely.Core.csproj" />
+    <Project Path="src/Nodely.Serialization/Nodely.Serialization.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Nodely.Avalonia.Tests/Nodely.Avalonia.Tests.csproj" />
+    <Project Path="tests/Nodely.Core.Tests/Nodely.Core.Tests.csproj" />
+  </Folder>
+</Solution>

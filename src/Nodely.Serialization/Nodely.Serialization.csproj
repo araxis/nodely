@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+    <PackageId>Nodely.Serialization</PackageId>
+    <Title>Nodely.Serialization</Title>
+    <Description>Optional versioned JSON snapshot serialization for Nodely diagrams.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nodely.Core\Nodely.Core.csproj" />
+  </ItemGroup>
+
+  <!-- System.Text.Json is in the framework on net10.0; netstandard2.0 needs the package. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Text.Json" />
+  </ItemGroup>
+
+</Project>

@@ -3,6 +3,15 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-04 — extension surface investigation
+
+- Audited the pre-public extension surface before adding more side packages.
+- Confirmed database pack model and render-registration tests pass on both `net8.0` and `net10.0`.
+- Confirmed database-only package dry-run can produce a side package, but current version overrides also rewrite
+  main package dependency versions.
+- Decision: revise PR #8 before merge so serializer registry, typed style registration, render context, and
+  independent side-package versioning become the stable pack contract.
+
 ## 2026-06-04 — v0.7.0 database pack
 
 - Package: added `Nodely.Avalonia.Database` as the first optional domain pack.

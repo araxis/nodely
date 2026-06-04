@@ -3,6 +3,18 @@
 Durable lessons, gotchas, surprises, and reversed decisions. Add an entry the moment something is
 non-obvious — it's the cheapest insurance we have. Tag each with a date and the phase.
 
+## F-046 — Side packages need a stronger extension contract before public release (2026-06-04, extension audit)
+
+The database pack proved the package pattern, but the current extension surface is too fragile to use as the
+long-term template for more side packages. Node data round-trips, but port and link metadata do not; link styling
+uses one global resolver property; snapshot kinds use CLR type names; and package-version overrides leak into
+project-reference dependency versions.
+
+Decision: revise the 0.7 work before merge. Add stable model-kind keys, model-wide extra-data hooks,
+serializer registry support for nodes/ports/links/groups, typed composable link-style registration, render
+context overloads, and per-package version properties before treating `Nodely.Avalonia.Database` as the side-pack
+template. See `memory/02-research/extension-surface-investigation.md`.
+
 ## F-045 — Domain packs should register a vocabulary, not change the core (2026-06-04, v0.7.0)
 
 The first optional node pack is database-focused because tables, views, procedures, columns, parameters, and

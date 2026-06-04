@@ -9,6 +9,15 @@ Tick items as completed. Mirrors `development-plan.md`. `[ ]` todo, `[~]` in pro
 - [x] Add database demo scene and documentation guide.
 - [x] Final validation: build, test, pack, package inspection, docs build, wording scan.
 
+## Post-M4 — extension surface redesign
+- [x] Audit side-package extension and versioning surface before public database-pack merge.
+- [ ] Add stable model-kind and model-wide extra-data hooks.
+- [ ] Add serializer registry and version 2 snapshots for nodes, ports, links, and groups.
+- [ ] Replace global link-style resolver with typed composable link-style registrations.
+- [ ] Add render-context factory overloads for palette-aware pack renderers.
+- [ ] Split main and side-package versions plus selective package workflow.
+- [ ] Revise database pack to use the finalized side-pack contract.
+
 ## Post-M4 — v0.6.0 compatibility pass
 - [x] Add `net8.0` package assets for `Nodely.Avalonia`.
 - [x] Add explicit `net8.0` assets for Core, Algorithms, and Serialization while retaining `netstandard2.0`.

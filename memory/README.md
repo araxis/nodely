@@ -23,6 +23,8 @@ memory/
     blazor-diagrams-architecture.md Upstream architecture map (Core vs rendering)
     api-surface-and-mapping.md      Blazor.Diagrams -> Nodely/Avalonia mapping tables
     avalonia-mapping-notes.md       How Avalonia natively replaces the Blazor JS/CSS/SVG layer
+    extension-surface-investigation.md
+                                      Side-package extension and versioning audit
   03-plan/                          The development plan
     development-plan.md             Full phased plan, each phase with a Definition of Done
     phase-checklist.md              Trackable checkboxes mirroring the plan
@@ -41,8 +43,8 @@ memory/
 
 ## Quick status
 
-- Phase: **v0.7.0 — database pack in progress.** 156 tests per app runtime expected across Core,
-  Database, and Avalonia suites on both `net8.0` and `net10.0`.
+- Phase: **extension surface redesign before public database pack.** 156 tests per app runtime currently
+  expected across Core, Database, and Avalonia suites on both `net8.0` and `net10.0`.
 - v0.1.0: 15 phases (0–14), M1–M4. v0.2.0 (F-027…F-039): editor/interaction wave. v0.3.0 (F-041): 10 extension
   seams (render hooks for links/ports/groups, custom layers, adorners, validation delegates, behaviors,
   IDiagramLayout, Tag/Data bag, serialization extras) — lean framework, not built-in features.
@@ -50,6 +52,7 @@ memory/
   warnings-as-errors, and release checklist docs.
 - v0.5.0 (F-043): command-state helpers, QuickStart sample, richer gallery, and copyable docs recipes.
 - v0.6.0 (F-044): `net8.0` package assets for Avalonia plus explicit `net8.0`/`net10.0` validation.
-- v0.7.0 (F-045): first optional domain pack, `Nodely.Avalonia.Database`, establishes the node-pack pattern.
+- v0.7.0 (F-045, F-046): first optional domain pack exposed the side-pack pattern, then the extension audit
+  found serializer, styling, render-context, and versioning redesign work to complete before merge.
 - Docs: static documentation site (F-040) + Extensibility guide; GitHub Pages pipeline.
 - Last updated: 2026-06-04

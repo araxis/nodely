@@ -65,3 +65,13 @@ Verified against the actual dev machine and nuget.org; several pins changed from
 
 Net-effect on platform reach: a `net8.0` TFM for `Nodely.Avalonia` (for consumers on .NET 8) is deferred
 to the packaging phase; trivial to add later. `netstandard2.0` already serves net8.0 consumers of the brain.
+
+## Update 2026-06-04 (v0.6.0 compatibility pass)
+
+The deferred compatibility work is now active. Avalonia 12.0.4 exposes both `net8.0` and `net10.0` assets, and
+the current source builds for `net8.0` under the pinned .NET 10 SDK.
+
+- `Nodely.Avalonia` targets `net8.0;net10.0`.
+- `Nodely.Core`, `Nodely.Algorithms`, and `Nodely.Serialization` target `netstandard2.0;net8.0;net10.0`.
+- App/runtime tests target `net8.0;net10.0`; the QuickStart sample targets `net8.0`.
+- Repository builds still use `global.json` with the .NET 10 SDK, and CI installs both .NET 8 and .NET 10.

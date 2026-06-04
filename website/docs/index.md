@@ -48,10 +48,10 @@ Nodely ships as four NuGet packages so you only take what you use:
 
 | Package | Targets | What's inside |
 | --- | --- | --- |
-| `Nodely.Core` | netstandard2.0, net10.0 | The UI-agnostic engine: geometry, models, behaviors, routers, path generators, commands |
-| `Nodely.Avalonia` | net10.0 | The `DiagramCanvas`, node/port/link/group rendering, adorners, the minimap, theming |
-| `Nodely.Serialization` | netstandard2.0, net10.0 | Versioned JSON snapshots that round-trip exactly |
-| `Nodely.Algorithms` | netstandard2.0, net10.0 | Graph queries and a layered auto-layout |
+| `Nodely.Core` | netstandard2.0, net8.0, net10.0 | The UI-agnostic engine: geometry, models, behaviors, routers, path generators, commands |
+| `Nodely.Avalonia` | net8.0, net10.0 | The `DiagramCanvas`, node/port/link/group rendering, adorners, the minimap, theming |
+| `Nodely.Serialization` | netstandard2.0, net8.0, net10.0 | Versioned JSON snapshots that round-trip exactly |
+| `Nodely.Algorithms` | netstandard2.0, net8.0, net10.0 | Graph queries and a layered auto-layout |
 
 Most apps reference `Nodely.Avalonia` (which brings in the core) and add the others as needed.
 

@@ -4,6 +4,19 @@ All notable changes to Nodely are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] - 2026-06-04
+
+Compatibility release. No C# API changes.
+
+### Changed
+- **Target framework assets:** `Nodely.Avalonia` now ships `net8.0` and `net10.0` assets.
+- **Engine package assets:** `Nodely.Core`, `Nodely.Algorithms`, and `Nodely.Serialization` now ship
+  `netstandard2.0`, `net8.0`, and `net10.0` assets.
+- **QuickStart runtime:** `samples/Nodely.QuickStart` now targets `net8.0` so the minimal copyable app matches
+  the lowest supported Avalonia runtime.
+- **Build validation:** CI and package workflows install both .NET 8 and .NET 10 before build, test, and pack.
+- **Docs:** README and documentation now include the package target matrix and compatibility release checks.
+
 ## [0.5.0] - 2026-06-04
 
 Adoption polish release. No breaking API changes.
@@ -65,6 +78,7 @@ No breaking API changes.
   save/load (snapshots gained an `Extra` map).
 - Documentation site gained an **Extensibility** guide (the seam map).
 
+[0.6.0]: https://github.com/araxis/nodely/releases/tag/v0.6.0
 [0.5.0]: https://github.com/araxis/nodely/releases/tag/v0.5.0
 [0.4.0]: https://github.com/araxis/nodely/releases/tag/v0.4.0
 [0.3.0]: https://github.com/araxis/nodely/releases/tag/v0.3.0

@@ -3,6 +3,17 @@
 Durable lessons, gotchas, surprises, and reversed decisions. Add an entry the moment something is
 non-obvious — it's the cheapest insurance we have. Tag each with a date and the phase.
 
+## F-044 — Avalonia net8.0 asset is viable with the current SDK baseline (2026-06-04, v0.6.0)
+
+The v0.5.0 release deferred Avalonia `net8.0` compatibility because the repo was built around a .NET 10 SDK
+baseline. Rechecking the restored Avalonia 12.0.4 package showed both `net8.0` and `net10.0` assets, and a
+forced `net8.0` build of `Nodely.Avalonia` succeeded once restore evaluated that target graph.
+
+Decision for v0.6.0: keep `global.json` pinned to the stable .NET 10 SDK for repository builds, but ship
+`net8.0` and `net10.0` assets for `Nodely.Avalonia`. Add explicit `net8.0` assets to the engine packages
+too, while retaining `netstandard2.0` for broad headless reuse. Tests run on both app runtimes so the package
+matrix stays honest.
+
 ## F-001 — The brain is already UI-agnostic (2026-06-02, research)
 
 `Blazor.Diagrams.Core` has no Blazor dependency and defines its own pointer/key/wheel event types. This

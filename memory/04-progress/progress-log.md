@@ -3,6 +3,18 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-04 — v0.6.0 compatibility pass
+
+- Packages: `Nodely.Avalonia` now ships `net8.0` and `net10.0`; Core, Algorithms, and Serialization now
+  ship `netstandard2.0`, `net8.0`, and `net10.0`.
+- Samples/tests: QuickStart moved to `net8.0`; Core and Avalonia test projects now run on `net8.0` and
+  `net10.0`.
+- Workflows/docs: CI and package workflows install both SDK lines; README, docs, changelog, and release
+  checklist document the compatibility matrix.
+- **Verified:** build 0/0; `dotnet test` -> Core 109/109 + Avalonia 41/41 on both `net8.0` and `net10.0`;
+  `dotnet pack` -> four packages + symbols; package contents have the expected target folders and dependency
+  groups; docs build green.
+
 ## 2026-06-04 — v0.5.0 adoption polish
 
 - Public API: `DiagramCanvas` gained command-state helpers plus `CommandStateChanged` for toolbar binding.

@@ -14,6 +14,9 @@ Add the Avalonia package — it pulls in the core engine with it:
 dotnet add package Nodely.Avalonia
 ```
 
+`Nodely.Avalonia` ships `net8.0` and `net10.0` assets. The optional engine packages also include
+`netstandard2.0` for headless or shared-library scenarios.
+
 If you need to save diagrams or arrange them automatically, add those packages too:
 
 ```bash
@@ -51,7 +54,8 @@ var canvas = new DiagramCanvas { Diagram = diagram };
 
 That `canvas` goes anywhere an Avalonia control can — a `Window`, a `UserControl`, a `Grid` cell. From there the
 canvas takes over: it measures your nodes, routes the links, and handles panning, zooming, and selection
-without any further wiring.
+without any further wiring. For a complete copyable app on the minimum supported runtime, run
+`samples/Nodely.QuickStart`.
 
 The diagram you just built looks like this:
 

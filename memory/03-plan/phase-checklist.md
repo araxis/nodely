@@ -2,6 +2,13 @@
 
 Tick items as completed. Mirrors `development-plan.md`. `[ ]` todo, `[~]` in progress, `[x]` done.
 
+## Post-M4 — v0.6.0 compatibility pass
+- [x] Add `net8.0` package assets for `Nodely.Avalonia`.
+- [x] Add explicit `net8.0` assets for Core, Algorithms, and Serialization while retaining `netstandard2.0`.
+- [x] Retarget QuickStart to `net8.0` and multi-target test projects to `net8.0;net10.0`.
+- [x] Update CI/package workflows to install both .NET 8 and .NET 10.
+- [x] Final validation: build, test, pack, package inspection, docs build, wording scan.
+
 ## Phase 0 — Foundation & scaffolding ✅ (2026-06-02)
 - [x] `Nodely.slnx` + all 7 projects created (ADR-0001 layout; note: `.slnx`, not `.sln` — F-010)
 - [x] `Directory.Build.props` / `Directory.Packages.props` (Avalonia 12.0.4 pinned) / `.editorconfig` / `.gitignore` / `.gitattributes` / `nuget.config` / `global.json` (SDK 10.0.300)

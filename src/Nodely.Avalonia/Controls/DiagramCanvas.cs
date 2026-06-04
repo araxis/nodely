@@ -73,6 +73,9 @@ public class DiagramCanvas : Panel
     /// <summary>Raised when the undo/redo state changes (so toolbars can refresh their enabled state).</summary>
     public event Action? HistoryChanged;
 
+    /// <summary>Raised when command availability changes (selection, clipboard, history, read-only, or diagram binding).</summary>
+    public event Action? CommandStateChanged;
+
     /// <summary>Creates the canvas with sensible defaults.</summary>
     public DiagramCanvas()
     {
@@ -362,6 +365,59 @@ public class DiagramCanvas : Panel
     /// <summary>Whether there's an edit to redo.</summary>
     public bool CanRedo => _history?.CanRedo ?? false;
 
+    /// <summary>Whether any model is currently selected.</summary>
+    public bool HasSelection => Diagram?.GetSelectedModels().Any() ?? false;
+
+    /// <summary>Whether the current selection contains nodes that can be copied.</summary>
+    public bool CanCopySelection => Diagram?.GetSelectedModels().OfType<NodeModel>().Any() ?? false;
+
+    /// <summary>Whether the current selection can be cut.</summary>
+    public bool CanCutSelection => CanDeleteSelection;
+
+    /// <summary>Whether the clipboard has nodes that can be pasted into the current diagram.</summary>
+    public bool CanPasteClipboard => !IsReadOnly && Diagram != null && _clipboard.Count > 0;
+
+    /// <summary>Whether the current selection contains at least one unlocked model that can be deleted.</summary>
+    public bool CanDeleteSelection => !IsReadOnly && Diagram?.GetSelectedModels().Any(CanDeleteModel) == true;
+
+    /// <summary>Whether the current selection contains nodes that can be duplicated.</summary>
+    public bool CanDuplicateSelection => !IsReadOnly && Diagram?.GetSelectedModels().OfType<NodeModel>().Any() == true;
+
+    /// <summary>Whether the selected top-level nodes can be grouped.</summary>
+    public bool CanGroupSelection
+    {
+        get
+        {
+            var d = Diagram;
+            if (d == null || IsReadOnly || !d.Options.Groups.Enabled)
+                return false;
+
+            var count = 0;
+            foreach (var model in d.GetSelectedModels())
+                if (model is NodeModel { Group: null } and not GroupModel && ++count >= 2)
+                    return true;
+
+            return false;
+        }
+    }
+
+    /// <summary>Whether the current selection touches one or more groups that can be ungrouped.</summary>
+    public bool CanUngroupSelection
+    {
+        get
+        {
+            var d = Diagram;
+            if (d == null || IsReadOnly)
+                return false;
+
+            foreach (var model in d.GetSelectedModels())
+                if (model is GroupModel || model is NodeModel { Group: not null })
+                    return true;
+
+            return false;
+        }
+    }
+
     /// <summary>Undoes the last edit (no-op when read-only).</summary>
     public void Undo()
     {
@@ -503,6 +559,8 @@ public class DiagramCanvas : Panel
         foreach (var model in d.GetSelectedModels())
             if (model is NodeModel node)
                 _clipboard.Add(node.Clone());
+
+        OnCommandStateChanged();
     }
 
     /// <summary>Copies the selection, then deletes it (undoable).</summary>
@@ -679,7 +737,13 @@ public class DiagramCanvas : Panel
         OnHistoryChanged();
     }
 
-    private void OnHistoryChanged() => HistoryChanged?.Invoke();
+    private void OnHistoryChanged()
+    {
+        HistoryChanged?.Invoke();
+        OnCommandStateChanged();
+    }
+
+    private void OnCommandStateChanged() => CommandStateChanged?.Invoke();
 
     // Deletes models through the history so the removal is undoable. Nodes cascade their links, so links whose
     // endpoint is one of the deleted nodes are skipped (they would otherwise be double-restored on undo).
@@ -733,6 +797,15 @@ public class DiagramCanvas : Panel
         _history.Execute(commands.Count == 1 ? commands[0] : new CompositeCommand(commands));
     }
 
+    private static bool CanDeleteModel(SelectableModel model) => model switch
+    {
+        GroupModel group => !group.Locked,
+        LinkVertexModel vertex => !vertex.Locked,
+        NodeModel node => !node.Locked,
+        BaseLinkModel link => !link.Locked,
+        _ => false,
+    };
+
     private static NodeModel? EndpointNode(Anchor anchor) => anchor switch
     {
         SinglePortAnchor spa => spa.Port.Parent,
@@ -779,6 +852,7 @@ public class DiagramCanvas : Panel
             ApplyReadOnly();
             InvalidateArrange(); // re-run SetContainer for the new diagram
             _grid?.InvalidateVisual();
+            OnCommandStateChanged();
         }
         else if (change.Property == GridBrushProperty || change.Property == GridSizeProperty)
         {
@@ -791,6 +865,7 @@ public class DiagramCanvas : Panel
         else if (change.Property == IsReadOnlyProperty)
         {
             ApplyReadOnly();
+            OnCommandStateChanged();
         }
     }
 
@@ -838,6 +913,7 @@ public class DiagramCanvas : Panel
         if (_subscribed != null)
         {
             _subscribed.Changed -= OnStructureChanged;
+            _subscribed.SelectionChanged -= OnSelectionChanged;
             _subscribed.PanChanged -= OnViewChanged;
             _subscribed.ZoomChanged -= OnViewChanged;
         }
@@ -847,10 +923,13 @@ public class DiagramCanvas : Panel
         if (diagram != null)
         {
             diagram.Changed += OnStructureChanged;
+            diagram.SelectionChanged += OnSelectionChanged;
             diagram.PanChanged += OnViewChanged;
             diagram.ZoomChanged += OnViewChanged;
         }
     }
+
+    private void OnSelectionChanged(SelectableModel model) => OnCommandStateChanged();
 
     private void OnStructureChanged()
     {
@@ -863,6 +942,7 @@ public class DiagramCanvas : Panel
         _adorners.Reposition();
         foreach (var entry in _customLayers)
             UpdateCustomLayer(entry.Layer, entry.World);
+        OnCommandStateChanged();
     }
 
     private void OnViewChanged()

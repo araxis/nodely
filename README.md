@@ -9,7 +9,7 @@ architecture to Avalonia. Pan/zoom canvas, custom nodes, interactive links, grou
 theming, read-only mode, serialization, undo/redo, and auto-layout — with **no SVG, no JS, no WebView**,
 just Avalonia's native rendering.
 
-> Status: **v0.4.0**. Engine + Avalonia UI are complete and tested (146 tests across the headless engine and
+> Status: **v0.5.0**. Engine + Avalonia UI are complete and tested (150 tests across the headless engine and
 > Avalonia headless UI). See [`CHANGELOG.md`](CHANGELOG.md) and the design notes in [`memory/`](memory/).
 
 ## Why
@@ -119,13 +119,19 @@ Nodely.Serialization.DiagramSerializer.Deserialize(new NodelyDiagram(), json);
 var history = new Nodely.Commands.UndoRedoStack();
 history.Execute(new Nodely.Commands.AddNodeCommand(diagram, new NodeModel()));
 history.Undo();  history.Redo();
+
+// Toolbar state
+canvas.CommandStateChanged += RefreshToolbar;
+copyButton.IsEnabled = canvas.CanCopySelection;
+pasteButton.IsEnabled = canvas.CanPasteClipboard;
+groupButton.IsEnabled = canvas.CanGroupSelection;
 ```
 
 ## Repository layout
 
 ```
 src/        Nodely.Core, Nodely.Avalonia, Nodely.Algorithms, Nodely.Serialization
-samples/    Nodely.Demo (Avalonia desktop gallery)
+samples/    Nodely.Demo (Avalonia desktop gallery), Nodely.QuickStart (minimal copyable app)
 tests/      Nodely.Core.Tests (xUnit), Nodely.Avalonia.Tests (Avalonia headless)
 bench/      Nodely.Benchmarks (engine throughput)
 memory/     Design decisions (ADRs), research, the development plan, progress, learnings
@@ -139,6 +145,7 @@ Requires the **.NET 10 SDK** (pinned via `global.json`).
 dotnet build Nodely.slnx
 dotnet test  Nodely.slnx
 dotnet run --project samples/Nodely.Demo
+dotnet run --project samples/Nodely.QuickStart
 dotnet pack  Nodely.slnx -c Release   # produces the NuGet packages
 ```
 

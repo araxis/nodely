@@ -4,6 +4,24 @@ All notable changes to Nodely are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2026-06-04
+
+Adoption polish release. No breaking API changes.
+
+### Added
+- **Command-state helpers:** `DiagramCanvas` now exposes `HasSelection`, selection/clipboard/grouping
+  availability properties, and `CommandStateChanged` so toolbars can stay in sync without inspecting the
+  diagram graph.
+- **QuickStart sample:** a tiny C#-only Avalonia app with one canvas, custom nodes, ports, links, a theme
+  toggle, and zoom-to-fit.
+- **Recipes docs:** copyable recipes for minimal setup, command-state toolbars, custom overlays, and
+  save/load custom nodes.
+
+### Changed
+- **Demo gallery:** the desktop gallery now has workflow, state machine, read-only inspector, and extensibility
+  scenes, plus a command-aware toolbar using the public canvas state helpers.
+- **Sample coverage:** the solution now builds both sample apps as part of normal build validation.
+
 ## [0.4.0] - 2026-06-04
 
 Hardening and editor polish release. No breaking API changes.
@@ -47,6 +65,7 @@ No breaking API changes.
   save/load (snapshots gained an `Extra` map).
 - Documentation site gained an **Extensibility** guide (the seam map).
 
+[0.5.0]: https://github.com/araxis/nodely/releases/tag/v0.5.0
 [0.4.0]: https://github.com/araxis/nodely/releases/tag/v0.4.0
 [0.3.0]: https://github.com/araxis/nodely/releases/tag/v0.3.0
 

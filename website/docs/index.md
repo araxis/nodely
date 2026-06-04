@@ -58,7 +58,7 @@ Most apps reference `Nodely.Avalonia` (which brings in the core) and add the oth
 ## Where to go next
 
 The fastest way in is [Getting started](./getting-started.md) — a working canvas in a few lines. If you'd
-rather understand how the pieces fit before writing code, the [Architecture](./architecture.md) page lays out
-the design. And when you're ready to make Nodely your own, the guides cover
-[custom nodes](./guides/custom-nodes.md), [links](./guides/links.md), [undo/redo](./guides/undo-redo.md), and
-the rest.
+rather start from a complete tiny app, run `samples/Nodely.QuickStart`. If you'd rather understand how the
+pieces fit before writing code, the [Architecture](./architecture.md) page lays out the design. And when you're
+ready to make Nodely your own, the guides cover [custom nodes](./guides/custom-nodes.md),
+[links](./guides/links.md), [recipes](./guides/recipes.md), [undo/redo](./guides/undo-redo.md), and the rest.

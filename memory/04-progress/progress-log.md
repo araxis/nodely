@@ -3,6 +3,19 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-04 — v0.7.0 database pack
+
+- Package: added `Nodely.Avalonia.Database` as the first optional domain pack.
+- Models: database table, view, procedure, column, parameter, port, and relationship-link types.
+- Rendering: one `UseDatabaseNodes()` canvas extension registers database node, port, and link styling.
+- Serialization: `DatabaseNodeFactory` restores database node types and fields through the existing snapshot
+  factory path without changing the snapshot schema.
+- Demo/docs: gallery database scene plus database guide, README package table, changelog, and release checklist.
+- **Verified:** build 0/0; `dotnet test` -> Core 109/109 + Avalonia 42/42 + Database 5/5 on both
+  `net8.0` and `net10.0`; `dotnet pack` -> five packages + symbols including `Nodely.Avalonia.Database`;
+  package inspection confirmed database `lib/net8.0` and `lib/net10.0` assets with Nodely-only dependency
+  groups; package feed indexes `0.6.0`; docs install dry-run and build passed.
+
 ## 2026-06-04 — v0.6.0 compatibility pass
 
 - Packages: `Nodely.Avalonia` now ships `net8.0` and `net10.0`; Core, Algorithms, and Serialization now

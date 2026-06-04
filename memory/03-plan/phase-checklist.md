@@ -2,6 +2,13 @@
 
 Tick items as completed. Mirrors `development-plan.md`. `[ ]` todo, `[~]` in progress, `[x]` done.
 
+## Post-M4 — v0.7.0 database pack
+- [x] Add `Nodely.Avalonia.Database` package targeting `net8.0;net10.0`.
+- [x] Add database nodes, columns, parameters, ports, and relationship links.
+- [x] Add `UseDatabaseNodes()` renderer registration and `DatabaseNodeFactory`.
+- [x] Add database demo scene and documentation guide.
+- [x] Final validation: build, test, pack, package inspection, docs build, wording scan.
+
 ## Post-M4 — v0.6.0 compatibility pass
 - [x] Add `net8.0` package assets for `Nodely.Avalonia`.
 - [x] Add explicit `net8.0` assets for Core, Algorithms, and Serialization while retaining `netstandard2.0`.

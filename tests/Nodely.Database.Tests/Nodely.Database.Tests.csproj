@@ -12,13 +12,10 @@
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Shouldly" />
-    <PackageReference Include="Avalonia.Headless.XUnit" />
-    <PackageReference Include="Avalonia.Themes.Fluent" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Nodely.Avalonia.Database\Nodely.Avalonia.Database.csproj" />
-    <ProjectReference Include="..\..\src\Nodely.Avalonia\Nodely.Avalonia.csproj" />
   </ItemGroup>
 
 </Project>

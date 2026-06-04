@@ -26,16 +26,18 @@ npm --prefix website ci --ignore-scripts --dry-run
 npm --prefix website run build
 ```
 
-Inspect `artifacts/packages` for all four `.nupkg` files and matching `.snupkg` symbol packages:
+Inspect `artifacts/packages` for all `.nupkg` files and matching `.snupkg` symbol packages:
 
 - `Nodely.Core`
 - `Nodely.Avalonia`
+- `Nodely.Avalonia.Database`
 - `Nodely.Algorithms`
 - `Nodely.Serialization`
 
 For compatibility releases, also inspect package contents:
 
 - `Nodely.Avalonia`: `lib/net8.0` and `lib/net10.0`
+- `Nodely.Avalonia.Database`: `lib/net8.0` and `lib/net10.0`
 - `Nodely.Core`, `Nodely.Algorithms`, `Nodely.Serialization`: `lib/netstandard2.0`, `lib/net8.0`, and `lib/net10.0`
 
 ## Publish
@@ -48,7 +50,7 @@ For compatibility releases, also inspect package contents:
 
 ## Verify
 
-1. Confirm NuGet lists the new version for all four packages.
+1. Confirm NuGet lists the new version for every package.
 2. Confirm the docs site is live at `https://araxis.github.io/nodely/`.
 3. Confirm `README.md` badges resolve.
 4. Keep the working tree clean after pruning merged release branches.

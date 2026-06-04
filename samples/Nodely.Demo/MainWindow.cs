@@ -8,6 +8,7 @@ using Nodely;
 using Nodely.Algorithms;
 using Nodely.Avalonia;
 using Nodely.Avalonia.Controls;
+using Nodely.Avalonia.Database;
 using Nodely.Models;
 using Nodely.Serialization;
 using NodelyPoint = Nodely.Geometry.Point;
@@ -91,6 +92,7 @@ public sealed class MainWindow : Window
         scenes.Children.Add(SceneButton("State machine", BuildStateMachine));
         scenes.Children.Add(SceneButton("Inspector", BuildInspector));
         scenes.Children.Add(SceneButton("Extensibility", BuildExtensibility));
+        scenes.Children.Add(SceneButton("Database", BuildDatabase));
         scenes.Children.Add(new Border { Width = 24 });
         scenes.Children.Add(ToolButton("Theme", ToggleTheme));
         scenes.Children.Add(ToolButton("Save", Save));
@@ -142,9 +144,15 @@ public sealed class MainWindow : Window
         _host.Content = Editor(diagram);
     }
 
-    private static NodeModel LoadNode(NodeSnapshot ns) => ns.Kind == nameof(TaskNode)
-        ? new TaskNode(ns.Id, new NodelyPoint(ns.X, ns.Y), ns.Title ?? string.Empty)
-        : new NodeModel(ns.Id, new NodelyPoint(ns.X, ns.Y)) { Title = ns.Title };
+    private static NodeModel LoadNode(NodeSnapshot ns)
+    {
+        if (DatabaseNodeFactory.TryCreate(ns, out var databaseNode))
+            return databaseNode;
+
+        return ns.Kind == nameof(TaskNode)
+            ? new TaskNode(ns.Id, new NodelyPoint(ns.X, ns.Y), ns.Title ?? string.Empty)
+            : new NodeModel(ns.Id, new NodelyPoint(ns.X, ns.Y)) { Title = ns.Title };
+    }
 
     private Control Editor(NodelyDiagram diagram, bool readOnly = false, Action<DiagramCanvas>? configureCanvas = null)
     {
@@ -347,5 +355,52 @@ public sealed class MainWindow : Window
                 : LinkStyle.Default;
             canvas.AddLayer(new GuideLayer());
         });
+    }
+
+    private Control BuildDatabase()
+    {
+        var diagram = NewDiagram();
+
+        var customers = diagram.Nodes.Add(new DatabaseTableNode(new NodelyPoint(120, 160), "Customers", "sales"));
+        customers.Columns.Add(new DatabaseColumn("CustomerId", "int", isPrimaryKey: true, isNullable: false));
+        customers.Columns.Add(new DatabaseColumn("Name", "nvarchar(120)", isNullable: false));
+        customers.Columns.Add(new DatabaseColumn("Email", "nvarchar(180)"));
+
+        var orders = diagram.Nodes.Add(new DatabaseTableNode(new NodelyPoint(450, 130), "Orders", "sales"));
+        orders.Columns.Add(new DatabaseColumn("OrderId", "int", isPrimaryKey: true, isNullable: false));
+        orders.Columns.Add(new DatabaseColumn("CustomerId", "int", isNullable: false) { IsForeignKey = true });
+        orders.Columns.Add(new DatabaseColumn("Total", "decimal(12,2)", isNullable: false));
+        orders.Columns.Add(new DatabaseColumn("CreatedAt", "datetime2", isNullable: false));
+
+        var summary = diagram.Nodes.Add(new DatabaseViewNode(new NodelyPoint(780, 150), "CustomerOrderSummary", "reporting"));
+        summary.Columns.Add(new DatabaseColumn("CustomerId", "int"));
+        summary.Columns.Add(new DatabaseColumn("OrderCount", "int"));
+        summary.Columns.Add(new DatabaseColumn("TotalSales", "decimal(12,2)"));
+
+        var refresh = diagram.Nodes.Add(new DatabaseProcedureNode(new NodelyPoint(450, 390), "RefreshCustomerSummary", "reporting"));
+        refresh.Parameters.Add(new DatabaseParameter("@customerId", "int"));
+        refresh.Parameters.Add(new DatabaseParameter("@fromDate", "datetime2"));
+
+        var customersOut = customers.AddPort(new DatabasePortModel(customers, PortAlignment.Right, DatabasePortKind.Relationship, "CustomerId"));
+        var ordersIn = orders.AddPort(new DatabasePortModel(orders, PortAlignment.Left, DatabasePortKind.Relationship, "CustomerId"));
+        var ordersOut = orders.AddPort(new DatabasePortModel(orders, PortAlignment.Right, DatabasePortKind.Dependency));
+        var summaryIn = summary.AddPort(new DatabasePortModel(summary, PortAlignment.Left, DatabasePortKind.Dependency));
+        var refreshOut = refresh.AddPort(new DatabasePortModel(refresh, PortAlignment.Top, DatabasePortKind.Output));
+        var ordersBottom = orders.AddPort(new DatabasePortModel(orders, PortAlignment.Bottom, DatabasePortKind.Input));
+
+        var relationship = diagram.Links.Add(new DatabaseRelationshipLink(customersOut, ordersIn, RelationshipKind.OneToMany)
+        {
+            SourceCardinality = "1",
+            TargetCardinality = "many",
+        });
+        relationship.AddLabel("customer orders", 0.5, new NodelyPoint(0, -16));
+
+        var viewDependency = diagram.Links.Add(new DatabaseRelationshipLink(ordersOut, summaryIn, RelationshipKind.Dependency));
+        viewDependency.AddLabel("feeds view", 0.5, new NodelyPoint(0, 14));
+
+        var procedureDependency = diagram.Links.Add(new DatabaseRelationshipLink(refreshOut, ordersBottom, RelationshipKind.Dependency));
+        procedureDependency.AddLabel("refresh reads", 0.5, new NodelyPoint(0, 14));
+
+        return Editor(diagram, configureCanvas: canvas => canvas.UseDatabaseNodes());
     }
 }

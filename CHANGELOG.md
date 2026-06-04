@@ -4,6 +4,21 @@ All notable changes to Nodely are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] - 2026-06-04
+
+Database pack release. No breaking API changes.
+
+### Added
+- **Database package:** `Nodely.Avalonia.Database` adds table, view, and procedure nodes, database ports, and
+  relationship/dependency links.
+- **Renderer registration:** `DiagramCanvas.UseDatabaseNodes()` registers database node, port, and link styling
+  in one call.
+- **Serialization helper:** `DatabaseNodeFactory` restores database node types and fields through the existing
+  `DiagramSerializer` factory path.
+- **Demo scene:** the gallery now includes a database diagram with tables, a view, a stored procedure,
+  relationship links, dependency links, save/load, theme switching, and zoom-to-fit.
+- **Docs:** README and the documentation site now include the database package and usage guide.
+
 ## [0.6.0] - 2026-06-04
 
 Compatibility release. No C# API changes.
@@ -78,6 +93,7 @@ No breaking API changes.
   save/load (snapshots gained an `Extra` map).
 - Documentation site gained an **Extensibility** guide (the seam map).
 
+[0.7.0]: https://github.com/araxis/nodely/releases/tag/v0.7.0
 [0.6.0]: https://github.com/araxis/nodely/releases/tag/v0.6.0
 [0.5.0]: https://github.com/araxis/nodely/releases/tag/v0.5.0
 [0.4.0]: https://github.com/araxis/nodely/releases/tag/v0.4.0

@@ -3,6 +3,19 @@
 Durable lessons, gotchas, surprises, and reversed decisions. Add an entry the moment something is
 non-obvious — it's the cheapest insurance we have. Tag each with a date and the phase.
 
+## F-045 — Domain packs should register a vocabulary, not change the core (2026-06-04, v0.7.0)
+
+The first optional node pack is database-focused because tables, views, procedures, columns, parameters, and
+relationship links are concrete enough to test and demo without turning the core engine into a domain model.
+
+Pattern established by `Nodely.Avalonia.Database`:
+
+- Keep domain model types in the pack.
+- Expose one canvas extension (`UseDatabaseNodes`) that registers node, port, and link renderers.
+- Persist domain node data through `NodeModel.GetExtraData` / `SetExtraData`.
+- Restore domain node types through the existing `DiagramSerializer` node factory.
+- Leave link-specific persistence for a future serializer extension; v0.7.0 keeps the snapshot schema stable.
+
 ## F-044 — Avalonia net8.0 asset is viable with the current SDK baseline (2026-06-04, v0.6.0)
 
 The v0.5.0 release deferred Avalonia `net8.0` compatibility because the repo was built around a .NET 10 SDK

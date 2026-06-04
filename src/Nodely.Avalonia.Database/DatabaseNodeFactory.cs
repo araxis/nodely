@@ -7,6 +7,9 @@ namespace Nodely.Avalonia.Database;
 /// <summary>Creates database node types from serialization snapshots.</summary>
 public static class DatabaseNodeFactory
 {
+    /// <summary>Creates a registry that restores database nodes, ports, and relationship links.</summary>
+    public static DiagramSerializationRegistry CreateRegistry() => new DiagramSerializationRegistry().UseDatabaseNodes();
+
     /// <summary>Creates a node for the snapshot kind, falling back to <see cref="NodeModel"/>.</summary>
     public static NodeModel Create(NodeSnapshot snapshot)
         => TryCreate(snapshot, out var node)
@@ -19,9 +22,9 @@ public static class DatabaseNodeFactory
         var position = new Point(snapshot.X, snapshot.Y);
         node = snapshot.Kind switch
         {
-            nameof(DatabaseTableNode) => new DatabaseTableNode(snapshot.Id, position),
-            nameof(DatabaseViewNode) => new DatabaseViewNode(snapshot.Id, position),
-            nameof(DatabaseProcedureNode) => new DatabaseProcedureNode(snapshot.Id, position),
+            DatabaseTableNode.ModelKindKey or nameof(DatabaseTableNode) => new DatabaseTableNode(snapshot.Id, position),
+            DatabaseViewNode.ModelKindKey or nameof(DatabaseViewNode) => new DatabaseViewNode(snapshot.Id, position),
+            DatabaseProcedureNode.ModelKindKey or nameof(DatabaseProcedureNode) => new DatabaseProcedureNode(snapshot.Id, position),
             _ => null!,
         };
 

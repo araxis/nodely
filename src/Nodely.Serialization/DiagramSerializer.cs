@@ -14,7 +14,7 @@ namespace Nodely.Serialization;
 public static class DiagramSerializer
 {
     /// <summary>The current snapshot schema version.</summary>
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2;
 
     private static readonly JsonSerializerOptions DefaultOptions = new()
     {
@@ -27,29 +27,39 @@ public static class DiagramSerializer
         var nodes = diagram.Nodes.Select(n => new NodeSnapshot
         {
             Id = n.Id,
-            Kind = n.GetType().Name,
+            Kind = n.ModelKind,
             X = n.Position.X,
             Y = n.Position.Y,
             Width = n.Size?.Width,
             Height = n.Size?.Height,
             Title = n.Title,
-            Ports = n.Ports.Select(p => new PortSnapshot { Id = p.Id, Alignment = p.Alignment.ToString() }).ToList(),
+            Ports = n.Ports.Select(p => new PortSnapshot
+            {
+                Id = p.Id,
+                Kind = p.ModelKind,
+                Alignment = p.Alignment.ToString(),
+                Extra = BuildExtra(p),
+            }).ToList(),
             Extra = BuildExtra(n),
         }).ToList();
 
         var links = diagram.Links.Select(l => new LinkSnapshot
         {
             Id = l.Id,
+            Kind = l.ModelKind,
             Source = EndpointOf(l.Source),
             Target = EndpointOf(l.Target),
             Vertices = l.Vertices.Select(v => new PointSnapshot { X = v.Position.X, Y = v.Position.Y }).ToList(),
+            Extra = BuildExtra(l),
         }).ToList();
 
         var groups = diagram.Groups.Select(g => new GroupSnapshot
         {
             Id = g.Id,
+            Kind = g.ModelKind,
             ChildIds = g.Children.Select(c => c.Id).ToList(),
             Padding = g.Padding,
+            Extra = BuildExtra(g),
         }).ToList();
 
         return new DiagramSnapshot
@@ -64,6 +74,22 @@ public static class DiagramSerializer
 
     /// <summary>Loads a snapshot into the diagram. <paramref name="nodeFactory"/> can create custom node types by <see cref="NodeSnapshot.Kind"/>.</summary>
     public static void Load(Diagram diagram, DiagramSnapshot snapshot, Func<NodeSnapshot, NodeModel>? nodeFactory = null)
+        => LoadCore(diagram, snapshot, registry: null, nodeFactory);
+
+    /// <summary>Loads a snapshot into the diagram using a registry for custom model kinds.</summary>
+    public static void Load(Diagram diagram, DiagramSnapshot snapshot, DiagramSerializationRegistry registry)
+    {
+        if (registry is null)
+            throw new ArgumentNullException(nameof(registry));
+
+        LoadCore(diagram, snapshot, registry, nodeFactory: null);
+    }
+
+    private static void LoadCore(
+        Diagram diagram,
+        DiagramSnapshot snapshot,
+        DiagramSerializationRegistry? registry,
+        Func<NodeSnapshot, NodeModel>? nodeFactory)
     {
         var nodesById = new Dictionary<string, NodeModel>();
         var portsById = new Dictionary<string, PortModel>();
@@ -72,20 +98,26 @@ public static class DiagramSerializer
         {
             foreach (var ns in snapshot.Nodes)
             {
-                var node = nodeFactory?.Invoke(ns) ?? new NodeModel(ns.Id, new NodelyPoint(ns.X, ns.Y));
+                var node = registry?.CreateNode(ns)
+                    ?? nodeFactory?.Invoke(ns)
+                    ?? new NodeModel(ns.Id, new NodelyPoint(ns.X, ns.Y));
                 node.Title = ns.Title;
                 if (ns.Width.HasValue && ns.Height.HasValue)
                     node.Size = new NodelySize(ns.Width.Value, ns.Height.Value);
 
+                if (ns.Extra is { Count: > 0 })
+                    node.SetExtraData(ToClrDictionary(ns.Extra));
+
                 foreach (var ps in ns.Ports)
                 {
                     var alignment = (PortAlignment)Enum.Parse(typeof(PortAlignment), ps.Alignment);
-                    var port = node.AddPort(new PortModel(ps.Id, node, alignment, node.Position));
+                    var port = registry?.CreatePort(ps, node)
+                        ?? new PortModel(ps.Id, node, alignment, node.Position);
+                    node.AddPort(port);
+                    if (ps.Extra is { Count: > 0 })
+                        port.SetExtraData(ToClrDictionary(ps.Extra));
                     portsById[ps.Id] = port;
                 }
-
-                if (ns.Extra is { Count: > 0 })
-                    node.SetExtraData(ToClrDictionary(ns.Extra));
 
                 nodesById[node.Id] = node;
                 diagram.Nodes.Add(node);
@@ -94,7 +126,10 @@ public static class DiagramSerializer
             foreach (var gs in snapshot.Groups)
             {
                 var children = gs.ChildIds.Where(nodesById.ContainsKey).Select(id => nodesById[id]).ToList();
-                diagram.Groups.Add(new GroupModel(gs.Id, children, gs.Padding));
+                var group = registry?.CreateGroup(gs, children) ?? new GroupModel(gs.Id, children, gs.Padding);
+                if (gs.Extra is { Count: > 0 })
+                    group.SetExtraData(ToClrDictionary(gs.Extra));
+                diagram.Groups.Add(group);
             }
 
             foreach (var ls in snapshot.Links)
@@ -104,9 +139,11 @@ public static class DiagramSerializer
                 if (source == null || target == null)
                     continue;
 
-                var link = new LinkModel(ls.Id, source, target);
+                var link = registry?.CreateLink(ls, source, target) ?? new LinkModel(ls.Id, source, target);
                 foreach (var v in ls.Vertices)
                     link.AddVertex(new NodelyPoint(v.X, v.Y));
+                if (ls.Extra is { Count: > 0 })
+                    link.SetExtraData(ToClrDictionary(ls.Extra));
                 diagram.Links.Add(link);
             }
 
@@ -129,6 +166,17 @@ public static class DiagramSerializer
         var snapshot = JsonSerializer.Deserialize<DiagramSnapshot>(json, options ?? DefaultOptions)
             ?? throw new ArgumentException("The JSON did not contain a diagram snapshot.", nameof(json));
         Load(diagram, snapshot, nodeFactory);
+    }
+
+    /// <summary>Deserializes JSON into the diagram using a registry for custom model kinds.</summary>
+    public static void Deserialize(Diagram diagram, string json, DiagramSerializationRegistry registry, JsonSerializerOptions? options = null)
+    {
+        if (registry is null)
+            throw new ArgumentNullException(nameof(registry));
+
+        var snapshot = JsonSerializer.Deserialize<DiagramSnapshot>(json, options ?? DefaultOptions)
+            ?? throw new ArgumentException("The JSON did not contain a diagram snapshot.", nameof(json));
+        Load(diagram, snapshot, registry);
     }
 
     private static EndpointSnapshot EndpointOf(Anchor anchor) => anchor switch
@@ -157,9 +205,9 @@ public static class DiagramSerializer
             _ => null,
         };
 
-    private static Dictionary<string, JsonElement>? BuildExtra(NodeModel node)
+    private static Dictionary<string, JsonElement>? BuildExtra(Model model)
     {
-        var extra = node.GetExtraData();
+        var extra = model.GetExtraData();
         if (extra == null || extra.Count == 0)
             return null;
 

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Nodely.Anchors;
 using Nodely.Geometry;
 using Nodely.Models;
 using Nodely.Serialization;
@@ -9,13 +10,15 @@ using Xunit;
 namespace Nodely.Core.Tests;
 
 // A custom node kind (with an id-preserving ctor) used to exercise the deserialize factory path.
-// Not 'file'-local: a file-local type's metadata name is mangled, so GetType().Name wouldn't match nameof
-// (the Kind seam keys off the simple type name — which is fine for normal public custom nodes like the demo's).
 internal sealed class CustomTestNode : NodeModel
 {
+    public new const string ModelKindKey = "test.node";
+
     public CustomTestNode(string id, Point position) : base(id, position) { }
 
     public string Note { get; set; } = "";
+
+    public override string ModelKind => ModelKindKey;
 
     public override IReadOnlyDictionary<string, object?> GetExtraData() => new Dictionary<string, object?> { ["Note"] = Note };
 
@@ -23,6 +26,66 @@ internal sealed class CustomTestNode : NodeModel
     {
         if (data.TryGetValue("Note", out var value) && value is string note)
             Note = note;
+    }
+}
+
+internal sealed class CustomTestPort : PortModel
+{
+    public new const string ModelKindKey = "test.port";
+
+    public CustomTestPort(string id, NodeModel parent, PortAlignment alignment) : base(id, parent, alignment) { }
+
+    public string Role { get; set; } = "";
+
+    public override string ModelKind => ModelKindKey;
+
+    public override IReadOnlyDictionary<string, object?> GetExtraData() => new Dictionary<string, object?> { ["Role"] = Role };
+
+    public override void SetExtraData(IReadOnlyDictionary<string, object?> data)
+    {
+        if (data.TryGetValue("Role", out var value) && value is string role)
+            Role = role;
+    }
+}
+
+internal sealed class CustomTestLink : LinkModel
+{
+    public new const string ModelKindKey = "test.link";
+
+    public CustomTestLink(string id, PortModel sourcePort, PortModel targetPort) : base(id, sourcePort, targetPort) { }
+
+    public CustomTestLink(string id, Anchor source, Anchor target) : base(id, source, target) { }
+
+    public bool Critical { get; set; }
+
+    public override string ModelKind => ModelKindKey;
+
+    public override IReadOnlyDictionary<string, object?> GetExtraData() =>
+        new Dictionary<string, object?> { ["Critical"] = Critical };
+
+    public override void SetExtraData(IReadOnlyDictionary<string, object?> data)
+    {
+        if (data.TryGetValue("Critical", out var value) && value is bool critical)
+            Critical = critical;
+    }
+}
+
+internal sealed class CustomTestGroup : GroupModel
+{
+    public new const string ModelKindKey = "test.group";
+
+    public CustomTestGroup(string id, IEnumerable<NodeModel> children, byte padding) : base(id, children, padding) { }
+
+    public string Label { get; set; } = "";
+
+    public override string ModelKind => ModelKindKey;
+
+    public override IReadOnlyDictionary<string, object?> GetExtraData() => new Dictionary<string, object?> { ["Label"] = Label };
+
+    public override void SetExtraData(IReadOnlyDictionary<string, object?> data)
+    {
+        if (data.TryGetValue("Label", out var value) && value is string label)
+            Label = label;
     }
 }
 
@@ -81,7 +144,7 @@ public class SerializationTests
         var json = DiagramSerializer.Serialize(d);
 
         var loaded = new NodelyDiagram(null, registerDefaultBehaviors: false);
-        DiagramSerializer.Deserialize(loaded, json, ns => ns.Kind == nameof(CustomTestNode)
+        DiagramSerializer.Deserialize(loaded, json, ns => ns.Kind == CustomTestNode.ModelKindKey
             ? new CustomTestNode(ns.Id, new Point(ns.X, ns.Y))
             : new NodeModel(ns.Id, new Point(ns.X, ns.Y)));
 
@@ -102,5 +165,34 @@ public class SerializationTests
 
         var node = loaded.Nodes.First().ShouldBeOfType<CustomTestNode>();
         node.Note.ShouldBe("hello"); // custom field survived the round-trip
+    }
+
+    [Fact]
+    public void Registry_restores_custom_nodes_ports_links_and_groups_with_extra_data()
+    {
+        var d = new NodelyDiagram(null, registerDefaultBehaviors: false);
+        var a = d.Nodes.Add(new CustomTestNode("a", new Point(0, 0)) { Note = "first", Size = new Size(20, 20) });
+        var b = d.Nodes.Add(new CustomTestNode("b", new Point(100, 0)) { Note = "second", Size = new Size(20, 20) });
+        var outPort = a.AddPort(new CustomTestPort("out", a, PortAlignment.Right) { Role = "out" });
+        var inPort = b.AddPort(new CustomTestPort("in", b, PortAlignment.Left) { Role = "in" });
+        d.Links.Add(new CustomTestLink("flow", outPort, inPort) { Critical = true });
+        d.Groups.Add(new CustomTestGroup("box", new[] { a, b }, 24) { Label = "pair" });
+
+        var json = DiagramSerializer.Serialize(d);
+        var registry = new DiagramSerializationRegistry()
+            .RegisterNode(CustomTestNode.ModelKindKey, ns => new CustomTestNode(ns.Id, new Point(ns.X, ns.Y)))
+            .RegisterPort(CustomTestPort.ModelKindKey, (ps, parent) =>
+                new CustomTestPort(ps.Id, parent, System.Enum.Parse<PortAlignment>(ps.Alignment)))
+            .RegisterLink(CustomTestLink.ModelKindKey, (ls, source, target) => new CustomTestLink(ls.Id, source, target))
+            .RegisterGroup(CustomTestGroup.ModelKindKey, (gs, children) => new CustomTestGroup(gs.Id, children, gs.Padding));
+
+        var loaded = new NodelyDiagram(null, registerDefaultBehaviors: false);
+        DiagramSerializer.Deserialize(loaded, json, registry);
+
+        loaded.Nodes.Count.ShouldBe(2);
+        loaded.Nodes[0].ShouldBeOfType<CustomTestNode>().Note.ShouldBe("first");
+        loaded.Nodes[0].Ports[0].ShouldBeOfType<CustomTestPort>().Role.ShouldBe("out");
+        loaded.Links.Single().ShouldBeOfType<CustomTestLink>().Critical.ShouldBeTrue();
+        loaded.Groups.Single().ShouldBeOfType<CustomTestGroup>().Label.ShouldBe("pair");
     }
 }

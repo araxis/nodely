@@ -23,35 +23,36 @@ string json = DiagramSerializer.Serialize(diagram);
 // write it to a file, a database, wherever
 ```
 
-A snapshot captures the node ids, their kinds, positions, sizes, titles, and ports; the links and their bend
-points; the groups; and the viewport's pan and zoom.
+A snapshot captures stable model kinds, built-in fields, custom extras, links, groups, and the viewport's pan
+and zoom.
 
 ## Loading
 
-Load JSON back into a fresh diagram. If you use custom node types, give the loader a factory that rebuilds them
-from each snapshot — and make sure it keeps the snapshot's id, because that's how links and groups find their
-nodes again:
+Load JSON back into a fresh diagram. If you use custom model types, give the loader a registry that rebuilds
+them from stable model kinds:
 
 ```csharp
 var diagram = new NodelyDiagram();
 
-DiagramSerializer.Deserialize(diagram, json, ns => ns.Kind == nameof(TaskNode)
-    ? new TaskNode(ns.Id, new Point(ns.X, ns.Y), ns.Title ?? "")
-    : new NodeModel(ns.Id, new Point(ns.X, ns.Y)));
+var registry = new DiagramSerializationRegistry()
+    .RegisterNode(TaskNode.ModelKindKey,
+        ns => new TaskNode(ns.Id, new Point(ns.X, ns.Y), ns.Title ?? ""));
+
+DiagramSerializer.Deserialize(diagram, json, registry);
 ```
 
-The factory keys off the kind, which is just the type's name, so your custom node needs an id-preserving
-constructor:
+Your custom model should expose a stable kind key and an id-preserving constructor:
 
 ```csharp
+public new const string ModelKindKey = "app.task";
+public override string ModelKind => ModelKindKey;
 public TaskNode(string id, Point position, string title) : base(id, position) => Title = title;
 ```
 
 ## Keeping custom fields
 
-Out of the box a snapshot stores the built-in fields, not whatever extra data your node carries. To persist that
-too, override the two hooks on your node. Write your fields out as plain JSON-friendly values, and read them back
-in:
+Out of the box a snapshot stores the built-in fields, not whatever extra data your model carries. To persist
+that too, override the two hooks. Write your fields out as plain JSON-friendly values, and read them back in:
 
 ```csharp
 public override IReadOnlyDictionary<string, object?> GetExtraData() =>
@@ -73,5 +74,5 @@ If you'd rather work with the snapshot object than a string, `ToSnapshot` and `L
 
 ```csharp
 DiagramSnapshot snapshot = DiagramSerializer.ToSnapshot(diagram);
-DiagramSerializer.Load(diagram, snapshot, nodeFactory);
+DiagramSerializer.Load(diagram, snapshot, registry);
 ```

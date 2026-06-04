@@ -9,6 +9,9 @@ namespace Nodely.Avalonia.Database;
 /// <summary>A stored procedure node with parameters.</summary>
 public sealed class DatabaseProcedureNode : DatabaseObjectNode
 {
+    /// <summary>The stable serialization kind for database procedure nodes.</summary>
+    public new const string ModelKindKey = "database.procedure";
+
     /// <summary>Creates a procedure node.</summary>
     public DatabaseProcedureNode(Point position, string objectName = "Procedure", string schema = "dbo")
         : base(position, objectName, schema) { }
@@ -22,6 +25,9 @@ public sealed class DatabaseProcedureNode : DatabaseObjectNode
 
     /// <inheritdoc />
     protected override string DefaultObjectName => "Procedure";
+
+    /// <inheritdoc />
+    public override string ModelKind => ModelKindKey;
 
     /// <inheritdoc />
     public override NodeModel Clone()

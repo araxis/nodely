@@ -3,6 +3,21 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-04 — extension contract redesign
+
+- Public API: added stable `ModelKind`, model-wide extra-data hooks, `DiagramSerializationRegistry`, typed
+  link-style registration, and render-context factory overloads.
+- Serialization: schema version 2 now carries `Kind` and `Extra` for nodes, ports, links, and groups.
+- Database: pack now restores database nodes, ports, and relationship links through one registry call, and uses
+  palette-aware render context plus typed link styling.
+- Packaging: main packages keep `0.7.0`; `Nodely.Avalonia.Database` starts its independent side-package line at
+  `0.1.0` and packs with dependencies on main package `0.7.0`.
+- Workflow: package workflow now selects main packages or the database side package from tag shape or dispatch
+  input.
+- **Verified:** `dotnet test` -> Core 110/110 + Avalonia 44/44 + Database 6/6 on both `net8.0` and
+  `net10.0`; `dotnet pack` -> main packages `0.7.0` plus database side package `0.1.0`; package inspection,
+  docs install dry-run, and docs build passed.
+
 ## 2026-06-04 — extension surface investigation
 
 - Audited the pre-public extension surface before adding more side packages.

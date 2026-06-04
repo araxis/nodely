@@ -6,15 +6,20 @@ All notable changes to Nodely are documented here. The format is based on
 
 ## [0.7.0] - 2026-06-04
 
-Database pack release. No breaking API changes.
+Database pack and extension-contract release.
 
 ### Added
 - **Database package:** `Nodely.Avalonia.Database` adds table, view, and procedure nodes, database ports, and
   relationship/dependency links.
 - **Renderer registration:** `DiagramCanvas.UseDatabaseNodes()` registers database node, port, and link styling
   in one call.
-- **Serialization helper:** `DatabaseNodeFactory` restores database node types and fields through the existing
-  `DiagramSerializer` factory path.
+- **Serialization registry:** `DiagramSerializationRegistry` restores custom node, port, link, and group kinds
+  with stable model-kind keys and model-wide extra-data hooks.
+- **Typed link styling:** `DiagramCanvas.RegisterLinkStyle<TLink>()` replaces the single global style resolver
+  with composable type-based registrations.
+- **Render context:** node, port, and group factories can receive a canvas context for palette-aware rendering.
+- **Independent side-package versioning:** `Nodely.Avalonia.Database` now has its own package version line and
+  tag-triggered publish path, starting at `0.1.0` while depending on the main `0.7.0` packages.
 - **Demo scene:** the gallery now includes a database diagram with tables, a view, a stored procedure,
   relationship links, dependency links, save/load, theme switching, and zoom-to-fit.
 - **Docs:** README and the documentation site now include the database package and usage guide.
@@ -80,7 +85,7 @@ No breaking API changes.
 ### Added
 - **Render hooks:** `RegisterLink<T>` (custom immediate-mode link drawer via `LinkRenderContext` +
   `DrawDefault()`), `RegisterPort<T>`, and `RegisterGroup<T>` — links/ports/groups are now as customizable as
-  nodes. Plus `LinkStyleResolver` for quick stroke/width/dash overrides.
+  nodes.
 - **Custom layers:** `DiagramCanvas.AddLayer` / `RemoveLayer` + a `DiagramLayer` base — add any overlay (rulers,
   guides, heatmaps, annotations) in world or screen space.
 - **Selection adorners:** `RegisterAdorner` for per-node toolbars/badges/handles.

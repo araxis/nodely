@@ -24,6 +24,12 @@ public abstract class Model
     /// <summary>The stable identity of this model.</summary>
     public string Id { get; }
 
+    /// <summary>
+    /// Stable serialization kind for this model. Custom packages should override this with a durable key
+    /// instead of relying on CLR type names.
+    /// </summary>
+    public virtual string ModelKind => "model";
+
     /// <summary>When true, the model should not respond to user interaction.</summary>
     public bool Locked { get; set; }
 
@@ -52,4 +58,12 @@ public abstract class Model
 
     /// <summary>Requests a re-render of this model by raising <see cref="Changed"/>.</summary>
     public virtual void Refresh() => Changed?.Invoke(this);
+
+    /// <summary>
+    /// Override to persist custom fields with the diagram snapshot. Return JSON-serializable values.
+    /// </summary>
+    public virtual IReadOnlyDictionary<string, object?>? GetExtraData() => null;
+
+    /// <summary>Restores the custom fields written by <see cref="GetExtraData"/>.</summary>
+    public virtual void SetExtraData(IReadOnlyDictionary<string, object?> data) { }
 }

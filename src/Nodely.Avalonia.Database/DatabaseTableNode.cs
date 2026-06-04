@@ -10,6 +10,9 @@ namespace Nodely.Avalonia.Database;
 /// <summary>A database table node with columns.</summary>
 public sealed class DatabaseTableNode : DatabaseObjectNode
 {
+    /// <summary>The stable serialization kind for database table nodes.</summary>
+    public new const string ModelKindKey = "database.table";
+
     /// <summary>Creates a table node.</summary>
     public DatabaseTableNode(Point position, string objectName = "Table", string schema = "dbo")
         : base(position, objectName, schema) { }
@@ -23,6 +26,9 @@ public sealed class DatabaseTableNode : DatabaseObjectNode
 
     /// <inheritdoc />
     protected override string DefaultObjectName => "Table";
+
+    /// <inheritdoc />
+    public override string ModelKind => ModelKindKey;
 
     /// <inheritdoc />
     public override NodeModel Clone()

@@ -15,6 +15,10 @@ serializer registry support for nodes/ports/links/groups, typed composable link-
 context overloads, and per-package version properties before treating `Nodely.Avalonia.Database` as the side-pack
 template. See `memory/02-research/extension-surface-investigation.md`.
 
+Resolution: implemented in the extension surface redesign. The database pack now uses stable kinds, registry
+restore for nodes/ports/links, typed link-style registration, palette-aware render context, and its own package
+version.
+
 ## F-045 — Domain packs should register a vocabulary, not change the core (2026-06-04, v0.7.0)
 
 The first optional node pack is database-focused because tables, views, procedures, columns, parameters, and
@@ -24,9 +28,9 @@ Pattern established by `Nodely.Avalonia.Database`:
 
 - Keep domain model types in the pack.
 - Expose one canvas extension (`UseDatabaseNodes`) that registers node, port, and link renderers.
-- Persist domain node data through `NodeModel.GetExtraData` / `SetExtraData`.
-- Restore domain node types through the existing `DiagramSerializer` node factory.
-- Leave link-specific persistence for a future serializer extension; v0.7.0 keeps the snapshot schema stable.
+- Persist domain model data through `Model.GetExtraData` / `SetExtraData`.
+- Restore domain model types through `DiagramSerializationRegistry`.
+- Keep side-package versions independent from the main package group.
 
 ## F-044 — Avalonia net8.0 asset is viable with the current SDK baseline (2026-06-04, v0.6.0)
 
@@ -321,8 +325,8 @@ extension seams instead of built-in features; reference impls go in the demo, no
 - **Render hooks (Avalonia, parity with `RegisterNode`):** `RegisterLink<TLink>(LinkDrawer)` — immediate-mode
   drawer with a `LinkRenderContext` (`Geometry`/`Path`/`Palette`/`IsSelected`/`Result` + `DrawDefault()`);
   `RegisterPort<TPort>` and `RegisterGroup<TGroup>` (views now call `owner.BuildPortContent/BuildGroupContent`).
-- **`LinkStyleResolver`** (`Func<BaseLinkModel, LinkStyle>`) — stroke/width/dash override on the default drawer
-  without a full drawer.
+- **Superseded by F-046:** the single link-style resolver became typed `RegisterLinkStyle<TLink>` registrations
+  so side packages compose without chaining a global property.
 - **Custom layers:** `DiagramCanvas.AddLayer(Control, worldSpace=true)` / `RemoveLayer` + `DiagramLayer` base
   (exposes `Owner`/`Diagram`). World-space layers share the pan/zoom transform; inserted just below adorners;
   updated in OnView/OnStructure changed. The "master seam" — any overlay, user-built.
@@ -331,10 +335,8 @@ extension seams instead of built-in features; reference impls go in the demo, no
 - **Validation delegates (Core, OCP):** `DiagramLinkOptions.CanConnect` (wired into `DragNewLinkBehavior` drop
   + snap), `DiagramOptions.CanDrag` + `SnapPosition` (wired into `DragMovablesBehavior`).
 - **`IDiagramLayout`** (Algorithms) + `LayeredDiagramLayout` wrapper — pluggable layouts.
-- **Serialization extras:** `NodeModel.GetExtraData()/SetExtraData()` (CLR `object?` values, format-neutral) +
-  `NodeSnapshot.Extra` (`Dictionary<string,JsonElement>`, omitted when null). Serializer converts JsonElement →
-  CLR primitive so authors read clean values. **Closes the F-037 limitation** — demo `TaskNode.Status` now
-  persists.
+- **Superseded by F-046:** serialization extras moved from node-only hooks to model-wide hooks, and registry
+  restore covers nodes, ports, links, and groups.
 - **Model metadata bag:** `Model.Tag` (object?) + lazy `Model.Data` dictionary — attach data without subclassing.
 - **Behavior/input API:** thin `RegisterBehavior/GetBehavior/UnregisterBehavior` pass-throughs on the canvas
   (the `Behavior` + `Trigger*` seams already existed). Added `InternalsVisibleTo` so tests can hit
@@ -386,13 +388,9 @@ Phase 2 deferred `DynamicAnchor`/`LinkAnchor` (checklist "Dynamic+Link deferred 
 ## F-037 — Demo Save/Load via the serializer (2026-06-03, post-0.1.0 backlog 5)
 
 - **Demo:** top-bar Save/Load. Save → `DiagramSerializer.Serialize(currentDiagram)` into a field; Load → new
-  `NodelyDiagram`, `Deserialize(..., LoadNode)`, then rebuild the host with `Editor(loaded)`. `LoadNode` maps
-  `NodeSnapshot.Kind` → the right type **preserving `ns.Id`** so links/groups resolve; needed adding an
-  id-preserving `TaskNode(string id, ...)` ctor. Demo now references `Nodely.Serialization`.
-- **GOTCHA (test):** keyed-by-`Kind` deserialization uses `GetType().Name`. A C# **`file`-local** test class has
-  a *mangled* metadata name, so `GetType().Name != nameof(...)` and the factory silently fell back to
-  `NodeModel` (test failed `ShouldBeOfType`). Fix: use a normal (non-`file`) `internal` class in the test. Real
-  custom nodes (demo `TaskNode`, public) are unaffected — only matters for `file`-local types.
+  `NodelyDiagram`, deserialize, then rebuild the host with `Editor(loaded)`.
+- **Superseded by F-046:** load now uses stable model-kind keys and `DiagramSerializationRegistry`, so CLR type
+  names are no longer the persistence key.
 - **Limitations:** custom fields not in the snapshot (e.g. `TaskNode.Status`) aren't persisted; options
   (arrows/groups) reset to defaults on load (demo re-sets the arrow marker).
 - **Tests:** Core `Custom_node_kind_round_trips_via_the_factory_preserving_id_and_links`. Core **94**, Avalonia

@@ -10,7 +10,7 @@ Use this checklist for each package release.
 
 ## Prepare
 
-1. Update `Directory.Build.props` with the new package version.
+1. Update `NodelyMainVersion` or the affected side-package version property in `Directory.Build.props`.
 2. Update `CHANGELOG.md`, `README.md`, package target tables, and any docs that mention the current version
    or test count.
 3. Run the wording scan before staging so branch names, commit messages, docs, comments, and generated files stay neutral.
@@ -44,13 +44,16 @@ For compatibility releases, also inspect package contents:
 
 1. Merge the release PR to `main`.
 2. Confirm `CI`, `Package`, and `Docs` are green on `main`.
-3. Create and push a tag named `vX.Y.Z`.
-4. Confirm the `Package` workflow publishes from the tag using the `NUGET_API_KEY` repository secret.
+3. Create and push a tag:
+   - `vX.Y.Z` for the main package group.
+   - `Nodely.Avalonia.Database/vX.Y.Z` for the database side package.
+4. Confirm the `Package` workflow publishes only the selected package set from the tag using the
+   `NUGET_API_KEY` repository secret.
 5. Create a GitHub release from the changelog entry.
 
 ## Verify
 
-1. Confirm NuGet lists the new version for every package.
+1. Confirm NuGet lists the new version for every package in the release set.
 2. Confirm the docs site is live at `https://araxis.github.io/nodely/`.
 3. Confirm `README.md` badges resolve.
 4. Keep the working tree clean after pruning merged release branches.

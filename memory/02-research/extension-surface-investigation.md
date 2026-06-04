@@ -115,3 +115,10 @@ reference material only; Nodely should choose the simplest, fastest Avalonia-fir
 Revise PR #8 before merge. It is a useful stress test and much of the database model/rendering work can stay, but
 the serializer, typed style registration, render context, and independent versioning contracts should be fixed
 before this package becomes the pattern for UML or other side packages.
+
+## Resolution
+
+Implemented on 2026-06-04 before PR #8 was made ready again. The redesign added stable model kinds,
+model-wide extra-data hooks, registry restore for nodes/ports/links/groups, typed link-style registrations,
+render-context factory overloads, independent database package versioning, and selective package workflow
+support.

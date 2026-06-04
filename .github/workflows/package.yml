@@ -7,8 +7,18 @@ on:
     branches: [ main ]
     tags:
       - 'v*.*.*'
+      - 'Nodely.Avalonia.Database/v*.*.*'
   workflow_dispatch:
     inputs:
+      package:
+        description: 'Package set'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - 'all'
+          - 'main'
+          - 'Nodely.Avalonia.Database'
       publish:
         description: 'Publish packages'
         required: true
@@ -43,8 +53,50 @@ jobs:
       - name: Test
         run: dotnet test Nodely.slnx --configuration Release --no-build --verbosity normal
 
+      - name: Determine package projects
+        id: package-projects
+        shell: bash
+        run: |
+          main_projects=(
+            "src/Nodely.Core/Nodely.Core.csproj"
+            "src/Nodely.Avalonia/Nodely.Avalonia.csproj"
+            "src/Nodely.Algorithms/Nodely.Algorithms.csproj"
+            "src/Nodely.Serialization/Nodely.Serialization.csproj"
+          )
+          database_projects=("src/Nodely.Avalonia.Database/Nodely.Avalonia.Database.csproj")
+
+          package_input="${{ github.event.inputs.package }}"
+          if [[ -z "$package_input" ]]; then
+            package_input="all"
+          fi
+
+          projects=()
+          if [[ "$GITHUB_REF" == refs/tags/Nodely.Avalonia.Database/v* ]]; then
+            projects=("${database_projects[@]}")
+          elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            projects=("${main_projects[@]}")
+          elif [[ "$package_input" == "main" ]]; then
+            projects=("${main_projects[@]}")
+          elif [[ "$package_input" == "Nodely.Avalonia.Database" ]]; then
+            projects=("${database_projects[@]}")
+          else
+            projects=("${main_projects[@]}" "${database_projects[@]}")
+          fi
+
+          {
+            echo "projects<<EOF"
+            printf '%s\n' "${projects[@]}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Pack
-        run: dotnet pack Nodely.slnx --configuration Release --no-build --output artifacts/packages
+        shell: bash
+        run: |
+          while IFS= read -r project; do
+            if [[ -n "$project" ]]; then
+              dotnet pack "$project" --configuration Release --no-build --output artifacts/packages
+            fi
+          done <<< "${{ steps.package-projects.outputs.projects }}"
 
       - name: Upload packages
         uses: actions/upload-artifact@v4
@@ -57,7 +109,7 @@ jobs:
 
   publish:
     needs: pack
-    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.publish == 'true')
+    if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/tags/Nodely.Avalonia.Database/v') || (github.event_name == 'workflow_dispatch' && inputs.publish == 'true')
     runs-on: ubuntu-latest
     environment: package-publish
     steps:

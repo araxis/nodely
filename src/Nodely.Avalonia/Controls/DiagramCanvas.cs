@@ -55,14 +55,16 @@ public class DiagramCanvas : Panel
     private readonly VerticesLayer _vertices;
     private readonly AdornersLayer _adorners;
     private readonly SelectionBoxLayer _selectionBox;
-    private readonly Dictionary<Type, Func<NodeModel, Control>> _nodeFactories = new();
-    private readonly Dictionary<Type, Func<PortModel, Control>> _portFactories = new();
-    private readonly Dictionary<Type, Func<GroupModel, Control>> _groupFactories = new();
+    private readonly Dictionary<Type, Func<NodeModel, DiagramRenderContext, Control>> _nodeFactories = new();
+    private readonly Dictionary<Type, Func<PortModel, DiagramRenderContext, Control>> _portFactories = new();
+    private readonly Dictionary<Type, Func<GroupModel, DiagramRenderContext, Control>> _groupFactories = new();
     private readonly Dictionary<Type, LinkDrawer> _linkDrawers = new();
+    private readonly Dictionary<Type, Func<BaseLinkModel, LinkStyleContext, LinkStyle?>> _linkStyleResolvers = new();
     private readonly ContextMenu _contextMenu = new();
     private readonly List<NodeModel> _clipboard = new();
     private readonly List<Func<NodeModel, Control?>> _adornerFactories = new();
     private readonly List<(Control Layer, bool World)> _customLayers = new();
+    private readonly DiagramRenderContext _renderContext;
     private double _pasteOffset;
     private Diagram? _subscribed;
     private DiagramHistory? _history;
@@ -79,6 +81,8 @@ public class DiagramCanvas : Panel
     /// <summary>Creates the canvas with sensible defaults.</summary>
     public DiagramCanvas()
     {
+        _renderContext = new DiagramRenderContext(this);
+
         // Layers are created before the property setters below (whose change handlers touch them).
         // Z-order (bottom to top): grid, groups, links, nodes, ports, vertices, adorners, selection box.
         _grid = new GridLayer(this);
@@ -150,7 +154,18 @@ public class DiagramCanvas : Panel
         if (factory is null)
             throw new ArgumentNullException(nameof(factory));
 
-        _nodeFactories[typeof(TNode)] = node => factory((TNode)node);
+        RegisterNode<TNode>((node, _) => factory(node));
+    }
+
+    /// <summary>
+    /// Registers how nodes of type <typeparamref name="TNode"/> are rendered, with access to canvas context.
+    /// </summary>
+    public void RegisterNode<TNode>(Func<TNode, DiagramRenderContext, Control> factory) where TNode : NodeModel
+    {
+        if (factory is null)
+            throw new ArgumentNullException(nameof(factory));
+
+        _nodeFactories[typeof(TNode)] = (node, context) => factory((TNode)node, context);
     }
 
     /// <summary>
@@ -167,10 +182,25 @@ public class DiagramCanvas : Panel
     }
 
     /// <summary>
-    /// Optional per-link style override (stroke/width/dash). Cheaper than a full <see cref="RegisterLink{TLink}"/>
-    /// drawer when you only want to restyle the standard link. Return null fields to keep the defaults.
+    /// Registers a typed style resolver for standard link rendering. The most-derived registered type wins.
     /// </summary>
-    public Func<BaseLinkModel, LinkStyle>? LinkStyleResolver { get; set; }
+    public void RegisterLinkStyle<TLink>(Func<TLink, LinkStyleContext, LinkStyle?> resolver) where TLink : BaseLinkModel
+    {
+        if (resolver is null)
+            throw new ArgumentNullException(nameof(resolver));
+
+        _linkStyleResolvers[typeof(TLink)] = (link, context) => resolver((TLink)link, context);
+        _links?.InvalidateVisual();
+    }
+
+    /// <summary>Registers a typed style resolver when no canvas context is needed.</summary>
+    public void RegisterLinkStyle<TLink>(Func<TLink, LinkStyle?> resolver) where TLink : BaseLinkModel
+    {
+        if (resolver is null)
+            throw new ArgumentNullException(nameof(resolver));
+
+        RegisterLinkStyle<TLink>((link, _) => resolver(link));
+    }
 
     /// <summary>Resolves the most-derived registered link drawer for <paramref name="link"/>, or null.</summary>
     internal LinkDrawer? ResolveLinkDrawer(BaseLinkModel link)
@@ -183,7 +213,14 @@ public class DiagramCanvas : Panel
     }
 
     /// <summary>Resolves the style overrides for <paramref name="link"/> (defaults when no resolver is set).</summary>
-    internal LinkStyle ResolveLinkStyle(BaseLinkModel link) => LinkStyleResolver?.Invoke(link) ?? LinkStyle.Default;
+    internal LinkStyle ResolveLinkStyle(BaseLinkModel link)
+    {
+        for (var type = link.GetType(); type != null && typeof(BaseLinkModel).IsAssignableFrom(type); type = type.BaseType)
+            if (_linkStyleResolvers.TryGetValue(type, out var resolver))
+                return resolver(link, new LinkStyleContext(this, link)) ?? LinkStyle.Default;
+
+        return LinkStyle.Default;
+    }
 
     /// <summary>Builds the content control for a node (used by <see cref="NodeView"/>).</summary>
     internal Control BuildNodeContent(NodeModel node)
@@ -191,7 +228,7 @@ public class DiagramCanvas : Panel
         for (var type = node.GetType(); type != null && typeof(NodeModel).IsAssignableFrom(type); type = type.BaseType)
         {
             if (_nodeFactories.TryGetValue(type, out var factory))
-                return factory(node);
+                return factory(node, _renderContext);
         }
 
         return BuildDefaultNodeContent(node);
@@ -217,7 +254,16 @@ public class DiagramCanvas : Panel
         if (factory is null)
             throw new ArgumentNullException(nameof(factory));
 
-        _portFactories[typeof(TPort)] = port => factory((TPort)port);
+        RegisterPort<TPort>((port, _) => factory(port));
+    }
+
+    /// <summary>Registers how ports of type <typeparamref name="TPort"/> render, with access to canvas context.</summary>
+    public void RegisterPort<TPort>(Func<TPort, DiagramRenderContext, Control> factory) where TPort : PortModel
+    {
+        if (factory is null)
+            throw new ArgumentNullException(nameof(factory));
+
+        _portFactories[typeof(TPort)] = (port, context) => factory((TPort)port, context);
         _ports?.Rebuild();
     }
 
@@ -227,7 +273,16 @@ public class DiagramCanvas : Panel
         if (factory is null)
             throw new ArgumentNullException(nameof(factory));
 
-        _groupFactories[typeof(TGroup)] = group => factory((TGroup)group);
+        RegisterGroup<TGroup>((group, _) => factory(group));
+    }
+
+    /// <summary>Registers how groups of type <typeparamref name="TGroup"/> render, with access to canvas context.</summary>
+    public void RegisterGroup<TGroup>(Func<TGroup, DiagramRenderContext, Control> factory) where TGroup : GroupModel
+    {
+        if (factory is null)
+            throw new ArgumentNullException(nameof(factory));
+
+        _groupFactories[typeof(TGroup)] = (group, context) => factory((TGroup)group, context);
         _groups?.Rebuild();
     }
 
@@ -236,7 +291,7 @@ public class DiagramCanvas : Panel
     {
         for (var type = port.GetType(); type != null && typeof(PortModel).IsAssignableFrom(type); type = type.BaseType)
             if (_portFactories.TryGetValue(type, out var factory))
-                return factory(port);
+                return factory(port, _renderContext);
 
         return new Ellipse { Fill = Palette.PortFill, Stroke = Palette.PortStroke, StrokeThickness = 1.5 };
     }
@@ -246,7 +301,7 @@ public class DiagramCanvas : Panel
     {
         for (var type = group.GetType(); type != null && typeof(GroupModel).IsAssignableFrom(type); type = type.BaseType)
             if (_groupFactories.TryGetValue(type, out var factory))
-                return factory(group);
+                return factory(group, _renderContext);
 
         return new Border
         {

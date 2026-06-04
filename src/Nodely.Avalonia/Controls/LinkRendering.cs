@@ -15,10 +15,7 @@ namespace Nodely.Avalonia.Controls;
 /// </summary>
 public delegate void LinkDrawer(DrawingContext context, LinkRenderContext ctx);
 
-/// <summary>
-/// Per-link style overrides resolved by <see cref="DiagramCanvas.LinkStyleResolver"/>. Any null field falls
-/// back to the palette / link defaults, so you only override what you care about (e.g. just a dash pattern).
-/// </summary>
+/// <summary>Per-link style overrides. Null fields fall back to the palette / link defaults.</summary>
 public sealed class LinkStyle
 {
     /// <summary>Stroke brush (default: <c>Palette.LinkStroke</c>).</summary>
@@ -35,6 +32,28 @@ public sealed class LinkStyle
 
     /// <summary>The all-defaults style.</summary>
     public static LinkStyle Default { get; } = new();
+}
+
+/// <summary>Context passed to typed link style registrations.</summary>
+public sealed class LinkStyleContext
+{
+    internal LinkStyleContext(DiagramCanvas canvas, BaseLinkModel link)
+    {
+        Canvas = canvas;
+        Link = link;
+    }
+
+    /// <summary>The canvas resolving the style.</summary>
+    public DiagramCanvas Canvas { get; }
+
+    /// <summary>The link being styled.</summary>
+    public BaseLinkModel Link { get; }
+
+    /// <summary>The current canvas palette.</summary>
+    public NodelyPalette Palette => Canvas.Palette;
+
+    /// <summary>Whether the link is currently selected.</summary>
+    public bool IsSelected => Link.Selected;
 }
 
 /// <summary>The information a <see cref="LinkDrawer"/> needs to render a link.</summary>

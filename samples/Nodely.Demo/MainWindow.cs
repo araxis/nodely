@@ -6,6 +6,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Nodely;
 using Nodely.Algorithms;
+using Nodely.Anchors;
 using Nodely.Avalonia;
 using Nodely.Avalonia.Controls;
 using Nodely.Avalonia.Database;
@@ -18,11 +19,15 @@ namespace Nodely.Demo;
 /// <summary>A custom node type with extra domain data, rendered by a registered template.</summary>
 public sealed class TaskNode : NodeModel
 {
+    public new const string ModelKindKey = "demo.task";
+
     public TaskNode(NodelyPoint position, string title) : base(position) => Title = title;
 
     public TaskNode(string id, NodelyPoint position, string title) : base(id, position) => Title = title;
 
     public string Status { get; set; } = "Pending";
+
+    public override string ModelKind => ModelKindKey;
 
     public override NodeModel Clone() => new TaskNode(Position, Title ?? string.Empty) { Status = Status, Size = Size };
 
@@ -40,14 +45,44 @@ public sealed class SignalPort : PortModel
 {
     public SignalPort(NodeModel parent, PortAlignment alignment, string role) : base(parent, alignment) => Role = role;
 
-    public string Role { get; }
+    public SignalPort(string id, NodeModel parent, PortAlignment alignment) : base(id, parent, alignment) { }
+
+    public new const string ModelKindKey = "demo.signal-port";
+
+    public string Role { get; set; } = "in";
+
+    public override string ModelKind => ModelKindKey;
+
+    public override IReadOnlyDictionary<string, object?> GetExtraData() =>
+        new Dictionary<string, object?> { ["Role"] = Role };
+
+    public override void SetExtraData(IReadOnlyDictionary<string, object?> data)
+    {
+        if (data.TryGetValue("Role", out var role) && role is string roleText)
+            Role = roleText;
+    }
 }
 
 public sealed class FlowLink : LinkModel
 {
     public FlowLink(PortModel sourcePort, PortModel targetPort) : base(sourcePort, targetPort) { }
 
+    public FlowLink(string id, Anchor source, Anchor target) : base(id, source, target) { }
+
+    public new const string ModelKindKey = "demo.flow";
+
     public bool Critical { get; set; }
+
+    public override string ModelKind => ModelKindKey;
+
+    public override IReadOnlyDictionary<string, object?> GetExtraData() =>
+        new Dictionary<string, object?> { ["Critical"] = Critical };
+
+    public override void SetExtraData(IReadOnlyDictionary<string, object?> data)
+    {
+        if (data.TryGetValue("Critical", out var critical) && critical is bool value)
+            Critical = value;
+    }
 }
 
 public sealed class HighlightGroup : GroupModel
@@ -140,19 +175,15 @@ public sealed class MainWindow : Window
             return;
 
         var diagram = NewDiagram();
-        DiagramSerializer.Deserialize(diagram, _savedJson, LoadNode);
+        DiagramSerializer.Deserialize(diagram, _savedJson, CreateSerializationRegistry());
         _host.Content = Editor(diagram);
     }
 
-    private static NodeModel LoadNode(NodeSnapshot ns)
-    {
-        if (DatabaseNodeFactory.TryCreate(ns, out var databaseNode))
-            return databaseNode;
-
-        return ns.Kind == nameof(TaskNode)
-            ? new TaskNode(ns.Id, new NodelyPoint(ns.X, ns.Y), ns.Title ?? string.Empty)
-            : new NodeModel(ns.Id, new NodelyPoint(ns.X, ns.Y)) { Title = ns.Title };
-    }
+    private static DiagramSerializationRegistry CreateSerializationRegistry() => DatabaseNodeFactory.CreateRegistry()
+        .RegisterNode(TaskNode.ModelKindKey, ns => new TaskNode(ns.Id, new NodelyPoint(ns.X, ns.Y), ns.Title ?? string.Empty))
+        .RegisterPort(SignalPort.ModelKindKey, (ps, parent) =>
+            new SignalPort(ps.Id, parent, Enum.Parse<PortAlignment>(ps.Alignment)))
+        .RegisterLink(FlowLink.ModelKindKey, (ls, source, target) => new FlowLink(ls.Id, source, target));
 
     private Control Editor(NodelyDiagram diagram, bool readOnly = false, Action<DiagramCanvas>? configureCanvas = null)
     {
@@ -350,9 +381,9 @@ public sealed class MainWindow : Window
                 if (((FlowLink)ctx.Link).Critical)
                     context.DrawGeometry(null, new Pen(new SolidColorBrush(Color.FromArgb(110, 255, 208, 90)), 7), ctx.Geometry);
             });
-            canvas.LinkStyleResolver = link => link is FlowLink { Critical: false }
-                ? new LinkStyle { Stroke = Brushes.MediumSeaGreen, DashStyle = DashStyle.Dash, Width = 2.5 }
-                : LinkStyle.Default;
+            canvas.RegisterLinkStyle<FlowLink>(link => link.Critical
+                ? LinkStyle.Default
+                : new LinkStyle { Stroke = Brushes.MediumSeaGreen, DashStyle = DashStyle.Dash, Width = 2.5 });
             canvas.AddLayer(new GuideLayer());
         });
     }

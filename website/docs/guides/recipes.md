@@ -102,10 +102,14 @@ Custom nodes should preserve their id on load, and use the extra-data hooks for 
 ```csharp
 public sealed class TaskNode : NodeModel
 {
+    public new const string ModelKindKey = "app.task";
+
     public TaskNode(Point position, string title) : base(position) => Title = title;
     public TaskNode(string id, Point position, string title) : base(id, position) => Title = title;
 
     public string Status { get; set; } = "Pending";
+
+    public override string ModelKind => ModelKindKey;
 
     public override IReadOnlyDictionary<string, object?> GetExtraData() =>
         new Dictionary<string, object?> { ["Status"] = Status };
@@ -122,8 +126,9 @@ public sealed class TaskNode : NodeModel
 string json = DiagramSerializer.Serialize(diagram);
 
 var loaded = new NodelyDiagram();
-DiagramSerializer.Deserialize(loaded, json, snapshot =>
-    snapshot.Kind == nameof(TaskNode)
-        ? new TaskNode(snapshot.Id, new Point(snapshot.X, snapshot.Y), snapshot.Title ?? "")
-        : new NodeModel(snapshot.Id, new Point(snapshot.X, snapshot.Y)) { Title = snapshot.Title });
+var registry = new DiagramSerializationRegistry()
+    .RegisterNode(TaskNode.ModelKindKey,
+        snapshot => new TaskNode(snapshot.Id, new Point(snapshot.X, snapshot.Y), snapshot.Title ?? ""));
+
+DiagramSerializer.Deserialize(loaded, json, registry);
 ```

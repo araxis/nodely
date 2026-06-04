@@ -9,6 +9,9 @@ namespace Nodely.Avalonia.Database;
 /// <summary>A database view node with projected columns.</summary>
 public sealed class DatabaseViewNode : DatabaseObjectNode
 {
+    /// <summary>The stable serialization kind for database view nodes.</summary>
+    public new const string ModelKindKey = "database.view";
+
     /// <summary>Creates a view node.</summary>
     public DatabaseViewNode(Point position, string objectName = "View", string schema = "dbo")
         : base(position, objectName, schema) { }
@@ -22,6 +25,9 @@ public sealed class DatabaseViewNode : DatabaseObjectNode
 
     /// <inheritdoc />
     protected override string DefaultObjectName => "View";
+
+    /// <inheritdoc />
+    public override string ModelKind => ModelKindKey;
 
     /// <inheritdoc />
     public override NodeModel Clone()

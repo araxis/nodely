@@ -55,7 +55,7 @@ public class DatabaseModelTests
         var json = DiagramSerializer.Serialize(diagram);
 
         var loaded = new NodelyDiagram(null, registerDefaultBehaviors: false);
-        DiagramSerializer.Deserialize(loaded, json, DatabaseNodeFactory.Create);
+        DiagramSerializer.Deserialize(loaded, json, DatabaseNodeFactory.CreateRegistry());
 
         var restored = loaded.Nodes.Single().ShouldBeOfType<DatabaseTableNode>();
         restored.Id.ShouldBe("customers");
@@ -72,20 +72,52 @@ public class DatabaseModelTests
         var viewSnapshot = new NodeSnapshot
         {
             Id = "v",
-            Kind = nameof(DatabaseViewNode),
+            Kind = DatabaseViewNode.ModelKindKey,
             X = 1,
             Y = 2,
         };
         var procedureSnapshot = new NodeSnapshot
         {
             Id = "p",
-            Kind = nameof(DatabaseProcedureNode),
+            Kind = DatabaseProcedureNode.ModelKindKey,
             X = 3,
             Y = 4,
         };
 
         DatabaseNodeFactory.Create(viewSnapshot).ShouldBeOfType<DatabaseViewNode>();
         DatabaseNodeFactory.Create(procedureSnapshot).ShouldBeOfType<DatabaseProcedureNode>();
+    }
+
+    [Fact]
+    public void Registry_round_trips_database_ports_and_relationship_links()
+    {
+        var diagram = new NodelyDiagram(null, registerDefaultBehaviors: false);
+        var customers = diagram.Nodes.Add(new DatabaseTableNode("customers", new Point(10, 20), "Customers", "sales"));
+        var orders = diagram.Nodes.Add(new DatabaseTableNode("orders", new Point(180, 20), "Orders", "sales"));
+        var customersOut = customers.AddPort(new DatabasePortModel("customers-out", customers, PortAlignment.Right,
+            DatabasePortKind.Relationship, "CustomerId"));
+        var ordersIn = orders.AddPort(new DatabasePortModel("orders-in", orders, PortAlignment.Left,
+            DatabasePortKind.Relationship, "CustomerId"));
+        diagram.Links.Add(new DatabaseRelationshipLink("rel", customersOut, ordersIn, RelationshipKind.OneToMany)
+        {
+            SourceCardinality = "1",
+            TargetCardinality = "many",
+        });
+
+        var json = DiagramSerializer.Serialize(diagram);
+
+        var loaded = new NodelyDiagram(null, registerDefaultBehaviors: false);
+        DiagramSerializer.Deserialize(loaded, json, DatabaseNodeFactory.CreateRegistry());
+
+        var restoredCustomers = loaded.Nodes.Single(n => n.Id == "customers").ShouldBeOfType<DatabaseTableNode>();
+        var restoredPort = restoredCustomers.Ports.Single().ShouldBeOfType<DatabasePortModel>();
+        restoredPort.Kind.ShouldBe(DatabasePortKind.Relationship);
+        restoredPort.Name.ShouldBe("CustomerId");
+
+        var restoredLink = loaded.Links.Single().ShouldBeOfType<DatabaseRelationshipLink>();
+        restoredLink.Kind.ShouldBe(RelationshipKind.OneToMany);
+        restoredLink.SourceCardinality.ShouldBe("1");
+        restoredLink.TargetCardinality.ShouldBe("many");
     }
 
     [Fact]

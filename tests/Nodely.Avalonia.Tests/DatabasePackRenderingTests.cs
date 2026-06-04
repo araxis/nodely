@@ -34,4 +34,24 @@ public class DatabasePackRenderingTests
         canvas.BuildPortContent((DatabasePortModel)tableOut).ShouldBeOfType<Ellipse>().Tag.ShouldBe("database-port");
         canvas.ResolveLinkStyle(relationship).Width.ShouldBe(relationship.Width);
     }
+
+    [AvaloniaFact]
+    public void Link_style_registrations_compose_by_link_type()
+    {
+        var diagram = new NodelyDiagram();
+        var table = diagram.Nodes.Add(new DatabaseTableNode(new NodelyPoint(0, 0), "Customers"));
+        var view = diagram.Nodes.Add(new DatabaseViewNode(new NodelyPoint(180, 0), "CustomerSummary"));
+        var relationship = new DatabaseRelationshipLink(table, view, RelationshipKind.Dependency);
+        var normal = new LinkModel(table, view);
+
+        var canvas = new DiagramCanvas { Diagram = diagram };
+        canvas.RegisterLinkStyle<LinkModel>(_ => new LinkStyle { Width = 9 });
+        canvas.UseDatabaseNodes();
+
+        canvas.ResolveLinkStyle(normal).Width.ShouldBe(9);
+        canvas.ResolveLinkStyle(relationship).Width.ShouldBe(relationship.Width);
+
+        canvas.RegisterLinkStyle<DatabaseRelationshipLink>(_ => new LinkStyle { Width = 12 });
+        canvas.ResolveLinkStyle(relationship).Width.ShouldBe(12);
+    }
 }

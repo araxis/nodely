@@ -60,15 +60,13 @@ Tables and views expose mutable `Columns` collections. Procedures expose mutable
 
 ## Save and load
 
-The pack uses the existing node extra-data hooks, so the snapshot schema does not change. Pass
-`DatabaseNodeFactory.Create` when loading:
+Register the database serializer vocabulary when loading:
 
 ```csharp
 string json = DiagramSerializer.Serialize(diagram);
 
 var loaded = new NodelyDiagram();
-DiagramSerializer.Deserialize(loaded, json, DatabaseNodeFactory.Create);
+DiagramSerializer.Deserialize(loaded, json, DatabaseNodeFactory.CreateRegistry());
 ```
 
-The factory restores `DatabaseTableNode`, `DatabaseViewNode`, and `DatabaseProcedureNode` instances with their
-schema, object name, columns, and parameters.
+The registry restores database nodes, ports, relationship links, and their custom metadata.

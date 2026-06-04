@@ -20,15 +20,13 @@ public static class DatabaseDiagramCanvasExtensions
         if (canvas is null)
             throw new ArgumentNullException(nameof(canvas));
 
-        canvas.RegisterNode<DatabaseTableNode>(node => BuildColumnNode(node, "TABLE", node.Columns, TableAccent, "database-table-node"));
-        canvas.RegisterNode<DatabaseViewNode>(node => BuildColumnNode(node, "VIEW", node.Columns, ViewAccent, "database-view-node"));
-        canvas.RegisterNode<DatabaseProcedureNode>(node => BuildProcedureNode(node));
+        canvas.RegisterNode<DatabaseTableNode>((node, context) =>
+            BuildColumnNode(node, "TABLE", node.Columns, TableAccent, "database-table-node", context));
+        canvas.RegisterNode<DatabaseViewNode>((node, context) =>
+            BuildColumnNode(node, "VIEW", node.Columns, ViewAccent, "database-view-node", context));
+        canvas.RegisterNode<DatabaseProcedureNode>(BuildProcedureNode);
         canvas.RegisterPort<DatabasePortModel>(BuildPort);
-
-        var previousResolver = canvas.LinkStyleResolver;
-        canvas.LinkStyleResolver = link => link is DatabaseRelationshipLink relationship
-            ? StyleFor(relationship)
-            : previousResolver?.Invoke(link) ?? LinkStyle.Default;
+        canvas.RegisterLinkStyle<DatabaseRelationshipLink>(StyleFor);
 
         return canvas;
     }
@@ -36,36 +34,40 @@ public static class DatabaseDiagramCanvasExtensions
     private static readonly IBrush TableAccent = new SolidColorBrush(Color.FromRgb(68, 158, 118));
     private static readonly IBrush ViewAccent = new SolidColorBrush(Color.FromRgb(76, 140, 220));
     private static readonly IBrush ProcedureAccent = new SolidColorBrush(Color.FromRgb(168, 116, 214));
-    private static readonly IBrush NodeBackground = new SolidColorBrush(Color.FromRgb(30, 35, 43));
-    private static readonly IBrush NodeBorder = new SolidColorBrush(Color.FromRgb(72, 82, 96));
-    private static readonly IBrush MutedText = new SolidColorBrush(Color.FromRgb(176, 186, 200));
 
     private static Control BuildColumnNode(
         DatabaseObjectNode node,
         string kind,
         IEnumerable<DatabaseColumn> columns,
         IBrush accent,
-        string tag)
-        => BuildShell(node, kind, accent, tag, BuildColumnRows(columns));
+        string tag,
+        DiagramRenderContext context)
+        => BuildShell(node, kind, accent, tag, BuildColumnRows(columns, context), context);
 
-    private static Control BuildProcedureNode(DatabaseProcedureNode node)
-        => BuildShell(node, "PROCEDURE", ProcedureAccent, "database-procedure-node", BuildParameterRows(node.Parameters));
+    private static Control BuildProcedureNode(DatabaseProcedureNode node, DiagramRenderContext context)
+        => BuildShell(node, "PROCEDURE", ProcedureAccent, "database-procedure-node", BuildParameterRows(node.Parameters, context), context);
 
-    private static Control BuildShell(DatabaseObjectNode node, string kind, IBrush accent, string tag, IEnumerable<Control> rows)
+    private static Control BuildShell(
+        DatabaseObjectNode node,
+        string kind,
+        IBrush accent,
+        string tag,
+        IEnumerable<Control> rows,
+        DiagramRenderContext context)
     {
         var rowPanel = new StackPanel { Spacing = 2 };
         foreach (var row in rows)
             rowPanel.Children.Add(row);
 
         if (rowPanel.Children.Count == 0)
-            rowPanel.Children.Add(new TextBlock { Text = "No fields", Foreground = MutedText, FontSize = 11 });
+            rowPanel.Children.Add(new TextBlock { Text = "No fields", Foreground = context.Palette.LinkStroke, FontSize = 11 });
 
         return new Border
         {
             Tag = tag,
             MinWidth = 220,
-            Background = NodeBackground,
-            BorderBrush = NodeBorder,
+            Background = context.Palette.NodeBackground,
+            BorderBrush = context.Palette.NodeBorder,
             BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(7),
             ClipToBounds = true,
@@ -97,17 +99,18 @@ public static class DatabaseDiagramCanvasExtensions
         };
     }
 
-    private static IEnumerable<Control> BuildColumnRows(IEnumerable<DatabaseColumn> columns)
+    private static IEnumerable<Control> BuildColumnRows(IEnumerable<DatabaseColumn> columns, DiagramRenderContext context)
         => columns.Select(column => BuildRow(
             column.IsPrimaryKey ? "PK" : column.IsForeignKey ? "FK" : "",
             column.Name,
             column.DataType,
-            column.IsNullable ? "null" : "not null"));
+            column.IsNullable ? "null" : "not null",
+            context));
 
-    private static IEnumerable<Control> BuildParameterRows(IEnumerable<DatabaseParameter> parameters)
-        => parameters.Select(parameter => BuildRow(parameter.Direction, parameter.Name, parameter.DataType, ""));
+    private static IEnumerable<Control> BuildParameterRows(IEnumerable<DatabaseParameter> parameters, DiagramRenderContext context)
+        => parameters.Select(parameter => BuildRow(parameter.Direction, parameter.Name, parameter.DataType, "", context));
 
-    private static Control BuildRow(string badge, string name, string type, string suffix)
+    private static Control BuildRow(string badge, string name, string type, string suffix, DiagramRenderContext context)
     {
         var grid = new Grid
         {
@@ -115,10 +118,11 @@ public static class DatabaseDiagramCanvasExtensions
             MinHeight = 20,
         };
 
-        grid.Children.Add(Cell(badge, MutedText, 0, FontWeight.SemiBold));
-        grid.Children.Add(Cell(name, Brushes.White, 1, FontWeight.Normal));
-        grid.Children.Add(Cell(type, MutedText, 2, FontWeight.Normal));
-        grid.Children.Add(Cell(suffix, MutedText, 3, FontWeight.Normal));
+        var muted = context.Palette.LinkStroke;
+        grid.Children.Add(Cell(badge, muted, 0, FontWeight.SemiBold));
+        grid.Children.Add(Cell(name, context.Palette.NodeText, 1, FontWeight.Normal));
+        grid.Children.Add(Cell(type, muted, 2, FontWeight.Normal));
+        grid.Children.Add(Cell(suffix, muted, 3, FontWeight.Normal));
         return grid;
     }
 

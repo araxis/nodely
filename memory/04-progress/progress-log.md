@@ -3,6 +3,16 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-04 — v0.5.0 adoption polish
+
+- Public API: `DiagramCanvas` gained command-state helpers plus `CommandStateChanged` for toolbar binding.
+- Samples: `Nodely.Demo` now includes workflow, state machine, inspector, and extensibility scenes with a
+  command-aware toolbar; `Nodely.QuickStart` was added as a minimal copyable Avalonia app.
+- Docs: recipes guide added for minimal setup, toolbar state, overlays, and save/load custom nodes.
+- Version: package metadata moved to `0.5.0`; README/changelog/status updated.
+- **Verified:** build 0/0; `dotnet test` -> Core 109/109 + Avalonia 41/41 (150 total); `dotnet pack` ->
+  four packages + symbols; docs build green.
+
 ## 2026-06-04 — v0.4.0 hardening and editor polish
 
 - Editor history: z-order changes, group/ungroup operations, and bend-point add/remove now have command

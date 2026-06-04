@@ -4,6 +4,7 @@
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/Nodely.Demo/Nodely.Demo.csproj" />
+    <Project Path="samples/Nodely.QuickStart/Nodely.QuickStart.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Nodely.Algorithms/Nodely.Algorithms.csproj" />

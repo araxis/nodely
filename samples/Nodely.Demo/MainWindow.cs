@@ -25,8 +25,8 @@ public sealed class TaskNode : NodeModel
 
     public override NodeModel Clone() => new TaskNode(Position, Title ?? string.Empty) { Status = Status, Size = Size };
 
-    // Persist Status across save/load (the snapshot only stores built-in fields otherwise).
-    public override IReadOnlyDictionary<string, object?> GetExtraData() => new Dictionary<string, object?> { ["Status"] = Status };
+    public override IReadOnlyDictionary<string, object?> GetExtraData() =>
+        new Dictionary<string, object?> { ["Status"] = Status };
 
     public override void SetExtraData(IReadOnlyDictionary<string, object?> data)
     {
@@ -35,31 +35,70 @@ public sealed class TaskNode : NodeModel
     }
 }
 
+public sealed class SignalPort : PortModel
+{
+    public SignalPort(NodeModel parent, PortAlignment alignment, string role) : base(parent, alignment) => Role = role;
+
+    public string Role { get; }
+}
+
+public sealed class FlowLink : LinkModel
+{
+    public FlowLink(PortModel sourcePort, PortModel targetPort) : base(sourcePort, targetPort) { }
+
+    public bool Critical { get; set; }
+}
+
+public sealed class HighlightGroup : GroupModel
+{
+    public HighlightGroup(IEnumerable<NodeModel> children, string title) : base(children, padding: 34) => Title = title;
+}
+
+public sealed class GuideLayer : DiagramLayer
+{
+    public override void Render(DrawingContext context)
+    {
+        var diagram = Diagram;
+        if (diagram == null)
+            return;
+
+        var pen = new Pen(new SolidColorBrush(Color.FromArgb(90, 86, 205, 255)), 1, DashStyle.Dash);
+        foreach (var node in diagram.Nodes)
+            if (node.Size is { } size)
+            {
+                var y = node.Position.Y + size.Height + 24;
+                context.DrawLine(pen, new Point(node.Position.X - 18, y), new Point(node.Position.X + size.Width + 18, y));
+            }
+    }
+}
+
 public sealed class MainWindow : Window
 {
     private readonly ContentControl _host = new();
     private NodelyPalette _palette = NodelyPalettes.Dark;
     private NodelyDiagram? _currentDiagram;
+    private DiagramCanvas? _currentCanvas;
     private string? _savedJson;
 
     public MainWindow()
     {
-        Title = "Nodely — Gallery";
-        Width = 1100;
-        Height = 720;
+        Title = "Nodely Gallery";
+        Width = 1180;
+        Height = 760;
 
-        var bar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(10) };
-        bar.Children.Add(SceneButton("Workflow", BuildWorkflow));
-        bar.Children.Add(SceneButton("State machine", BuildStateMachine));
-        bar.Children.Add(SceneButton("Inspector (read-only)", BuildInspector));
-        bar.Children.Add(new Border { Width = 24 });
-        bar.Children.Add(ToolButton("Toggle theme", ToggleTheme));
-        bar.Children.Add(ToolButton("Save", Save));
-        bar.Children.Add(ToolButton("Load", Load));
+        var scenes = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(10) };
+        scenes.Children.Add(SceneButton("Workflow", BuildWorkflow));
+        scenes.Children.Add(SceneButton("State machine", BuildStateMachine));
+        scenes.Children.Add(SceneButton("Inspector", BuildInspector));
+        scenes.Children.Add(SceneButton("Extensibility", BuildExtensibility));
+        scenes.Children.Add(new Border { Width = 24 });
+        scenes.Children.Add(ToolButton("Theme", ToggleTheme));
+        scenes.Children.Add(ToolButton("Save", Save));
+        scenes.Children.Add(ToolButton("Load", Load));
 
         var root = new DockPanel();
-        DockPanel.SetDock(bar, Dock.Top);
-        root.Children.Add(bar);
+        DockPanel.SetDock(scenes, Dock.Top);
+        root.Children.Add(scenes);
         root.Children.Add(_host);
         Content = root;
 
@@ -68,14 +107,14 @@ public sealed class MainWindow : Window
 
     private Button SceneButton(string text, Func<Control> build)
     {
-        var button = new Button { Content = text };
+        var button = new Button { Content = text, MinWidth = 96 };
         button.Click += (_, _) => _host.Content = build();
         return button;
     }
 
     private static Button ToolButton(string text, Action onClick)
     {
-        var button = new Button { Content = text, MinWidth = 36 };
+        var button = new Button { Content = text, MinWidth = 42 };
         button.Click += (_, _) => onClick();
         return button;
     }
@@ -83,10 +122,8 @@ public sealed class MainWindow : Window
     private void ToggleTheme()
     {
         _palette = _palette == NodelyPalettes.Dark ? NodelyPalettes.Light : NodelyPalettes.Dark;
-        if (_host.Content is Grid grid)
-            foreach (var child in grid.Children)
-                if (child is DiagramCanvas canvas)
-                    canvas.Palette = _palette;
+        if (_currentCanvas != null)
+            _currentCanvas.Palette = _palette;
     }
 
     private void Save()
@@ -100,68 +137,92 @@ public sealed class MainWindow : Window
         if (_savedJson == null)
             return;
 
-        var diagram = new NodelyDiagram();
-        diagram.Options.Links.DefaultTargetMarker = LinkMarker.Arrow;
+        var diagram = NewDiagram();
         DiagramSerializer.Deserialize(diagram, _savedJson, LoadNode);
-        _host.Content = Editor(diagram, registerTask: true);
+        _host.Content = Editor(diagram);
     }
 
-    // Recreates the right node type (preserving its id so links/groups resolve) from a snapshot.
     private static NodeModel LoadNode(NodeSnapshot ns) => ns.Kind == nameof(TaskNode)
         ? new TaskNode(ns.Id, new NodelyPoint(ns.X, ns.Y), ns.Title ?? string.Empty)
-        : new NodeModel(ns.Id, new NodelyPoint(ns.X, ns.Y));
+        : new NodeModel(ns.Id, new NodelyPoint(ns.X, ns.Y)) { Title = ns.Title };
 
-    private Control Editor(NodelyDiagram diagram, bool readOnly = false, bool registerTask = false)
+    private Control Editor(NodelyDiagram diagram, bool readOnly = false, Action<DiagramCanvas>? configureCanvas = null)
     {
         _currentDiagram = diagram;
+
         var canvas = new DiagramCanvas { Diagram = diagram, Palette = _palette, IsReadOnly = readOnly };
-        if (registerTask)
-            RegisterTaskNode(canvas);
+        _currentCanvas = canvas;
+        RegisterTaskNode(canvas);
+        configureCanvas?.Invoke(canvas);
 
         var navigator = new DiagramNavigator
         {
             Diagram = diagram,
-            Width = 200,
-            Height = 130,
+            Width = 210,
+            Height = 136,
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Bottom,
             Margin = new Thickness(12),
         };
 
-        var undo = ToolButton("Undo", canvas.Undo);
-        var redo = ToolButton("Redo", canvas.Redo);
-        void RefreshHistory()
-        {
-            undo.IsEnabled = canvas.CanUndo;
-            redo.IsEnabled = canvas.CanRedo;
-        }
+        var toolbar = BuildEditorToolbar(canvas, diagram, readOnly);
+        return new Grid { Children = { canvas, navigator, toolbar } };
+    }
 
-        canvas.HistoryChanged += RefreshHistory;
-        RefreshHistory();
-
-        var toolbar = new StackPanel
+    private StackPanel BuildEditorToolbar(DiagramCanvas canvas, NodelyDiagram diagram, bool readOnly)
+    {
+        var bar = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = 4,
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Top,
             Margin = new Thickness(12),
-            Children =
-            {
-                ToolButton("+", canvas.ZoomIn),
-                ToolButton("−", canvas.ZoomOut),
-                ToolButton("Fit", () => canvas.ZoomToFit()),
-                ToolButton("Layout", () =>
-                {
-                    canvas.RunAsUndoableMove(() => LayeredLayout.Arrange(diagram));
-                    canvas.ZoomToFit();
-                }),
-                undo,
-                redo,
-            },
         };
 
-        return new Grid { Children = { canvas, navigator, toolbar } };
+        bar.Children.Add(ToolButton("+", canvas.ZoomIn));
+        bar.Children.Add(ToolButton("-", canvas.ZoomOut));
+        bar.Children.Add(ToolButton("Fit", () => canvas.ZoomToFit()));
+
+        var layout = ToolButton("Layout", () =>
+        {
+            canvas.RunAsUndoableMove(() => LayeredLayout.Arrange(diagram));
+            canvas.ZoomToFit();
+        });
+        layout.IsEnabled = !readOnly;
+        bar.Children.Add(layout);
+
+        var copy = ToolButton("Copy", canvas.CopySelection);
+        var cut = ToolButton("Cut", canvas.CutSelection);
+        var paste = ToolButton("Paste", canvas.PasteClipboard);
+        var duplicate = ToolButton("Duplicate", canvas.DuplicateSelection);
+        var group = ToolButton("Group", canvas.GroupSelection);
+        var ungroup = ToolButton("Ungroup", canvas.UngroupSelection);
+        var front = ToolButton("Front", canvas.BringSelectionToFront);
+        var back = ToolButton("Back", canvas.SendSelectionToBack);
+        var undo = ToolButton("Undo", canvas.Undo);
+        var redo = ToolButton("Redo", canvas.Redo);
+
+        foreach (var button in new[] { copy, cut, paste, duplicate, group, ungroup, front, back, undo, redo })
+            bar.Children.Add(button);
+
+        void Refresh()
+        {
+            copy.IsEnabled = canvas.CanCopySelection;
+            cut.IsEnabled = canvas.CanCutSelection;
+            paste.IsEnabled = canvas.CanPasteClipboard;
+            duplicate.IsEnabled = canvas.CanDuplicateSelection;
+            group.IsEnabled = canvas.CanGroupSelection;
+            ungroup.IsEnabled = canvas.CanUngroupSelection;
+            front.IsEnabled = !canvas.IsReadOnly && canvas.HasSelection;
+            back.IsEnabled = !canvas.IsReadOnly && canvas.HasSelection;
+            undo.IsEnabled = !canvas.IsReadOnly && canvas.CanUndo;
+            redo.IsEnabled = !canvas.IsReadOnly && canvas.CanRedo;
+        }
+
+        canvas.CommandStateChanged += Refresh;
+        Refresh();
+        return bar;
     }
 
     private static void RegisterTaskNode(DiagramCanvas canvas) => canvas.RegisterNode<TaskNode>(node => new Border
@@ -182,33 +243,39 @@ public sealed class MainWindow : Window
         },
     });
 
-    private Control BuildWorkflow()
+    private static NodelyDiagram NewDiagram()
     {
         var diagram = new NodelyDiagram();
         diagram.Options.GridSize = 24;
         diagram.Options.Groups.Enabled = true;
         diagram.Options.Links.DefaultTargetMarker = LinkMarker.Arrow;
+        return diagram;
+    }
 
-        var start = diagram.Nodes.Add(new NodeModel(new NodelyPoint(120, 220)) { Title = "Start" });
+    private Control BuildWorkflow()
+    {
+        var diagram = NewDiagram();
+        var start = diagram.Nodes.Add(new NodeModel(new NodelyPoint(120, 230)) { Title = "Start" });
         var build = diagram.Nodes.Add(new TaskNode(new NodelyPoint(420, 160), "Build") { Status = "Running" });
-        var deploy = diagram.Nodes.Add(new TaskNode(new NodelyPoint(420, 320), "Deploy") { Status = "Pending" });
+        var test = diagram.Nodes.Add(new TaskNode(new NodelyPoint(690, 160), "Test") { Status = "Queued" });
+        var deploy = diagram.Nodes.Add(new TaskNode(new NodelyPoint(420, 330), "Deploy") { Status = "Pending" });
 
         var startOut = start.AddPort(PortAlignment.Right);
-        var buildLink = diagram.Links.Add(new LinkModel(startOut, build.AddPort(PortAlignment.Left)));
-        buildLink.Segmentable = true;
-        buildLink.AddVertex(new NodelyPoint(300, 120)); // a draggable bend point — double-click a link to add more, a vertex to remove
-        var deployLink = diagram.Links.Add(new LinkModel(startOut, deploy.AddPort(PortAlignment.Left)));
-        deployLink.Segmentable = true;
-        deployLink.SourceMarker = LinkMarker.Circle; // a circle at the source end (arrow stays at the target)
+        var buildLink = diagram.Links.Add(new LinkModel(startOut, build.AddPort(PortAlignment.Left))) as LinkModel;
+        buildLink!.Segmentable = true;
+        buildLink.AddVertex(new NodelyPoint(300, 120));
+        diagram.Links.Add(new LinkModel(build.AddPort(PortAlignment.Right), test.AddPort(PortAlignment.Left))).AddLabel("green");
+        var deployLink = diagram.Links.Add(new LinkModel(startOut, deploy.AddPort(PortAlignment.Left))) as LinkModel;
+        deployLink!.Segmentable = true;
+        deployLink.SourceMarker = LinkMarker.Circle;
         diagram.Groups.Group(build, deploy);
 
-        return Editor(diagram, registerTask: true);
+        return Editor(diagram);
     }
 
     private Control BuildStateMachine()
     {
-        var diagram = new NodelyDiagram();
-        diagram.Options.Links.DefaultTargetMarker = LinkMarker.Arrow;
+        var diagram = NewDiagram();
         var idle = diagram.Nodes.Add(new NodeModel(new NodelyPoint(0, 0)) { Title = "Idle" });
         var running = diagram.Nodes.Add(new NodeModel(new NodelyPoint(0, 0)) { Title = "Running" });
         var done = diagram.Nodes.Add(new NodeModel(new NodelyPoint(0, 0)) { Title = "Done" });
@@ -218,20 +285,67 @@ public sealed class MainWindow : Window
         diagram.Links.Add(new LinkModel(running, done)).AddLabel("ok");
         diagram.Links.Add(new LinkModel(running, error)).AddLabel("fail");
         diagram.Links.Add(new LinkModel(error, idle)).AddLabel("reset");
+        LayeredLayout.Arrange(diagram);
 
-        return Editor(diagram); // press "Layout" to arrange
+        return Editor(diagram);
     }
 
     private Control BuildInspector()
     {
-        var diagram = new NodelyDiagram();
-        diagram.Options.Links.DefaultTargetMarker = LinkMarker.Arrow;
-        var a = diagram.Nodes.Add(new TaskNode(new NodelyPoint(120, 160), "Ingest") { Status = "Done" });
-        var b = diagram.Nodes.Add(new TaskNode(new NodelyPoint(420, 160), "Transform") { Status = "Done" });
-        var c = diagram.Nodes.Add(new TaskNode(new NodelyPoint(720, 160), "Load") { Status = "Done" });
+        var diagram = NewDiagram();
+        var a = diagram.Nodes.Add(new TaskNode(new NodelyPoint(120, 180), "Ingest") { Status = "Done" });
+        var b = diagram.Nodes.Add(new TaskNode(new NodelyPoint(430, 180), "Transform") { Status = "Done" });
+        var c = diagram.Nodes.Add(new TaskNode(new NodelyPoint(740, 180), "Load") { Status = "Done" });
         diagram.Links.Add(new LinkModel(a.AddPort(PortAlignment.Right), b.AddPort(PortAlignment.Left)));
         diagram.Links.Add(new LinkModel(b.AddPort(PortAlignment.Right), c.AddPort(PortAlignment.Left)));
 
-        return Editor(diagram, readOnly: true, registerTask: true);
+        return Editor(diagram, readOnly: true);
+    }
+
+    private Control BuildExtensibility()
+    {
+        var diagram = NewDiagram();
+        var source = diagram.Nodes.Add(new TaskNode(new NodelyPoint(130, 210), "Source") { Status = "Live" });
+        var route = diagram.Nodes.Add(new TaskNode(new NodelyPoint(430, 140), "Route") { Status = "Balanced" });
+        var sink = diagram.Nodes.Add(new TaskNode(new NodelyPoint(740, 210), "Sink") { Status = "Healthy" });
+
+        var sourcePort = source.AddPort(new SignalPort(source, PortAlignment.Right, "out"));
+        var routeIn = route.AddPort(new SignalPort(route, PortAlignment.Left, "in"));
+        var routeOut = route.AddPort(new SignalPort(route, PortAlignment.Right, "out"));
+        var sinkPort = sink.AddPort(new SignalPort(sink, PortAlignment.Left, "in"));
+
+        diagram.Links.Add(new FlowLink(sourcePort, routeIn) { Critical = true, Segmentable = true }).AddLabel("custom drawer");
+        diagram.Links.Add(new FlowLink(routeOut, sinkPort)).AddLabel("style resolver");
+        diagram.Groups.Add(new HighlightGroup(new[] { source, route, sink }, "Pipeline"));
+
+        return Editor(diagram, configureCanvas: canvas =>
+        {
+            canvas.RegisterPort<SignalPort>(port => new Border
+            {
+                Width = 14,
+                Height = 14,
+                CornerRadius = new CornerRadius(7),
+                Background = port.Role == "out" ? Brushes.DeepSkyBlue : Brushes.MediumSeaGreen,
+                BorderBrush = Brushes.White,
+                BorderThickness = new Thickness(1),
+            });
+            canvas.RegisterGroup<HighlightGroup>(group => new Border
+            {
+                Background = new SolidColorBrush(Color.FromArgb(34, 77, 158, 255)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(77, 158, 255)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(8),
+            });
+            canvas.RegisterLink<FlowLink>((context, ctx) =>
+            {
+                ctx.DrawDefault();
+                if (((FlowLink)ctx.Link).Critical)
+                    context.DrawGeometry(null, new Pen(new SolidColorBrush(Color.FromArgb(110, 255, 208, 90)), 7), ctx.Geometry);
+            });
+            canvas.LinkStyleResolver = link => link is FlowLink { Critical: false }
+                ? new LinkStyle { Stroke = Brushes.MediumSeaGreen, DashStyle = DashStyle.Dash, Width = 2.5 }
+                : LinkStyle.Default;
+            canvas.AddLayer(new GuideLayer());
+        });
     }
 }

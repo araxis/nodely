@@ -245,6 +245,19 @@ Porting the engine surfaced several deliberate seam/scoping decisions:
 What we expected, what we found, why it matters, what we changed.
 -->
 
+## F-043 — Adoption polish needs command state, not more editor features (2026-06-04, v0.5.0)
+
+The next useful release boundary is helping consumers wire real apps quickly:
+
+- **Toolbar friction:** the canvas already had commands (`CopySelection`, `GroupSelection`, `Undo`, etc.), but
+  callers had to inspect selection, clipboard, grouping, history, and read-only state themselves. Added
+  read-only command-state helpers and one `CommandStateChanged` event.
+- **Samples as documentation:** `Nodely.Demo` now shows practical app scenes and the command-aware toolbar;
+  `Nodely.QuickStart` is intentionally tiny so a new consumer can copy the whole app.
+- **Docs recipes:** recipes cover the adoption paths that were too small for full guides: minimal app, toolbar
+  state, overlay layer, and custom-node save/load.
+- **Tests:** Avalonia +4 for selection, clipboard/read-only, grouping, and diagram-swap command state.
+
 ## F-042 — History polish and refresh hardening (2026-06-04, v0.4.0)
 
 The next release is a hardening pass rather than a feature wave. The useful boundary was "make existing editor

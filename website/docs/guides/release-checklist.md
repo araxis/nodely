@@ -1,7 +1,7 @@
 ---
 id: release-checklist
 title: Release checklist
-sidebar_position: 9
+sidebar_position: 10
 ---
 
 # Release checklist

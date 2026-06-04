@@ -82,4 +82,5 @@ diagram.Options.GridSize = 24;            // snap dragged nodes to a 24-pixel gr
 ```
 
 Once you have a canvas running, the natural next step is making the nodes look like *your* data — that's
-[Custom nodes](./guides/custom-nodes.md).
+[Custom nodes](./guides/custom-nodes.md). For copyable app patterns, including command-aware toolbars and
+custom overlays, see [Recipes](./guides/recipes.md).

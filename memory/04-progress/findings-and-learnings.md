@@ -271,26 +271,20 @@ extension seams instead of built-in features; reference impls go in the demo, no
 - **Behavior/input API:** thin `RegisterBehavior/GetBehavior/UnregisterBehavior` pass-throughs on the canvas
   (the `Behavior` + `Trigger*` seams already existed). Added `InternalsVisibleTo` so tests can hit
   `ResolveLinkDrawer/Style`.
-- **Docs:** new Docusaurus "Extensibility" guide (the seam map); site builds green.
+- **Docs:** new "Extensibility" guide (the seam map); site builds green.
 - **Tests:** Core +6 (metadata, IDiagramLayout, extras, 3× validation); Avalonia +5 (port/group templates,
   AddLayer/RemoveLayer, adorner, link drawer/style resolution). Core **103**, Avalonia **34** (137). 0/0 both TFMs.
 
-## F-040 — Documentation site: Docusaurus + GitHub Pages pipeline (2026-06-03, docs)
+## F-040 — Documentation site + GitHub Pages pipeline (2026-06-03, docs)
 
-- **Generator:** Docusaurus (user preference over DocFX — modern/popular static site). Lean "classic" setup in
-  `website/`: docs-only (`routeBasePath: '/'`, blog off), dark-default theme tuned to the blue accent. Curated
-  guides: intro (homepage, `slug: /`), getting-started, custom-nodes, links/markers/labels/vertices, selection
-  & clipboard, undo/redo, serialization, layout, theming, architecture — all written from the verified APIs.
+- **Site shape:** lean docs-only setup in `website/`, dark-default theme tuned to the blue accent. Curated
+  guides: intro homepage, getting-started, custom-nodes, links/markers/labels/vertices, selection & clipboard,
+  undo/redo, serialization, layout, theming, architecture — all written from the verified APIs.
 - **Pipeline:** `.github/workflows/docs.yml` — Node 20 + `npm ci` + `npm run build`, deployed via the official
   GitHub Pages actions (`upload-pages-artifact` + `deploy-pages`), triggered on `website/**`. One-time repo
-  setup: **Settings → Pages → Source: "GitHub Actions"**. `url`/`baseUrl`/org/repo are placeholders for
-  `https://nodely.github.io/nodely/` (update when the real remote exists).
-- **GOTCHA (would also fail CI):** webpack ≥ 5.99 tightened `ProgressPlugin` schema validation, which breaks the
-  `webpackbar` that Docusaurus 3.6.3 depends on (it passes `name`/`color`) → build fails *"Progress Plugin …
-  unknown property 'name'"*. Fix: npm `overrides` pinning `webpack` to `5.97.1`. `npm ci` resolves the same
-  transitive webpack, so this is required for CI, not just local — caught by building locally first.
-- **MDX note:** wrap C# generics like `RegisterNode<TNode>` in backticks in prose — MDX v3 parses a bare `<` as
-  JSX and fails. Kept `onBrokenLinks: 'throw'`; local build is green (1306 deps, both client+server compiled).
+  setup: **Settings → Pages → Source: "GitHub Actions"**.
+- **Markup note:** wrap C# generics like `RegisterNode<TNode>` in backticks in prose so the docs build treats
+  them as code, not markup. Local build is green before publishing.
 - `package-lock.json` is committed (CI uses `npm ci`); `node_modules/` and `build/` are gitignored.
 
 ## F-039 — Circle link marker (last deferred marker shape) (2026-06-03, post-0.1.0 backlog 7)

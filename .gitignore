@@ -39,8 +39,8 @@ packages/
 # MSBuild binary logs
 *.binlog
 
-# Docusaurus docs site (website/). package-lock.json IS committed (CI uses npm ci).
+# Documentation site. package-lock.json IS committed (CI uses npm ci).
 website/node_modules/
 website/build/
-website/.docusaurus/
+website/docs/.vitepress/cache/
 website/.cache-loader/

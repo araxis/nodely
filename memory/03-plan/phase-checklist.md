@@ -2,6 +2,15 @@
 
 Tick items as completed. Mirrors `development-plan.md`. `[ ]` todo, `[~]` in progress, `[x]` done.
 
+## Post-M4 — side package roadmap
+- [x] Add `Nodely.Avalonia.Uml` package targeting `net8.0;net10.0`.
+- [x] Add structural UML nodes and relationship links.
+- [x] Add `UseUmlNodes()` renderer registration, serializer registration, and `UmlNodeFactory`.
+- [x] Generalize side-package package workflow selection with a package map.
+- [x] Add UML demo scene, documentation guide, and focused tests.
+- [ ] Add `Nodely.Avalonia.Workflow` as the next independent side package.
+- [ ] Add `Nodely.Avalonia.MindMap` as the third independent side package.
+
 ## Post-M4 — v0.7.0 database pack
 - [x] Add `Nodely.Avalonia.Database` package targeting `net8.0;net10.0`.
 - [x] Add database nodes, columns, parameters, ports, and relationship links.

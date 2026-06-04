@@ -10,6 +10,7 @@ using Nodely.Anchors;
 using Nodely.Avalonia;
 using Nodely.Avalonia.Controls;
 using Nodely.Avalonia.Database;
+using Nodely.Avalonia.Uml;
 using Nodely.Models;
 using Nodely.Serialization;
 using NodelyPoint = Nodely.Geometry.Point;
@@ -128,6 +129,7 @@ public sealed class MainWindow : Window
         scenes.Children.Add(SceneButton("Inspector", BuildInspector));
         scenes.Children.Add(SceneButton("Extensibility", BuildExtensibility));
         scenes.Children.Add(SceneButton("Database", BuildDatabase));
+        scenes.Children.Add(SceneButton("UML", BuildUml));
         scenes.Children.Add(new Border { Width = 24 });
         scenes.Children.Add(ToolButton("Theme", ToggleTheme));
         scenes.Children.Add(ToolButton("Save", Save));
@@ -180,6 +182,7 @@ public sealed class MainWindow : Window
     }
 
     private static DiagramSerializationRegistry CreateSerializationRegistry() => DatabaseNodeFactory.CreateRegistry()
+        .UseUmlNodes()
         .RegisterNode(TaskNode.ModelKindKey, ns => new TaskNode(ns.Id, new NodelyPoint(ns.X, ns.Y), ns.Title ?? string.Empty))
         .RegisterPort(SignalPort.ModelKindKey, (ps, parent) =>
             new SignalPort(ps.Id, parent, Enum.Parse<PortAlignment>(ps.Alignment)))
@@ -433,5 +436,76 @@ public sealed class MainWindow : Window
         procedureDependency.AddLabel("refresh reads", 0.5, new NodelyPoint(0, 14));
 
         return Editor(diagram, configureCanvas: canvas => canvas.UseDatabaseNodes());
+    }
+
+    private Control BuildUml()
+    {
+        var diagram = NewDiagram();
+
+        var domain = diagram.Nodes.Add(new UmlPackageNode(new NodelyPoint(80, 80), "Sales.Domain"));
+
+        var customer = diagram.Nodes.Add(new UmlClassNode(new NodelyPoint(120, 180), "Customer")
+        {
+            IsAbstract = true,
+        });
+        customer.Stereotypes.Add("entity");
+        customer.Members.Add(new UmlMember("Id", "Guid", UmlVisibility.Public));
+        customer.Members.Add(new UmlMember("Name", "string", UmlVisibility.Private));
+        var rename = new UmlOperation("Rename", "void");
+        rename.Parameters.Add(new UmlParameter("name", "string"));
+        customer.Operations.Add(rename);
+
+        var preferred = diagram.Nodes.Add(new UmlClassNode(new NodelyPoint(120, 430), "PreferredCustomer"));
+        preferred.Members.Add(new UmlMember("DiscountRate", "decimal"));
+
+        var order = diagram.Nodes.Add(new UmlClassNode(new NodelyPoint(450, 180), "Order"));
+        order.Members.Add(new UmlMember("OrderId", "Guid"));
+        order.Members.Add(new UmlMember("Status", "OrderStatus"));
+        order.Operations.Add(new UmlOperation("Submit", "void"));
+
+        var status = diagram.Nodes.Add(new UmlEnumNode(new NodelyPoint(780, 170), "OrderStatus"));
+        status.Literals.Add("Draft");
+        status.Literals.Add("Submitted");
+        status.Literals.Add("Cancelled");
+
+        var repository = diagram.Nodes.Add(new UmlInterfaceNode(new NodelyPoint(780, 410), "IOrderRepository"));
+        repository.Operations.Add(new UmlOperation("Get", "Order"));
+        repository.Operations.Add(new UmlOperation("Save", "void"));
+
+        var sqlRepository = diagram.Nodes.Add(new UmlClassNode(new NodelyPoint(450, 430), "SqlOrderRepository"));
+        sqlRepository.Stereotypes.Add("adapter");
+        sqlRepository.Operations.Add(new UmlOperation("Save", "void"));
+
+        var note = diagram.Nodes.Add(new UmlNoteNode(new NodelyPoint(1060, 180), "Structural UML nodes are plain Nodely models and serialize with the UML registry."));
+
+        diagram.Links.Add(new UmlRelationshipLink(preferred, customer, UmlRelationshipKind.Inheritance)
+        {
+            Label = "inherits",
+        });
+        diagram.Links.Add(new UmlRelationshipLink(customer, order, UmlRelationshipKind.Aggregation)
+        {
+            SourceMultiplicity = "1",
+            TargetMultiplicity = "0..*",
+            Label = "places",
+        });
+        diagram.Links.Add(new UmlRelationshipLink(order, status, UmlRelationshipKind.Association)
+        {
+            Label = "status",
+        });
+        diagram.Links.Add(new UmlRelationshipLink(sqlRepository, repository, UmlRelationshipKind.Realization)
+        {
+            Label = "implements",
+        });
+        diagram.Links.Add(new UmlRelationshipLink(sqlRepository, order, UmlRelationshipKind.Dependency)
+        {
+            Label = "persists",
+        });
+        diagram.Links.Add(new UmlRelationshipLink(domain, customer, UmlRelationshipKind.Dependency));
+        diagram.Links.Add(new UmlRelationshipLink(note, order, UmlRelationshipKind.Dependency)
+        {
+            Label = "documents",
+        });
+
+        return Editor(diagram, configureCanvas: canvas => canvas.UseUmlNodes());
     }
 }

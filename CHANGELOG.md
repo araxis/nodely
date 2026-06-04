@@ -4,6 +4,22 @@ All notable changes to Nodely are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [Nodely.Avalonia.Uml 0.1.0] - 2026-06-04
+
+First UML side-package release.
+
+### Added
+- **UML package:** `Nodely.Avalonia.Uml` adds class, interface, enum, package, and note nodes.
+- **UML relationships:** association, inheritance, realization, dependency, aggregation, and composition links
+  include label and multiplicity metadata.
+- **Renderer registration:** `DiagramCanvas.UseUmlNodes()` registers UML node renderers, link styling, and UML
+  relationship markers in one call.
+- **Serialization registration:** `DiagramSerializationRegistry.UseUmlNodes()` restores UML nodes and links with
+  stable model-kind keys.
+- **Package workflow:** side-package selection now uses a package map so future side packages can be added
+  without duplicating tag/dispatch branch logic.
+- **Demo and docs:** the desktop gallery and documentation site include a structural UML scene and guide.
+
 ## [0.7.0] - 2026-06-04
 
 Database pack and extension-contract release.

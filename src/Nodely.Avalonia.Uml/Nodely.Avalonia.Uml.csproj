@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>Nodely.Avalonia.Uml</PackageId>
+    <Title>Nodely.Avalonia.Uml</Title>
+    <Version>$(NodelyAvaloniaUmlVersion)</Version>
+    <PackageVersion>$(NodelyAvaloniaUmlVersion)</PackageVersion>
+    <Description>Optional UML diagram node pack for Nodely Avalonia: class, interface, enum, package, note nodes, and UML relationship links.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nodely.Avalonia\Nodely.Avalonia.csproj" />
+    <ProjectReference Include="..\Nodely.Serialization\Nodely.Serialization.csproj" />
+  </ItemGroup>
+
+</Project>

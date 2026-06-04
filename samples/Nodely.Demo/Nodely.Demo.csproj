@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Nodely.Avalonia.Database\Nodely.Avalonia.Database.csproj" />
+    <ProjectReference Include="..\..\src\Nodely.Avalonia.Uml\Nodely.Avalonia.Uml.csproj" />
     <ProjectReference Include="..\..\src\Nodely.Avalonia\Nodely.Avalonia.csproj" />
     <ProjectReference Include="..\..\src\Nodely.Algorithms\Nodely.Algorithms.csproj" />
     <ProjectReference Include="..\..\src\Nodely.Serialization\Nodely.Serialization.csproj" />

@@ -16,6 +16,7 @@ namespace Nodely.Models.Base;
 public abstract class BaseLinkModel : SelectableModel, IHasBounds, ILinkable
 {
     private readonly List<BaseLinkModel> _links = new();
+    private bool _refreshing;
 
     /// <summary>Raised when the source anchor changes (link, old, new).</summary>
     public event Action<BaseLinkModel, Anchor, Anchor>? SourceChanged;
@@ -91,8 +92,20 @@ public abstract class BaseLinkModel : SelectableModel, IHasBounds, ILinkable
     /// <inheritdoc />
     public override void Refresh()
     {
-        GeneratePath();
-        base.Refresh();
+        if (_refreshing)
+            return;
+
+        _refreshing = true;
+        try
+        {
+            GeneratePath();
+            base.Refresh();
+            RefreshLinks();
+        }
+        finally
+        {
+            _refreshing = false;
+        }
     }
 
     /// <summary>Refreshes every link attached to this one.</summary>
@@ -169,8 +182,7 @@ public abstract class BaseLinkModel : SelectableModel, IHasBounds, ILinkable
             var router = Router ?? Diagram.Options.Links.DefaultRouter;
             var pathGenerator = PathGenerator ?? Diagram.Options.Links.DefaultPathGenerator;
 
-            // Phase 2: the default router/generator may be null until Phase 4 wires them up. Until then the
-            // link still attaches and its anchors resolve; only the drawable path is deferred.
+            // Consumers can set either default to null to attach links without producing drawable paths.
             if (router != null && pathGenerator != null)
             {
                 var route = router.GetRoute(Diagram, this);

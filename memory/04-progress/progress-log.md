@@ -3,6 +3,17 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-04 — v0.4.0 hardening and editor polish
+
+- Editor history: z-order changes, group/ungroup operations, and bend-point add/remove now have command
+  coverage and route through the canvas undo stack.
+- Refresh correctness: link label edits refresh their parent link, and link-to-link dependents refresh when the
+  target link reroutes.
+- Hardening: warnings-as-errors enabled; unsupported link factory source models now throw an argument exception.
+- Docs: undo/redo and selection guides updated; release checklist guide added to the static docs site.
+- Version: package metadata moved to `0.4.0`; README/changelog/status updated.
+- **Verified:** build 0/0; `dotnet test` → Core 109/109 + Avalonia 37/37 (146 total).
+
 ## 2026-06-03 — Phase 14 complete: docs, gallery, packaging → MILESTONE M4 (RELEASE v0.1.0) 🎉
 
 - Packaging: `Directory.Build.props` v0.1.0 + metadata + symbols; `dotnet pack -c Release` produces 4

@@ -52,11 +52,25 @@ diagram.SendToFront(model);
 diagram.SendToBack(model);
 ```
 
+Calling the canvas methods records the order change in the normal undo stack.
+
+## Groups
+
+```csharp
+diagram.Options.Groups.Enabled = true;
+
+canvas.GroupSelection();
+canvas.UngroupSelection();
+canvas.ToggleGroupingSelection(); // group if possible, otherwise ungroup
+```
+
+The canvas methods leave child nodes on the diagram and record the group edit as one undo step.
+
 ## The right-click menu
 
-Right-clicking the canvas opens a menu with Delete, Duplicate, Bring to front, Send to back, Select all, and
-Zoom to fit. If you right-click a model that isn't selected, it gets selected first, so the menu always acts on
-whatever you clicked.
+Right-clicking the canvas opens a menu with Delete, Duplicate, Group, Ungroup, Bring to front, Send to back,
+Select all, and Zoom to fit. If you right-click a model that isn't selected, it gets selected first, so the menu
+always acts on whatever you clicked.
 
 ## Read-only mode
 

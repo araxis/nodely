@@ -14,8 +14,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
 
-    <!-- Warnings-as-errors gets switched on in a later hardening pass once the API is real. -->
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
     <Authors>Nodely contributors</Authors>
     <Product>Nodely</Product>
@@ -23,8 +22,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
 
-    <!-- Packaging. Set the real repo URL once a remote exists; SourceLink wires up then too. -->
-    <Version>0.3.0</Version>
+    <Version>0.4.0</Version>
     <PackageProjectUrl>https://github.com/araxis/nodely</PackageProjectUrl>
     <RepositoryUrl>https://github.com/araxis/nodely</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>

@@ -90,7 +90,7 @@ public class SmoothPathGenerator : PathGenerator
         if (anchor is SinglePortAnchor spa)
             return GetCurvePoint(pX, pY, cX, cY, spa.Port.Alignment);
 
-        // ShapeIntersectionAnchor (and future Dynamic/Link anchors): an axis-aligned curve handle.
+        // Shape-based anchors use an axis-aligned curve handle.
         if (Math.Abs(route[0].X - route[1].X) >= Math.Abs(route[0].Y - route[1].Y))
             return first ? new Point(cX, route[0].Y) : new Point(cX, route[1].Y);
 

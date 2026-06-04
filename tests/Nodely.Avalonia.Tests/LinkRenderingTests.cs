@@ -7,6 +7,7 @@ using Avalonia.Input;
 using Avalonia.Threading;
 using Nodely.Avalonia.Controls;
 using Nodely.Models;
+using Nodely.Models.Base;
 using Shouldly;
 using NodelyPoint = Nodely.Geometry.Point;
 
@@ -95,6 +96,29 @@ public class LinkRenderingTests
         Dispatcher.UIThread.RunJobs();
 
         vertex.Selected.ShouldBeTrue();
+    }
+
+    [AvaloniaFact]
+    public void Deleting_a_selected_vertex_is_undoable()
+    {
+        var diagram = new NodelyDiagram();
+        var n1 = diagram.Nodes.Add(new NodeModel(new NodelyPoint(50, 60)) { Title = "A" });
+        var n2 = diagram.Nodes.Add(new NodeModel(new NodelyPoint(320, 200)) { Title = "B" });
+        var link = diagram.Links.Add(new LinkModel(n1.AddPort(PortAlignment.Right), n2.AddPort(PortAlignment.Left)));
+        var vertex = link.AddVertex(new NodelyPoint(200, 110));
+        link.Refresh();
+        var canvas = new DiagramCanvas { Diagram = diagram };
+
+        var window = new Window { Width = 600, Height = 400, Content = canvas };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+        diagram.SelectModel(vertex, unselectOthers: true);
+
+        canvas.DeleteModels(new Model[] { vertex });
+        link.Vertices.ShouldNotContain(vertex);
+
+        canvas.Undo();
+        link.Vertices.ShouldContain(vertex);
     }
 
     [AvaloniaFact]

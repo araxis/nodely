@@ -9,7 +9,7 @@ architecture to Avalonia. Pan/zoom canvas, custom nodes, interactive links, grou
 theming, read-only mode, serialization, undo/redo, and auto-layout — with **no SVG, no JS, no WebView**,
 just Avalonia's native rendering.
 
-> Status: **v0.3.0**. Engine + Avalonia UI are complete and tested (137 tests across the headless engine and
+> Status: **v0.4.0**. Engine + Avalonia UI are complete and tested (146 tests across the headless engine and
 > Avalonia headless UI). See [`CHANGELOG.md`](CHANGELOG.md) and the design notes in [`memory/`](memory/).
 
 ## Why

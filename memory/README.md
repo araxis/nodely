@@ -41,9 +41,11 @@ memory/
 
 ## Quick status
 
-- Phase: **✅ v0.3.0 — extensibility-seams wave on top of v0.2.0.** 137 tests green (Core 103 + Avalonia 34).
+- Phase: **✅ v0.4.0 — hardening and editor-polish release.** 146 tests green (Core 109 + Avalonia 37).
 - v0.1.0: 15 phases (0–14), M1–M4. v0.2.0 (F-027…F-039): editor/interaction wave. v0.3.0 (F-041): 10 extension
   seams (render hooks for links/ports/groups, custom layers, adorners, validation delegates, behaviors,
   IDiagramLayout, Tag/Data bag, serialization extras) — lean framework, not built-in features.
+- v0.4.0 (F-042): undoable z-order/group/bend-point edits, label/dependent-link refresh fixes,
+  warnings-as-errors, and release checklist docs.
 - Docs: static documentation site (F-040) + Extensibility guide; GitHub Pages pipeline.
 - Last updated: 2026-06-04

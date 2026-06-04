@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Avalonia;
 using Avalonia.Automation.Peers;
 using Avalonia.Controls;
@@ -20,7 +21,7 @@ namespace Nodely.Avalonia.Controls;
 
 /// <summary>
 /// The Nodely diagramming surface: a viewport bound to a <see cref="Diagram"/>. It hosts the rendering
-/// layers (background grid + nodes; links/adorners in later phases), translates Avalonia pointer/wheel/key
+/// layers (grid, groups, links, nodes, ports, vertices, adorners, and selection), translates Avalonia pointer/wheel/key
 /// input into framework-neutral events fed to the diagram's <c>Trigger*</c> seam (resolving the hit node so
 /// input carries the right model), and reports its size to the diagram via <c>SetContainer</c>.
 /// </summary>
@@ -406,25 +407,88 @@ public class DiagramCanvas : Panel
     }
 
     /// <summary>Brings the selected models to the front of the z-order.</summary>
-    public void BringSelectionToFront()
+    public void BringSelectionToFront() => RunAsUndoableOrder(d =>
     {
-        var d = Diagram;
-        if (d == null)
-            return;
-
         foreach (var model in new List<SelectableModel>(d.GetSelectedModels()))
             d.SendToFront(model);
-    }
+    });
 
     /// <summary>Sends the selected models to the back of the z-order.</summary>
-    public void SendSelectionToBack()
+    public void SendSelectionToBack() => RunAsUndoableOrder(d =>
     {
-        var d = Diagram;
-        if (d == null)
-            return;
-
         foreach (var model in new List<SelectableModel>(d.GetSelectedModels()))
             d.SendToBack(model);
+    });
+
+    /// <summary>Groups the selected top-level nodes as one undoable edit.</summary>
+    public void GroupSelection()
+    {
+        var d = Diagram;
+        if (d == null || IsReadOnly || !d.Options.Groups.Enabled)
+            return;
+
+        var nodes = new List<NodeModel>();
+        foreach (var model in d.GetSelectedModels())
+            if (model is NodeModel { Group: null } node && model is not GroupModel)
+                nodes.Add(node);
+
+        if (nodes.Count < 2)
+            return;
+
+        var group = d.Options.Groups.Factory(d, nodes.ToArray());
+        if (_history != null)
+            _history.Execute(new AddGroupCommand(d, group));
+        else
+            d.Groups.Add(group);
+    }
+
+    /// <summary>Removes the selected groups while leaving their child nodes on the diagram.</summary>
+    public void UngroupSelection()
+    {
+        var d = Diagram;
+        if (d == null || IsReadOnly)
+            return;
+
+        var groups = new List<GroupModel>();
+        foreach (var model in d.GetSelectedModels())
+        {
+            if (model is GroupModel group && !groups.Contains(group))
+                groups.Add(group);
+            else if (model is NodeModel { Group: { } parent } && !groups.Contains(parent))
+                groups.Add(parent);
+        }
+
+        if (groups.Count == 0)
+            return;
+
+        var commands = new List<IDiagramCommand>();
+        foreach (var group in groups)
+            commands.Add(new RemoveGroupCommand(d, group));
+
+        if (_history != null)
+            _history.Execute(commands.Count == 1 ? commands[0] : new CompositeCommand(commands));
+        else
+            foreach (var group in groups)
+                d.Groups.Remove(group);
+    }
+
+    /// <summary>Groups ungrouped selected nodes, or ungroups when the selection already touches a group.</summary>
+    public void ToggleGroupingSelection()
+    {
+        var d = Diagram;
+        if (d == null || IsReadOnly)
+            return;
+
+        foreach (var model in d.GetSelectedModels())
+        {
+            if (model is GroupModel || model is NodeModel { Group: not null })
+            {
+                UngroupSelection();
+                return;
+            }
+        }
+
+        GroupSelection();
     }
 
     /// <summary>Copies the selected nodes to the clipboard (as clones).</summary>
@@ -505,6 +569,43 @@ public class DiagramCanvas : Panel
         }
     }
 
+    private void RunAsUndoableOrder(Action<Diagram> mutate)
+    {
+        var d = Diagram;
+        if (d == null || IsReadOnly)
+            return;
+
+        var before = SnapshotOrders(d);
+        mutate(d);
+        var after = SnapshotOrders(d);
+        if (!OrdersChanged(before, after))
+            return;
+
+        _history?.RecordApplied(new SetModelOrdersCommand(d, before, after));
+    }
+
+    private static Dictionary<SelectableModel, int> SnapshotOrders(Diagram diagram)
+    {
+        var snapshot = new Dictionary<SelectableModel, int>();
+        foreach (var model in diagram.OrderedSelectables)
+            snapshot[model] = model.Order;
+        return snapshot;
+    }
+
+    private static bool OrdersChanged(
+        IReadOnlyDictionary<SelectableModel, int> before,
+        IReadOnlyDictionary<SelectableModel, int> after)
+    {
+        if (before.Count != after.Count)
+            return true;
+
+        foreach (var entry in before)
+            if (!after.TryGetValue(entry.Key, out var order) || order != entry.Value)
+                return true;
+
+        return false;
+    }
+
     private void OnContextRequested(object? sender, ContextRequestedEventArgs e)
     {
         var d = Diagram;
@@ -540,6 +641,9 @@ public class DiagramCanvas : Panel
         {
             _contextMenu.Items.Add(BuildMenuItem("Delete", () => DeleteModels(new List<Model>(d.GetSelectedModels()))));
             _contextMenu.Items.Add(BuildMenuItem("Duplicate", DuplicateSelection));
+            _contextMenu.Items.Add(new Separator());
+            _contextMenu.Items.Add(BuildMenuItem("Group", GroupSelection));
+            _contextMenu.Items.Add(BuildMenuItem("Ungroup", UngroupSelection));
             _contextMenu.Items.Add(new Separator());
             _contextMenu.Items.Add(BuildMenuItem("Bring to front", BringSelectionToFront));
             _contextMenu.Items.Add(BuildMenuItem("Send to back", SendSelectionToBack));
@@ -585,16 +689,30 @@ public class DiagramCanvas : Panel
         if (d == null || _history == null || IsReadOnly || models.Count == 0)
             return;
 
+        var groups = new List<GroupModel>();
+        var vertices = new List<LinkVertexModel>();
         var nodes = new List<NodeModel>();
         foreach (var model in models)
-            if (model is NodeModel node && !node.Locked)
+        {
+            if (model is GroupModel group && !group.Locked)
+                groups.Add(group);
+            else if (model is LinkVertexModel vertex && !vertex.Locked)
+                vertices.Add(vertex);
+            else if (model is NodeModel node && !node.Locked)
                 nodes.Add(node);
+        }
 
         var deletedNodes = new HashSet<NodeModel>(nodes);
         var commands = new List<IDiagramCommand>();
 
+        foreach (var group in groups)
+            commands.Add(new RemoveGroupCommand(d, group));
+
         foreach (var node in nodes)
             commands.Add(new RemoveNodeCommand(d, node));
+
+        foreach (var vertex in vertices)
+            commands.Add(new RemoveLinkVertexCommand(vertex.Parent, vertex));
 
         foreach (var model in models)
         {
@@ -820,16 +938,22 @@ public class DiagramCanvas : Panel
     {
         if (model is LinkVertexModel vertex)
         {
-            vertex.Parent.Vertices.Remove(vertex);
-            vertex.Parent.Refresh();
+            var command = new RemoveLinkVertexCommand(vertex.Parent, vertex);
+            if (_history != null)
+                _history.Execute(command);
+            else
+                command.Execute();
             return true;
         }
 
         if (model is BaseLinkModel { Segmentable: true } link)
         {
             var point = diagram.GetRelativeMousePoint(screen.X, screen.Y);
-            link.Vertices.Insert(BestVertexIndex(link, point), new LinkVertexModel(link, point));
-            link.Refresh();
+            var command = new AddLinkVertexCommand(link, new LinkVertexModel(link, point), BestVertexIndex(link, point));
+            if (_history != null)
+                _history.Execute(command);
+            else
+                command.Execute();
             return true;
         }
 
@@ -940,6 +1064,13 @@ public class DiagramCanvas : Panel
         if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.Key == Key.A)
         {
             d.SelectAll();
+            e.Handled = true;
+            return;
+        }
+
+        if (!IsReadOnly && e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Alt) && e.Key == Key.G)
+        {
+            ToggleGroupingSelection();
             e.Handled = true;
             return;
         }

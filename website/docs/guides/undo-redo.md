@@ -27,9 +27,10 @@ flowchart LR
     undo --> redo["Ctrl+Y reapplies it"]
 ```
 
-That covers adding nodes and links, finishing a drag, and deleting (including the links a deleted node took with
-it, so undo brings them all back). Anything the history itself does while undoing or redoing is deliberately not
-re-recorded, and the diagram's starting contents aren't undoable — only the edits you make from there.
+That covers adding nodes and links, finishing a drag, deleting (including the links a deleted node took with
+it), z-order changes, group/ungroup operations, and bend-point add/remove. Anything the history itself does
+while undoing or redoing is deliberately not re-recorded, and the diagram's starting contents aren't undoable —
+only the edits you make from there.
 
 ## A gesture is one step
 
@@ -43,13 +44,25 @@ canvas.RunAsUndoableMove(() => LayeredLayout.Arrange(diagram));
 
 Under the covers that opens a transaction, runs your change, and records the net movement as one command.
 
+## Grouping and ordering
+
+Canvas helpers record their work automatically:
+
+```csharp
+canvas.GroupSelection();
+canvas.UngroupSelection();
+canvas.ToggleGroupingSelection();
+
+canvas.BringSelectionToFront();
+canvas.SendSelectionToBack();
+```
+
+These are the methods to call from toolbar buttons and context-menu actions when you want the normal undo stack
+to stay coherent.
+
 ## Going lower
 
 The whole thing is built on a small command model in `Nodely.Commands` — `IDiagramCommand`, `UndoRedoStack`,
-and concrete commands like `AddNodeCommand`, `MoveNodeCommand`, and `CompositeCommand`. You can drive that
-directly for a headless or custom editor, but for the normal canvas you won't usually need to.
-
-::: info Not yet undoable
-Editing vertices and labels, group operations, and z-order changes don't go through the history yet, so they
-can't be undone today.
-:::
+and concrete commands like `AddNodeCommand`, `MoveNodeCommand`, `SetModelOrdersCommand`,
+`AddGroupCommand`, and `CompositeCommand`. You can drive that directly for a headless or custom editor, but
+for the normal canvas you won't usually need to.

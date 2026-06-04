@@ -1,0 +1,48 @@
+---
+id: release-checklist
+title: Release checklist
+sidebar_position: 9
+---
+
+# Release checklist
+
+Use this checklist for each package release.
+
+## Prepare
+
+1. Update `Directory.Build.props` with the new package version.
+2. Update `CHANGELOG.md`, `README.md`, and any docs that mention the current version or test count.
+3. Run the wording scan before staging so branch names, commit messages, docs, comments, and generated files stay neutral.
+
+## Validate locally
+
+```powershell
+dotnet build Nodely.slnx --configuration Release
+dotnet test Nodely.slnx --configuration Release --no-build --verbosity normal
+dotnet pack Nodely.slnx --configuration Release --no-build --output artifacts/packages
+
+npm --prefix website ci --ignore-scripts --dry-run
+npm --prefix website run build
+```
+
+Inspect `artifacts/packages` for all four `.nupkg` files and matching `.snupkg` symbol packages:
+
+- `Nodely.Core`
+- `Nodely.Avalonia`
+- `Nodely.Algorithms`
+- `Nodely.Serialization`
+
+## Publish
+
+1. Merge the release PR to `main`.
+2. Confirm `CI`, `Package`, and `Docs` are green on `main`.
+3. Create and push a tag named `vX.Y.Z`.
+4. Confirm the `Package` workflow publishes from the tag using the `NUGET_API_KEY` repository secret.
+5. Create a GitHub release from the changelog entry.
+
+## Verify
+
+1. Confirm NuGet lists the new version for all four packages.
+2. Confirm the docs site is live at `https://araxis.github.io/nodely/`.
+3. Confirm `README.md` badges resolve.
+4. Keep the working tree clean after pruning merged release branches.

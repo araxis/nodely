@@ -91,10 +91,7 @@ public class NodeModel : MovableModel, IHasBounds, IHasShape, ILinkable
     public void RefreshLinks()
     {
         foreach (var link in Links)
-        {
             link.Refresh();
-            link.RefreshLinks();
-        }
     }
 
     /// <summary>Marks all ports as uninitialized and refreshes them (forces re-measure).</summary>

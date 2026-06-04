@@ -1,10 +1,12 @@
 name: Docs
 
-# Builds the Docusaurus site in website/ and publishes it to GitHub Pages.
-# One-time setup in the repo: Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
-
 on:
   push:
+    branches: [main]
+    paths:
+      - 'website/**'
+      - '.github/workflows/docs.yml'
+  pull_request:
     branches: [main]
     paths:
       - 'website/**'
@@ -42,6 +44,7 @@ jobs:
 
   deploy:
     needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

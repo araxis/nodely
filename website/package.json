@@ -2,25 +2,16 @@
   "name": "nodely-docs",
   "version": "0.0.0",
   "private": true,
-  "description": "Documentation site for Nodely (Avalonia diagram toolkit), built with Docusaurus.",
+  "description": "Documentation site for Nodely.",
   "scripts": {
-    "docusaurus": "docusaurus",
-    "start": "docusaurus start",
-    "build": "docusaurus build",
-    "serve": "docusaurus serve",
-    "clear": "docusaurus clear"
+    "start": "vitepress dev docs --host 0.0.0.0",
+    "build": "vitepress build docs",
+    "serve": "vitepress preview docs --host 0.0.0.0"
   },
-  "dependencies": {
-    "@docusaurus/core": "3.6.3",
-    "@docusaurus/preset-classic": "3.6.3",
-    "@docusaurus/theme-mermaid": "^3.6.3",
-    "clsx": "^2.1.1",
-    "prism-react-renderer": "^2.4.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  },
-  "overrides": {
-    "webpack": "5.97.1"
+  "devDependencies": {
+    "mermaid": "11.15.0",
+    "vitepress": "1.6.4",
+    "vitepress-plugin-mermaid": "2.0.17"
   },
   "browserslist": {
     "production": [
@@ -35,6 +26,6 @@
     ]
   },
   "engines": {
-    "node": ">=18.0"
+    "node": ">=18.0.0"
   }
 }

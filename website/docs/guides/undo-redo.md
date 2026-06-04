@@ -49,7 +49,7 @@ The whole thing is built on a small command model in `Nodely.Commands` — `IDia
 and concrete commands like `AddNodeCommand`, `MoveNodeCommand`, and `CompositeCommand`. You can drive that
 directly for a headless or custom editor, but for the normal canvas you won't usually need to.
 
-:::note Not yet undoable
+::: info Not yet undoable
 Editing vertices and labels, group operations, and z-order changes don't go through the history yet, so they
 can't be undone today.
 :::

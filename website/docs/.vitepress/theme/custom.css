@@ -1,0 +1,27 @@
+:root {
+  --vp-c-brand-1: #2d7de0;
+  --vp-c-brand-2: #2270cd;
+  --vp-c-brand-3: #71a8ed;
+  --vp-c-bg: #fbfcff;
+  --vp-c-bg-alt: #f3f6fb;
+  --vp-c-bg-soft: #edf3fb;
+  --vp-c-text-1: #18202f;
+  --vp-c-text-2: #47546a;
+  --vp-code-font-size: 0.95em;
+}
+
+.dark {
+  --vp-c-brand-1: #6eb1ff;
+  --vp-c-brand-2: #4d9eff;
+  --vp-c-brand-3: #2c8bff;
+  --vp-c-bg: #1e1e24;
+  --vp-c-bg-alt: #17191f;
+  --vp-c-bg-soft: #252936;
+  --vp-c-text-1: #f5f7fb;
+  --vp-c-text-2: #c5ccda;
+}
+
+.VPDoc h1,
+.VPHome h1 {
+  letter-spacing: 0;
+}

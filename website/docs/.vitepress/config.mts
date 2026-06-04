@@ -29,6 +29,7 @@ export default withMermaid({
           { text: 'Auto-layout & graph queries', link: '/guides/layout' },
           { text: 'Theming', link: '/guides/theming' },
           { text: 'Extensibility', link: '/guides/extensibility' },
+          { text: 'Release checklist', link: '/guides/release-checklist' },
         ],
       },
       { text: 'Architecture', link: '/architecture' },

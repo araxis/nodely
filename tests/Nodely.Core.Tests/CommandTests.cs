@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using Nodely.Commands;
 using Nodely.Geometry;
 using Nodely.Models;
+using Nodely.Models.Base;
 using Shouldly;
 using Xunit;
 
@@ -42,6 +44,35 @@ public class CommandTests
     }
 
     [Fact]
+    public void Set_model_orders_undo_restores_the_previous_z_order()
+    {
+        var d = new NodelyDiagram(null, registerDefaultBehaviors: false);
+        var a = d.Nodes.Add(new NodeModel(new Point(0, 0)));
+        var b = d.Nodes.Add(new NodeModel(new Point(10, 0)));
+        var before = new Dictionary<SelectableModel, int>
+        {
+            [a] = a.Order,
+            [b] = b.Order,
+        };
+
+        d.SendToFront(a);
+        var after = new Dictionary<SelectableModel, int>
+        {
+            [a] = a.Order,
+            [b] = b.Order,
+        };
+        var command = new SetModelOrdersCommand(d, before, after);
+
+        command.Undo();
+        a.Order.ShouldBe(before[a]);
+        b.Order.ShouldBe(before[b]);
+
+        command.Execute();
+        a.Order.ShouldBe(after[a]);
+        b.Order.ShouldBe(after[b]);
+    }
+
+    [Fact]
     public void Remove_node_undo_restores_node_and_its_links()
     {
         var d = new NodelyDiagram(null, registerDefaultBehaviors: false);
@@ -60,6 +91,75 @@ public class CommandTests
         d.Nodes.Count.ShouldBe(2);
         d.Links.Count.ShouldBe(1);
         p1.Links.ShouldContain(link);
+    }
+
+    [Fact]
+    public void Add_group_undo_and_redo_toggles_group_membership()
+    {
+        var d = new NodelyDiagram(null, registerDefaultBehaviors: false);
+        var a = d.Nodes.Add(new NodeModel(new Point(0, 0)) { Size = new Size(20, 20) });
+        var b = d.Nodes.Add(new NodeModel(new Point(50, 0)) { Size = new Size(20, 20) });
+        var group = new GroupModel(new[] { a, b });
+        var stack = new UndoRedoStack();
+
+        stack.Execute(new AddGroupCommand(d, group));
+        d.Groups.Count.ShouldBe(1);
+        a.Group.ShouldBeSameAs(group);
+
+        stack.Undo();
+        d.Groups.Count.ShouldBe(0);
+        a.Group.ShouldBeNull();
+
+        stack.Redo();
+        d.Groups.Count.ShouldBe(1);
+        a.Group.ShouldBeSameAs(group);
+        b.Group.ShouldBeSameAs(group);
+    }
+
+    [Fact]
+    public void Remove_group_undo_restores_group_without_deleting_children()
+    {
+        var d = new NodelyDiagram(null, registerDefaultBehaviors: false);
+        var a = d.Nodes.Add(new NodeModel(new Point(0, 0)) { Size = new Size(20, 20) });
+        var b = d.Nodes.Add(new NodeModel(new Point(50, 0)) { Size = new Size(20, 20) });
+        var group = d.Groups.Add(new GroupModel(new[] { a, b }));
+        var stack = new UndoRedoStack();
+
+        stack.Execute(new RemoveGroupCommand(d, group));
+        d.Groups.Count.ShouldBe(0);
+        d.Nodes.Count.ShouldBe(2);
+        a.Group.ShouldBeNull();
+
+        stack.Undo();
+        d.Groups.Count.ShouldBe(1);
+        a.Group.ShouldBeSameAs(group);
+        b.Group.ShouldBeSameAs(group);
+    }
+
+    [Fact]
+    public void Link_vertex_commands_restore_the_vertex_at_its_original_index()
+    {
+        var d = new NodelyDiagram(null, registerDefaultBehaviors: false);
+        var a = d.Nodes.Add(new NodeModel(new Point(0, 0)) { Size = new Size(20, 20) });
+        var b = d.Nodes.Add(new NodeModel(new Point(200, 0)) { Size = new Size(20, 20) });
+        var link = d.Links.Add(new LinkModel(a, b));
+        var first = link.AddVertex(new Point(40, 20));
+        var inserted = new LinkVertexModel(link, new Point(80, 40));
+        var stack = new UndoRedoStack();
+
+        stack.Execute(new AddLinkVertexCommand(link, inserted, 1));
+        link.Vertices[1].ShouldBeSameAs(inserted);
+
+        stack.Undo();
+        link.Vertices.Count.ShouldBe(1);
+        link.Vertices[0].ShouldBeSameAs(first);
+
+        stack.Redo();
+        stack.Execute(new RemoveLinkVertexCommand(link, inserted));
+        link.Vertices.ShouldNotContain(inserted);
+
+        stack.Undo();
+        link.Vertices[1].ShouldBeSameAs(inserted);
     }
 
     [Fact]

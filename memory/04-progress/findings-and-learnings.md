@@ -245,6 +245,25 @@ Porting the engine surfaced several deliberate seam/scoping decisions:
 What we expected, what we found, why it matters, what we changed.
 -->
 
+## F-042 — History polish and refresh hardening (2026-06-04, v0.4.0)
+
+The next release is a hardening pass rather than a feature wave. The useful boundary was "make existing editor
+actions behave like durable editor actions":
+
+- **Undoable z-order:** `SendToFront`/`SendToBack` mutate several `Order` values, so the command stores full
+  before/after order snapshots (`SetModelOrdersCommand`) instead of trying to infer a single delta.
+- **Undoable grouping:** group removal should ungroup by default in the canvas, leaving child nodes on the
+  diagram. `RemoveGroupCommand` captures children before `GroupLayer.Remove` calls `Ungroup()`, then restores
+  membership on undo.
+- **Undoable bend points:** add/remove vertex commands preserve the vertex instance and original index, so redo
+  and undo keep route order stable.
+- **Refresh fix:** link labels now refresh their parent link when content, distance, or offset changes. Link
+  refresh also cascades to link-to-link dependents, guarded by a local `_refreshing` flag so cyclic link anchors
+  cannot recurse forever.
+- **Hardening:** warnings-as-errors is now on across the solution; the default link factory throws a precise
+  argument exception for unsupported source models.
+- **Tests:** Core +6, Avalonia +3. Current count: Core **109**, Avalonia **37** (146 total).
+
 ## F-041 — Extensibility seams wave (lean framework, not features) (2026-06-03, per user direction)
 
 User wants the lib kept lean and customization maximized (see [[working-style-decide-and-document]]). Added 10
@@ -310,9 +329,8 @@ Phase 2 deferred `DynamicAnchor`/`LinkAnchor` (checklist "Dynamic+Link deferred 
   `PathData.PointAtDistance(Length/2)` (the helpers added in F-031), falling back to the endpoint midpoint
   before the path exists. `Model = link` (a `BaseLinkModel` is `ILinkable`), so the diagram registers the
   dependent link on the target.
-- **Limitation:** live link-to-link refresh (recompute the dependent when the target link reroutes) relies on
-  the target's `RefreshLinks` being called; the anchor resolves correctly on generation but very-live updates
-  may lag a refresh. Noted for a future pass.
+- **Superseded by F-042:** live link-to-link refresh now cascades from the refreshed target link to its
+  dependents.
 - **Tests:** `Dynamic_anchor_picks_the_candidate_nearest_the_other_endpoint`,
   `Link_anchor_resolves_to_the_middle_of_the_target_link`. Core **96**. 0/0 both TFMs.
 
@@ -380,9 +398,8 @@ Follow-up to F-033, resolving its two noted issues.
 - **Tests:** Core `Transaction_groups_multiple_moves_into_one_undo_step`,
   `Transaction_cancels_a_link_added_then_removed_within_it`; Avalonia `Undo_reverts_a_multi_node_drag_in_one_step`
   (select 2, drag, one `Undo()` restores both). Core **89**, Avalonia **26** (115 total). 0/0 both TFMs.
-- **Still not undoable (noted):** vertex/label edits, group ops, and bulk `LayeredLayout` moves (they don't fire
-  `Moved`/go through the history). A "Layout" undo would need the demo/canvas to snapshot positions and wrap the
-  arrange in a `Transaction()` with explicit `MoveNodeCommand`s.
+- **Superseded by F-035/F-042:** bulk layout moves, vertex add/remove, group/ungroup, and z-order changes now
+  have canvas history paths.
 
 ## F-033 — Undo/redo wired into the editor via an observer DiagramHistory (2026-06-03, post-0.1.0 feature)
 
@@ -408,9 +425,8 @@ as deferred).
   + `HistoryChanged`, handles **Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z** and **Delete/Back** in `OnKeyDown` (Delete now
   routes through history instead of forwarding to the core `KeyboardShortcuts` behavior — avoids a double
   delete), and the adorner ✕ deletes via `DeleteModels` too. Demo gains Undo/Redo toolbar buttons.
-- **Limitations (noted):** multi-node drag records one move command **per node** (multiple undo steps);
-  vertex/label edits, group ops, and bulk `LayeredLayout` moves aren't undoable (they don't go through the
-  history). Reasonable next iteration: transactions to group a gesture into one undo unit.
+- **Superseded by F-034/F-035/F-042:** multi-node drag, bulk layout moves, vertex add/remove, group/ungroup,
+  and z-order changes now have grouped canvas history paths.
 - **Tests:** Core `History_records_a_completed_move...`, `..._link_add...`, `..._delete_via_execute_is_undoable
   _and_the_restore_is_not_re_recorded`; Avalonia `Undo_restores_a_dragged_node_and_redo_reapplies_it` (drag via
   mouse, `canvas.Undo()/Redo()`). Ctrl+Z key mapping is build-verified, not headless-tested. Core **87**,
@@ -440,8 +456,8 @@ Last deferred link feature. `LinkVertexModel` + `AddVertex` existed but vertices
   `Clicking_a_vertex_handle_selects_the_vertex` (single-click — reliable). **Double-click add/remove is NOT
   headless-tested** — headless doesn't synthesize `ClickCount==2` reliably (cf. F-030's headless limits); logic
   is simple + build-verified, needs manual check. Core **84**, Avalonia **24** (108 total). 0/0 both TFMs.
-- **Note:** `DeleteSelection` doesn't remove a selected vertex (only node/link/group) — vertices are removed by
-  double-click by design. All original deferred link features (markers, selection, labels, vertices) are now done.
+- **Superseded by F-042:** selected vertices can now be removed through the canvas delete path and undone.
+  All original deferred link features (markers, selection, labels, vertices) are now done.
 
 ## F-031 — Link labels rendered along the path (2026-06-03, post-0.1.0 feature)
 
@@ -463,9 +479,7 @@ Last deferred link feature. `LinkVertexModel` + `AddVertex` existed but vertices
   brush)`, `DrawingContext.DrawText(FormattedText, Point)`, and `DrawRectangle(..., radiusX, radiusY)` all
   compile/work.
 - **Demo:** state-machine transitions now carry labels (`start`/`ok`/`fail`/`reset`) via `.AddLabel(...)`.
-- **Limitation (noted, deferred):** the layer renders `link.Labels` each frame but doesn't subscribe to
-  individual `LinkLabelModel.Changed`; changing a label's text after creation needs a `link.Refresh()` to
-  repaint. Acceptable for set-once labels; revisit if dynamic label editing is added.
+- **Superseded by F-042:** changing label content, distance, or offset now refreshes the parent link.
 - **Tests:** Core `PathData_length_and_point_at_distance_along_a_polyline`. Rendering itself isn't pixel-tested
   (headless has no text rendering — see F-030); positioning math is covered in Core. Core **83**, Avalonia **23** (106 total). 0/0 both TFMs.
 - **Still deferred:** draggable **vertices/bend points** (model exists, not interactive).

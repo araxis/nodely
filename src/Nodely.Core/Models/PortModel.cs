@@ -61,10 +61,7 @@ public class PortModel : Model, IHasBounds, IHasShape, ILinkable
     public void RefreshLinks()
     {
         foreach (var link in Links)
-        {
             link.Refresh();
-            link.RefreshLinks();
-        }
     }
 
     /// <summary>The parent node as <typeparamref name="T"/>.</summary>

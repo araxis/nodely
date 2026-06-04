@@ -14,8 +14,8 @@ namespace Nodely.Avalonia.Controls;
 
 /// <summary>
 /// Immediate-mode layer that draws every link's generated path under the shared pan/zoom transform. The
-/// built <see cref="AvGeometry"/> is cached per link and only rebuilt when that link changes (Phase 13).
-/// Not hit-test visible for now (per-link selection is a later refinement).
+/// built <see cref="AvGeometry"/> is cached per link and only rebuilt when that link changes. The layer stays
+/// transparent to Avalonia hit-testing; the canvas resolves link hits with backend-independent path math.
 /// </summary>
 internal sealed class LinksLayer : Control
 {

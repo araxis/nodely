@@ -57,7 +57,7 @@ public class DiagramLinkOptions
         {
             NodeModel node => new ShapeIntersectionAnchor(node),
             PortModel port => new SinglePortAnchor(port),
-            _ => throw new NotImplementedException()
+            _ => throw new ArgumentOutOfRangeException(nameof(source), source, "Unsupported link source model.")
         };
         return new LinkModel(sourceAnchor, targetAnchor);
     };

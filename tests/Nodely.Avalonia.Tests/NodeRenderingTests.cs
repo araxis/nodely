@@ -10,6 +10,7 @@ using Nodely.Avalonia.Controls;
 using Nodely.Models;
 using Shouldly;
 using NodelyPoint = Nodely.Geometry.Point;
+using NodelySize = Nodely.Geometry.Size;
 
 namespace Nodely.Avalonia.Tests;
 
@@ -147,6 +148,62 @@ public class NodeRenderingTests
         canvas.Undo(); // one undo restores both
         a.Position.X.ShouldBe(0, 0.001);
         b.Position.X.ShouldBe(50, 0.001);
+    }
+
+    [AvaloniaFact]
+    public void Bring_selection_to_front_is_undoable()
+    {
+        var (_, canvas, diagram) = Show();
+        var a = diagram.Nodes.Add(new NodeModel(new NodelyPoint(0, 0)) { Title = "A" });
+        var b = diagram.Nodes.Add(new NodeModel(new NodelyPoint(50, 0)) { Title = "B" });
+        Dispatcher.UIThread.RunJobs();
+        var originalA = a.Order;
+        var originalB = b.Order;
+        diagram.SelectModel(a, unselectOthers: true);
+
+        canvas.BringSelectionToFront();
+        a.Order.ShouldBeGreaterThan(b.Order);
+
+        canvas.Undo();
+        a.Order.ShouldBe(originalA);
+        b.Order.ShouldBe(originalB);
+
+        canvas.Redo();
+        a.Order.ShouldBeGreaterThan(b.Order);
+    }
+
+    [AvaloniaFact]
+    public void Group_selection_and_ungroup_selection_are_undoable()
+    {
+        var (_, canvas, diagram) = Show();
+        diagram.Options.Groups.Enabled = true;
+        var a = diagram.Nodes.Add(new NodeModel(new NodelyPoint(0, 0)) { Title = "A", Size = new NodelySize(20, 20) });
+        var b = diagram.Nodes.Add(new NodeModel(new NodelyPoint(50, 0)) { Title = "B", Size = new NodelySize(20, 20) });
+        Dispatcher.UIThread.RunJobs();
+        diagram.SelectModel(a, unselectOthers: true);
+        diagram.SelectModel(b, unselectOthers: false);
+
+        canvas.GroupSelection();
+        diagram.Groups.Count.ShouldBe(1);
+        var group = diagram.Groups.Single();
+        a.Group.ShouldBeSameAs(group);
+
+        canvas.Undo();
+        diagram.Groups.Count.ShouldBe(0);
+        a.Group.ShouldBeNull();
+
+        canvas.Redo();
+        diagram.Groups.Count.ShouldBe(1);
+        group = diagram.Groups.Single();
+        diagram.SelectModel(group, unselectOthers: true);
+
+        canvas.UngroupSelection();
+        diagram.Groups.Count.ShouldBe(0);
+        a.Group.ShouldBeNull();
+
+        canvas.Undo();
+        diagram.Groups.Count.ShouldBe(1);
+        a.Group.ShouldBeSameAs(group);
     }
 
     [AvaloniaFact]

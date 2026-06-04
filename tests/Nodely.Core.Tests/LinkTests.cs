@@ -174,6 +174,41 @@ public class LinkTests
     }
 
     [Fact]
+    public void Changing_a_label_refreshes_its_parent_link()
+    {
+        var d = new NodelyDiagram();
+        var a = d.Nodes.Add(new NodeModel(new Point(0, 0)) { Size = new Size(20, 20) });
+        var b = d.Nodes.Add(new NodeModel(new Point(100, 0)) { Size = new Size(20, 20) });
+        var link = d.Links.Add(new LinkModel(a, b));
+        var label = link.AddLabel("old");
+        var changed = 0;
+        link.Changed += _ => changed++;
+
+        label.Content = "new";
+        label.Distance = 0.25;
+        label.Offset = new Point(0, -10);
+
+        changed.ShouldBeGreaterThanOrEqualTo(3);
+    }
+
+    [Fact]
+    public void Link_to_link_dependents_refresh_when_the_target_link_reroutes()
+    {
+        var d = new NodelyDiagram();
+        var a = d.Nodes.Add(new NodeModel(new Point(0, 0)) { Size = new Size(20, 20) });
+        var b = d.Nodes.Add(new NodeModel(new Point(100, 0)) { Size = new Size(20, 20) });
+        var c = d.Nodes.Add(new NodeModel(new Point(50, 120)) { Size = new Size(20, 20) });
+        var target = d.Links.Add(new LinkModel(a, b));
+        var dependent = d.Links.Add(new LinkModel(new ShapeIntersectionAnchor(c), new LinkAnchor(target)));
+        var changed = 0;
+        dependent.Changed += _ => changed++;
+
+        b.SetPosition(200, 0);
+
+        changed.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
     public void Removing_node_removes_its_port_links()
     {
         var d = new NodelyDiagram();

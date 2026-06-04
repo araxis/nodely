@@ -4,6 +4,28 @@ All notable changes to Nodely are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] - 2026-06-04
+
+Hardening and editor polish release. No breaking API changes.
+
+### Added
+- **Undoable editor polish:** z-order changes, group/ungroup operations, and link bend-point add/remove now
+  route through the canvas history where the canvas exposes those actions.
+- **Canvas grouping helpers:** `GroupSelection`, `UngroupSelection`, and `ToggleGroupingSelection` give
+  toolbar/menu authors direct entry points for grouping workflows.
+- **Release checklist docs:** the documentation site now includes a release checklist for version bumps,
+  validation, tagging, package publishing, and Pages verification.
+
+### Changed
+- **Refresh correctness:** editing a link label now refreshes its parent link immediately, and link-to-link
+  anchors refresh dependent links when the target link reroutes.
+- **Build hardening:** warnings are treated as errors across the solution.
+
+### Fixed
+- Deleting a selected bend point through the canvas is now undoable.
+- Link factory failures now report unsupported source models with an argument exception instead of an
+  implementation placeholder.
+
 ## [0.3.0] - 2026-06-03
 
 Extensibility wave: a lean set of seams so you can build features yourself, rather than growing the library.
@@ -25,6 +47,7 @@ No breaking API changes.
   save/load (snapshots gained an `Extra` map).
 - Documentation site gained an **Extensibility** guide (the seam map).
 
+[0.4.0]: https://github.com/araxis/nodely/releases/tag/v0.4.0
 [0.3.0]: https://github.com/araxis/nodely/releases/tag/v0.3.0
 
 ## [0.2.0] - 2026-06-03

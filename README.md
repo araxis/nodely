@@ -1,12 +1,15 @@
 # Nodely
 
+[![Package](https://img.shields.io/nuget/v/Nodely.Avalonia?label=package)](https://www.nuget.org/packages/Nodely.Avalonia)
+[![Downloads](https://img.shields.io/nuget/dt/Nodely.Avalonia?label=downloads)](https://www.nuget.org/packages/Nodely.Avalonia)
+
 **Nodely** is a native **Avalonia** toolkit for building interactive node / graph / diagram editors — a
 first-party port of the proven [Blazor.Diagrams](https://github.com/Blazor-Diagrams/Blazor.Diagrams)
 architecture to Avalonia. Pan/zoom canvas, custom nodes, interactive links, groups, an overview minimap,
 theming, read-only mode, serialization, undo/redo, and auto-layout — with **no SVG, no JS, no WebView**,
 just Avalonia's native rendering.
 
-> Status: **v0.1.0**. Engine + Avalonia UI are complete and tested (96 tests across the headless engine and
+> Status: **v0.3.0**. Engine + Avalonia UI are complete and tested (137 tests across the headless engine and
 > Avalonia headless UI). See [`CHANGELOG.md`](CHANGELOG.md) and the design notes in [`memory/`](memory/).
 
 ## Why
@@ -19,12 +22,27 @@ just Avalonia's native rendering.
 
 ## Packages
 
+Install the main Avalonia package:
+
+```powershell
+dotnet add package Nodely.Avalonia
+```
+
+Optional packages:
+
+```powershell
+dotnet add package Nodely.Algorithms
+dotnet add package Nodely.Serialization
+```
+
+Use `Nodely.Core` directly for headless engine scenarios; it is included transitively by `Nodely.Avalonia`.
+
 | Package | What |
 |---|---|
-| `Nodely.Core` | UI-agnostic engine: models, behaviors, geometry, routers, path generators, commands. |
-| `Nodely.Avalonia` | Avalonia controls: `DiagramCanvas`, `DiagramNavigator`, theming, adorners. |
-| `Nodely.Algorithms` | Optional: traversal, connected components, layered auto-layout. |
-| `Nodely.Serialization` | Optional: versioned JSON snapshots. |
+| [`Nodely.Core`](https://www.nuget.org/packages/Nodely.Core) | UI-agnostic engine: models, behaviors, geometry, routers, path generators, commands. |
+| [`Nodely.Avalonia`](https://www.nuget.org/packages/Nodely.Avalonia) | Avalonia controls: `DiagramCanvas`, `DiagramNavigator`, theming, adorners. |
+| [`Nodely.Algorithms`](https://www.nuget.org/packages/Nodely.Algorithms) | Optional: traversal, connected components, layered auto-layout. |
+| [`Nodely.Serialization`](https://www.nuget.org/packages/Nodely.Serialization) | Optional: versioned JSON snapshots. |
 
 ## Getting started
 

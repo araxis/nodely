@@ -11,7 +11,8 @@ Use this checklist for each package release.
 ## Prepare
 
 1. Update `Directory.Build.props` with the new package version.
-2. Update `CHANGELOG.md`, `README.md`, and any docs that mention the current version or test count.
+2. Update `CHANGELOG.md`, `README.md`, package target tables, and any docs that mention the current version
+   or test count.
 3. Run the wording scan before staging so branch names, commit messages, docs, comments, and generated files stay neutral.
 
 ## Validate locally
@@ -31,6 +32,11 @@ Inspect `artifacts/packages` for all four `.nupkg` files and matching `.snupkg` 
 - `Nodely.Avalonia`
 - `Nodely.Algorithms`
 - `Nodely.Serialization`
+
+For compatibility releases, also inspect package contents:
+
+- `Nodely.Avalonia`: `lib/net8.0` and `lib/net10.0`
+- `Nodely.Core`, `Nodely.Algorithms`, `Nodely.Serialization`: `lib/netstandard2.0`, `lib/net8.0`, and `lib/net10.0`
 
 ## Publish
 

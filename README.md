@@ -9,8 +9,9 @@ architecture to Avalonia. Pan/zoom canvas, custom nodes, interactive links, grou
 theming, read-only mode, serialization, undo/redo, and auto-layout — with **no SVG, no JS, no WebView**,
 just Avalonia's native rendering.
 
-> Status: **v0.5.0**. Engine + Avalonia UI are complete and tested (150 tests across the headless engine and
-> Avalonia headless UI). See [`CHANGELOG.md`](CHANGELOG.md) and the design notes in [`memory/`](memory/).
+> Status: **v0.6.0**. Engine + Avalonia UI are complete and tested on `net8.0` and `net10.0`
+> (150 tests per runtime across the headless engine and Avalonia headless UI). See
+> [`CHANGELOG.md`](CHANGELOG.md) and the design notes in [`memory/`](memory/).
 
 ## Why
 
@@ -37,12 +38,12 @@ dotnet add package Nodely.Serialization
 
 Use `Nodely.Core` directly for headless engine scenarios; it is included transitively by `Nodely.Avalonia`.
 
-| Package | What |
-|---|---|
-| [`Nodely.Core`](https://www.nuget.org/packages/Nodely.Core) | UI-agnostic engine: models, behaviors, geometry, routers, path generators, commands. |
-| [`Nodely.Avalonia`](https://www.nuget.org/packages/Nodely.Avalonia) | Avalonia controls: `DiagramCanvas`, `DiagramNavigator`, theming, adorners. |
-| [`Nodely.Algorithms`](https://www.nuget.org/packages/Nodely.Algorithms) | Optional: traversal, connected components, layered auto-layout. |
-| [`Nodely.Serialization`](https://www.nuget.org/packages/Nodely.Serialization) | Optional: versioned JSON snapshots. |
+| Package | Targets | What |
+|---|---|---|
+| [`Nodely.Core`](https://www.nuget.org/packages/Nodely.Core) | `netstandard2.0`, `net8.0`, `net10.0` | UI-agnostic engine: models, behaviors, geometry, routers, path generators, commands. |
+| [`Nodely.Avalonia`](https://www.nuget.org/packages/Nodely.Avalonia) | `net8.0`, `net10.0` | Avalonia controls: `DiagramCanvas`, `DiagramNavigator`, theming, adorners. |
+| [`Nodely.Algorithms`](https://www.nuget.org/packages/Nodely.Algorithms) | `netstandard2.0`, `net8.0`, `net10.0` | Optional: traversal, connected components, layered auto-layout. |
+| [`Nodely.Serialization`](https://www.nuget.org/packages/Nodely.Serialization) | `netstandard2.0`, `net8.0`, `net10.0` | Optional: versioned JSON snapshots. |
 
 ## Getting started
 
@@ -139,7 +140,8 @@ memory/     Design decisions (ADRs), research, the development plan, progress, l
 
 ## Build & run
 
-Requires the **.NET 10 SDK** (pinned via `global.json`).
+Building the repository requires the **.NET 10 SDK** (pinned via `global.json`). Packages ship assets for
+both `net8.0` and `net10.0` Avalonia consumers; `samples/Nodely.QuickStart` targets `net8.0`.
 
 ```powershell
 dotnet build Nodely.slnx

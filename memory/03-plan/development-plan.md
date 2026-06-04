@@ -5,8 +5,9 @@ A phased, vertical-slice plan. Each phase has a **Goal**, **Work**, and an expli
 throughout: verify upstream behavior and Avalonia 12.0.4 APIs before coding, and cite findings in
 `02-research/` and `04-progress/`.
 
-**Stack (ADR-0004):** Avalonia 12.0.4, .NET 8 LTS (Core/Algorithms/Serialization multi-target
-`netstandard2.0;net8.0`), C#-only UI, xUnit + Shouldly, Avalonia.Headless.XUnit, MVVM-agnostic core.
+**Stack (ADR-0004):** Avalonia 12.0.4, repository builds pinned to the .NET 10 SDK, package assets for
+`net8.0` and `net10.0` Avalonia consumers, Core/Algorithms/Serialization also retaining `netstandard2.0`,
+C#-only UI, xUnit + Shouldly, Avalonia.Headless.XUnit, MVVM-agnostic core.
 
 **Architecture:** first-party ported brain `Nodely.Core` (ADR-0002) + hybrid Avalonia renderer
 `Nodely.Avalonia` (ADR-0003) + DataTemplate-based customization (ADR-0005).

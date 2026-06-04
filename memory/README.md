@@ -41,12 +41,14 @@ memory/
 
 ## Quick status
 
-- Phase: **v0.5.0 — adoption polish in progress.** 150 tests expected (Core 109 + Avalonia 41).
+- Phase: **v0.6.0 — compatibility pass in progress.** 150 tests per app runtime expected (Core 109 +
+  Avalonia 41 on both `net8.0` and `net10.0`).
 - v0.1.0: 15 phases (0–14), M1–M4. v0.2.0 (F-027…F-039): editor/interaction wave. v0.3.0 (F-041): 10 extension
   seams (render hooks for links/ports/groups, custom layers, adorners, validation delegates, behaviors,
   IDiagramLayout, Tag/Data bag, serialization extras) — lean framework, not built-in features.
 - v0.4.0 (F-042): undoable z-order/group/bend-point edits, label/dependent-link refresh fixes,
   warnings-as-errors, and release checklist docs.
 - v0.5.0 (F-043): command-state helpers, QuickStart sample, richer gallery, and copyable docs recipes.
+- v0.6.0 (F-044): `net8.0` package assets for Avalonia plus explicit `net8.0`/`net10.0` validation.
 - Docs: static documentation site (F-040) + Extensibility guide; GitHub Pages pipeline.
 - Last updated: 2026-06-04

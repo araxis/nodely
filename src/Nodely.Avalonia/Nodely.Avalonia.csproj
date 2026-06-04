@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
     <PackageId>Nodely.Avalonia</PackageId>
     <Title>Nodely.Avalonia</Title>
     <Description>Avalonia controls for Nodely: the DiagramCanvas surface, node/port/link rendering, widgets, and theme.</Description>

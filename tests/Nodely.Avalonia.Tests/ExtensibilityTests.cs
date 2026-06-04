@@ -84,7 +84,7 @@ public class ExtensibilityTests
     }
 
     [AvaloniaFact]
-    public void RegisterLink_and_LinkStyleResolver_resolve_for_the_type()
+    public void RegisterLink_and_typed_link_style_resolve_for_the_type()
     {
         var canvas = new DiagramCanvas();
         LinkDrawer drawer = (_, _) => { };
@@ -95,7 +95,25 @@ public class ExtensibilityTests
         new DiagramCanvas().ResolveLinkDrawer(link).ShouldBeNull();      // none registered
 
         canvas.ResolveLinkStyle(link).ShouldBe(LinkStyle.Default);       // no resolver -> default
-        canvas.LinkStyleResolver = _ => new LinkStyle { Width = 5 };
+        canvas.RegisterLinkStyle<LinkModel>((_, ctx) => new LinkStyle { Width = ctx.IsSelected ? 7 : 5 });
         canvas.ResolveLinkStyle(link).Width.ShouldBe(5);
+    }
+
+    [AvaloniaFact]
+    public void Render_factories_can_use_the_canvas_context()
+    {
+        var diagram = new NodelyDiagram();
+        var node = diagram.Nodes.Add(new NodeModel(new NodelyPoint(50, 50)) { Title = "A" });
+        node.AddPort(PortAlignment.Right);
+        var canvas = new DiagramCanvas { Diagram = diagram, Palette = NodelyPalettes.Light };
+
+        canvas.RegisterNode<NodeModel>((_, context) => new Border
+        {
+            Tag = ReferenceEquals(context.Canvas, canvas) && ReferenceEquals(context.Palette, NodelyPalettes.Light)
+                ? "context-node"
+                : "wrong-context",
+        });
+
+        canvas.BuildNodeContent(node).ShouldBeOfType<Border>().Tag.ShouldBe("context-node");
     }
 }

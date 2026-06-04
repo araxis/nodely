@@ -20,7 +20,7 @@ flowchart TB
     Overlays["Overlays"] --> O1["AddLayer · RegisterAdorner"]
     Rules["Interaction rules"] --> Ru1["CanConnect · CanDrag · SnapPosition"]
     Logic["Logic"] --> L1["Behavior · Router · PathGenerator · Anchor · IDiagramLayout"]
-    Data["Data"] --> D1["Tag · Data · GetExtraData"]
+    Data["Data"] --> D1["Tag · Data · ModelKind · GetExtraData"]
 ```
 
 ## Render anything
@@ -51,9 +51,9 @@ selected, and the marker positions. When all you want is a different stroke or a
 and use a style resolver instead:
 
 ```csharp
-canvas.LinkStyleResolver = link => link.Locked
+canvas.RegisterLinkStyle<FlowLink>((link, ctx) => link.Locked
     ? new LinkStyle { Stroke = Brushes.Gray, DashStyle = DashStyle.Dash }
-    : LinkStyle.Default;
+    : LinkStyle.Default);
 ```
 
 ## Add your own overlay
@@ -135,7 +135,7 @@ node.Tag = myDomainObject;
 node.Data["status"] = "active";
 ```
 
-For data that should survive a save and reload, override the snapshot hooks on your node instead — they're
+For data that should survive a save and reload, override the snapshot hooks on your model instead — they're
 covered in [Save & load](./serialization.md):
 
 ```csharp
@@ -165,7 +165,7 @@ canvas.RunAsUndoableMove(() => new CircularLayout().Arrange(diagram)); // one un
 | What you want to change | The seam |
 | --- | --- |
 | How a node, port, or group looks | `RegisterNode` / `RegisterPort` / `RegisterGroup` |
-| How a link is drawn or styled | `RegisterLink` / `LinkStyleResolver` |
+| How a link is drawn or styled | `RegisterLink` / `RegisterLinkStyle` |
 | Any extra overlay | `AddLayer` + `DiagramLayer` |
 | Adorners on the selection | `RegisterAdorner` |
 | The interaction rules | `CanConnect` / `CanDrag` / `SnapPosition` |
@@ -174,8 +174,8 @@ canvas.RunAsUndoableMove(() => new CircularLayout().Arrange(diagram)); // one un
 | How links route and draw | `Router` / `PathGenerator` |
 | How the graph is laid out | `IDiagramLayout` |
 | The colors | `NodelyPalette` |
-| Data on a model | `Tag` / `Data` / `GetExtraData` |
-| What gets saved | `DiagramSerializer` + a node factory + extras |
+| Data on a model | `Tag` / `Data` / `ModelKind` / `GetExtraData` |
+| What gets saved | `DiagramSerializer` + `DiagramSerializationRegistry` + extras |
 
 The examples that go with these live in the demo app, not in the core packages — the whole point is that your
 features stay in your code and lean on the seams.

@@ -9,6 +9,9 @@ namespace Nodely.Models;
 /// <summary>A positioned, sized node on the canvas. Holds ports and tracks the links attached to it.</summary>
 public class NodeModel : MovableModel, IHasBounds, IHasShape, ILinkable
 {
+    /// <summary>The stable serialization kind for a default node.</summary>
+    public const string ModelKindKey = "node";
+
     private readonly List<PortModel> _ports = new();
     private readonly List<BaseLinkModel> _links = new();
     private Size? _size;
@@ -56,6 +59,9 @@ public class NodeModel : MovableModel, IHasBounds, IHasShape, ILinkable
 
     /// <summary>Links attached directly to the node (port-less links).</summary>
     public IReadOnlyList<BaseLinkModel> Links => _links;
+
+    /// <inheritdoc />
+    public override string ModelKind => ModelKindKey;
 
     /// <summary>All links attached through the node's ports.</summary>
     public IEnumerable<BaseLinkModel> PortLinks => Ports.SelectMany(p => p.Links);
@@ -166,15 +172,6 @@ public class NodeModel : MovableModel, IHasBounds, IHasShape, ILinkable
         Title = Title,
         Size = Size,
     };
-
-    /// <summary>
-    /// Override to persist custom fields with the diagram snapshot. Return a map of JSON-serializable values
-    /// (strings, numbers, bools); the keys round-trip back through <see cref="SetExtraData"/> on load.
-    /// </summary>
-    public virtual IReadOnlyDictionary<string, object?>? GetExtraData() => null;
-
-    /// <summary>Restores the custom fields written by <see cref="GetExtraData"/> (values are CLR primitives).</summary>
-    public virtual void SetExtraData(IReadOnlyDictionary<string, object?> data) { }
 
     /// <inheritdoc />
     public virtual bool CanAttachTo(ILinkable other) => other is not PortModel && other is not BaseLinkModel;

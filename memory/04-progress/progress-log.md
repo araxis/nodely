@@ -3,6 +3,43 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-04 — extension contract redesign
+
+- Public API: added stable `ModelKind`, model-wide extra-data hooks, `DiagramSerializationRegistry`, typed
+  link-style registration, and render-context factory overloads.
+- Serialization: schema version 2 now carries `Kind` and `Extra` for nodes, ports, links, and groups.
+- Database: pack now restores database nodes, ports, and relationship links through one registry call, and uses
+  palette-aware render context plus typed link styling.
+- Packaging: main packages keep `0.7.0`; `Nodely.Avalonia.Database` starts its independent side-package line at
+  `0.1.0` and packs with dependencies on main package `0.7.0`.
+- Workflow: package workflow now selects main packages or the database side package from tag shape or dispatch
+  input.
+- **Verified:** `dotnet test` -> Core 110/110 + Avalonia 44/44 + Database 6/6 on both `net8.0` and
+  `net10.0`; `dotnet pack` -> main packages `0.7.0` plus database side package `0.1.0`; package inspection,
+  docs install dry-run, and docs build passed.
+
+## 2026-06-04 — extension surface investigation
+
+- Audited the pre-public extension surface before adding more side packages.
+- Confirmed database pack model and render-registration tests pass on both `net8.0` and `net10.0`.
+- Confirmed database-only package dry-run can produce a side package, but current version overrides also rewrite
+  main package dependency versions.
+- Decision: revise PR #8 before merge so serializer registry, typed style registration, render context, and
+  independent side-package versioning become the stable pack contract.
+
+## 2026-06-04 — v0.7.0 database pack
+
+- Package: added `Nodely.Avalonia.Database` as the first optional domain pack.
+- Models: database table, view, procedure, column, parameter, port, and relationship-link types.
+- Rendering: one `UseDatabaseNodes()` canvas extension registers database node, port, and link styling.
+- Serialization: `DatabaseNodeFactory` restores database node types and fields through the existing snapshot
+  factory path without changing the snapshot schema.
+- Demo/docs: gallery database scene plus database guide, README package table, changelog, and release checklist.
+- **Verified:** build 0/0; `dotnet test` -> Core 109/109 + Avalonia 42/42 + Database 5/5 on both
+  `net8.0` and `net10.0`; `dotnet pack` -> five packages + symbols including `Nodely.Avalonia.Database`;
+  package inspection confirmed database `lib/net8.0` and `lib/net10.0` assets with Nodely-only dependency
+  groups; package feed indexes `0.6.0`; docs install dry-run and build passed.
+
 ## 2026-06-04 — v0.6.0 compatibility pass
 
 - Packages: `Nodely.Avalonia` now ships `net8.0` and `net10.0`; Core, Algorithms, and Serialization now

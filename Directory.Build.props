@@ -22,7 +22,10 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
 
-    <Version>0.6.0</Version>
+    <NodelyMainVersion>0.7.0</NodelyMainVersion>
+    <NodelyAvaloniaDatabaseVersion>0.1.0</NodelyAvaloniaDatabaseVersion>
+    <Version>$(NodelyMainVersion)</Version>
+    <PackageVersion>$(NodelyMainVersion)</PackageVersion>
     <PackageProjectUrl>https://github.com/araxis/nodely</PackageProjectUrl>
     <RepositoryUrl>https://github.com/araxis/nodely</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>

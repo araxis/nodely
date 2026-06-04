@@ -8,7 +8,7 @@ namespace Nodely.Serialization;
 public sealed record DiagramSnapshot
 {
     /// <summary>The snapshot schema version (bump when the shape changes; migrate on load).</summary>
-    public int Version { get; init; } = 1;
+    public int Version { get; init; } = 2;
 
     /// <summary>The nodes (excluding groups).</summary>
     public List<NodeSnapshot> Nodes { get; init; } = new();
@@ -29,8 +29,8 @@ public sealed record NodeSnapshot
     /// <summary>The node id.</summary>
     public string Id { get; init; } = "";
 
-    /// <summary>The node's runtime type name (used by a custom factory on load).</summary>
-    public string Kind { get; init; } = "Node";
+    /// <summary>The node's stable model kind.</summary>
+    public string Kind { get; init; } = "node";
 
     /// <summary>X position.</summary>
     public double X { get; init; }
@@ -50,7 +50,7 @@ public sealed record NodeSnapshot
     /// <summary>The node's ports.</summary>
     public List<PortSnapshot> Ports { get; init; } = new();
 
-    /// <summary>Custom per-node data from <c>NodeModel.GetExtraData</c> (restored via <c>SetExtraData</c> on load).</summary>
+    /// <summary>Custom per-node data from <c>GetExtraData</c> (restored via <c>SetExtraData</c> on load).</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public Dictionary<string, JsonElement>? Extra { get; init; }
 }
@@ -61,8 +61,15 @@ public sealed record PortSnapshot
     /// <summary>The port id.</summary>
     public string Id { get; init; } = "";
 
+    /// <summary>The port's stable model kind.</summary>
+    public string Kind { get; init; } = "port";
+
     /// <summary>The port alignment (enum name).</summary>
     public string Alignment { get; init; } = "Bottom";
+
+    /// <summary>Custom per-port data.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Dictionary<string, JsonElement>? Extra { get; init; }
 }
 
 /// <summary>A serialized link.</summary>
@@ -70,6 +77,9 @@ public sealed record LinkSnapshot
 {
     /// <summary>The link id.</summary>
     public string Id { get; init; } = "";
+
+    /// <summary>The link's stable model kind.</summary>
+    public string Kind { get; init; } = "link";
 
     /// <summary>The source endpoint.</summary>
     public EndpointSnapshot Source { get; init; } = new();
@@ -79,6 +89,10 @@ public sealed record LinkSnapshot
 
     /// <summary>The link's user vertices.</summary>
     public List<PointSnapshot> Vertices { get; init; } = new();
+
+    /// <summary>Custom per-link data.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Dictionary<string, JsonElement>? Extra { get; init; }
 }
 
 /// <summary>A serialized link endpoint (a port, a node, or a free position).</summary>
@@ -106,11 +120,18 @@ public sealed record GroupSnapshot
     /// <summary>The group id.</summary>
     public string Id { get; init; } = "";
 
+    /// <summary>The group's stable model kind.</summary>
+    public string Kind { get; init; } = "group";
+
     /// <summary>The ids of the group's child nodes.</summary>
     public List<string> ChildIds { get; init; } = new();
 
     /// <summary>The group padding.</summary>
     public byte Padding { get; init; } = 30;
+
+    /// <summary>Custom per-group data.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Dictionary<string, JsonElement>? Extra { get; init; }
 }
 
 /// <summary>A serialized viewport.</summary>

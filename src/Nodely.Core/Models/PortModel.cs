@@ -7,6 +7,9 @@ namespace Nodely.Models;
 /// <summary>A typed connection point on a node. Links attach to ports.</summary>
 public class PortModel : Model, IHasBounds, IHasShape, ILinkable
 {
+    /// <summary>The stable serialization kind for a default port.</summary>
+    public const string ModelKindKey = "port";
+
     private readonly List<BaseLinkModel> _links = new(4);
 
     /// <summary>Creates a port on <paramref name="parent"/>.</summary>
@@ -46,6 +49,9 @@ public class PortModel : Model, IHasBounds, IHasShape, ILinkable
 
     /// <summary>The links attached to this port.</summary>
     public IReadOnlyList<BaseLinkModel> Links => _links;
+
+    /// <inheritdoc />
+    public override string ModelKind => ModelKindKey;
 
     /// <summary>If false, a call to <see cref="Model.Refresh"/> forces the port to update its position/size.</summary>
     public bool Initialized { get; set; }

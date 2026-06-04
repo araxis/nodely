@@ -8,6 +8,9 @@ namespace Nodely.Models;
 /// <summary>A node that contains other nodes; its bounds auto-fit its children and moving it moves them.</summary>
 public class GroupModel : NodeModel
 {
+    /// <summary>The stable serialization kind for a default group.</summary>
+    public new const string ModelKindKey = "group";
+
     private readonly List<NodeModel> _children;
 
     /// <summary>Creates a group around the given children.</summary>
@@ -40,6 +43,9 @@ public class GroupModel : NodeModel
 
     /// <summary>Whether the group resizes itself to fit its children.</summary>
     public bool AutoSize { get; }
+
+    /// <inheritdoc />
+    public override string ModelKind => ModelKindKey;
 
     /// <summary>Adds a child to the group.</summary>
     public void AddChild(NodeModel child)

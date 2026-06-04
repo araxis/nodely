@@ -44,12 +44,13 @@ push you toward any particular MVVM pattern.
 
 ## The packages
 
-Nodely ships as four NuGet packages so you only take what you use:
+Nodely ships as focused NuGet packages so you only take what you use:
 
 | Package | Targets | What's inside |
 | --- | --- | --- |
 | `Nodely.Core` | netstandard2.0, net8.0, net10.0 | The UI-agnostic engine: geometry, models, behaviors, routers, path generators, commands |
 | `Nodely.Avalonia` | net8.0, net10.0 | The `DiagramCanvas`, node/port/link/group rendering, adorners, the minimap, theming |
+| `Nodely.Avalonia.Database` | net8.0, net10.0 | Optional side package: database table, view, procedure nodes, ports, and relationship links |
 | `Nodely.Serialization` | netstandard2.0, net8.0, net10.0 | Versioned JSON snapshots that round-trip exactly |
 | `Nodely.Algorithms` | netstandard2.0, net8.0, net10.0 | Graph queries and a layered auto-layout |
 
@@ -61,4 +62,5 @@ The fastest way in is [Getting started](./getting-started.md) — a working canv
 rather start from a complete tiny app, run `samples/Nodely.QuickStart`. If you'd rather understand how the
 pieces fit before writing code, the [Architecture](./architecture.md) page lays out the design. And when you're
 ready to make Nodely your own, the guides cover [custom nodes](./guides/custom-nodes.md),
-[links](./guides/links.md), [recipes](./guides/recipes.md), [undo/redo](./guides/undo-redo.md), and the rest.
+[links](./guides/links.md), [the database pack](./guides/database.md), [recipes](./guides/recipes.md),
+[undo/redo](./guides/undo-redo.md), and the rest.

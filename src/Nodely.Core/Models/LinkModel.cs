@@ -6,6 +6,9 @@ namespace Nodely.Models;
 /// <summary>The default link: a styleable connection between two anchors, ports, or nodes.</summary>
 public class LinkModel : BaseLinkModel
 {
+    /// <summary>The stable serialization kind for a default link.</summary>
+    public const string ModelKindKey = "link";
+
     /// <summary>Creates a link between two anchors.</summary>
     public LinkModel(Anchor source, Anchor target) : base(source, target) { }
 
@@ -36,4 +39,7 @@ public class LinkModel : BaseLinkModel
 
     /// <summary>The stroke width.</summary>
     public double Width { get; set; } = 2;
+
+    /// <inheritdoc />
+    public override string ModelKind => ModelKindKey;
 }

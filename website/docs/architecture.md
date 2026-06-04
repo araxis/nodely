@@ -87,7 +87,7 @@ sensible default:
 | When you want to… | Reach for |
 | --- | --- |
 | Render a node, port, or group your way | `RegisterNode` / `RegisterPort` / `RegisterGroup` |
-| Draw or restyle a link | `RegisterLink` / `LinkStyleResolver` |
+| Draw or restyle a link | `RegisterLink` / `RegisterLinkStyle` |
 | Add any overlay | `AddLayer` + `DiagramLayer` |
 | Change how a link routes or draws | `Router`, `PathGenerator` |
 | Change where a link attaches | an `Anchor` |

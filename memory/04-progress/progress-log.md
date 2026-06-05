@@ -3,6 +3,24 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-05 — API side package
+
+- Package: added `Nodely.Avalonia.Api` as the seventh optional domain pack, starting at side-package version
+  `0.1.0` while main packages remain on `0.7.0`.
+- Models: service, endpoint, contract, operation, client, gateway, auth, and group nodes with API ports and
+  request, response, publish, consume, dependency, and security links.
+- Rendering/layout: one `UseApiNodes()` canvas extension registers service headers, endpoint method badges,
+  schema-style contract rows, client/gateway/auth visuals, visible typed ports, API link glyphs, and curved
+  API paths; `ApiLayout.Arrange()` provides a small pack-local API layout.
+- Demo/docs: gallery now includes an API scene with editable runtime properties, theme switching, save/load,
+  arrange, client/gateway/service/endpoint/contract/auth visuals, and mixed API link types; docs include an
+  API guide and package matrix updates.
+- **Verified:** build 0/0; `dotnet test` -> Core 111/111 + Avalonia 58/58 + API 7/7 + Database 7/7
+  + MindMap 7/7 + Network 7/7 + StateMachine 7/7 + UML 6/6 + Workflow 5/5 on both `net8.0` and
+  `net10.0`; `dotnet pack` -> main packages `0.7.0`, API/Database/MindMap/Network/StateMachine/UML/Workflow
+  `0.1.0`; API package inspection confirmed `lib/net8.0`, `lib/net10.0`, symbol package assets, and
+  main-package `0.7.0` dependency groups; docs install dry-run and docs build passed.
+
 ## 2026-06-05 — Network side package
 
 - Package: added `Nodely.Avalonia.Network` as the sixth optional domain pack, starting at side-package

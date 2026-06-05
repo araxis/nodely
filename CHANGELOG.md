@@ -24,6 +24,26 @@ All notable changes to Nodely are documented here. The format is based on
 - **Visibility rendering:** link and port layers now honor model `Visible` state so collapse helpers can hide
   dependent paths and handles cleanly.
 
+## [Nodely.Avalonia.Api 0.1.0] - 2026-06-05
+
+First API side-package release.
+
+### Added
+- **API package:** `Nodely.Avalonia.Api` adds service, endpoint, contract, operation, client, gateway, auth,
+  and group nodes with name, version, status, summary, accent, and icon metadata.
+- **Typed ports and API links:** API ports carry request, response, event, dependency, and auth roles, while
+  API links carry request, response, publish, consume, dependency, and security kinds plus protocol, payload,
+  status, label, and accent metadata.
+- **Pack-owned visuals:** `DiagramCanvas.UseApiNodes()` registers recognizable service headers, endpoint method
+  badges, schema-style contract rows, client/gateway/auth visuals, visible API ports, API link styling, and
+  link glyphs.
+- **Arrange helper:** `ApiLayout.Arrange()` places API diagrams into readable client, gateway, service,
+  endpoint, operation/auth, and contract columns.
+- **Serialization registration:** `DiagramSerializationRegistry.UseApiNodes()` restores API nodes, ports, links,
+  and metadata with stable model-kind keys.
+- **Demo and docs:** the desktop gallery, runtime inspector, documentation site, package matrix, and package
+  workflow include the API pack.
+
 ## [Nodely.Avalonia.Network 0.1.0] - 2026-06-05
 
 First Network side-package release.

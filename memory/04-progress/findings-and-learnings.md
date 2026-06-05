@@ -3,6 +3,17 @@
 Durable lessons, gotchas, surprises, and reversed decisions. Add an entry the moment something is
 non-obvious — it's the cheapest insurance we have. Tag each with a date and the phase.
 
+## F-054 — API packs should separate endpoints, contracts, and traffic (2026-06-05, API side package)
+
+API diagrams become hard to read when endpoints, payload shapes, auth policy, and backend operations collapse
+into one generic box. The package needs distinct endpoint cards, contract rows, visible request/response/event
+ports, and relationship glyphs so the flow is understandable before a user opens an inspector.
+
+Decision: `Nodely.Avalonia.Api` keeps endpoint, contract, auth, gateway, client, service, and group visuals
+inside the side package, along with typed API ports, link metadata, link glyphs, and `ApiLayout.Arrange()`.
+Core stays unchanged, and future integration-style packs should keep protocol vocabulary in the pack instead
+of asking the main packages for domain-specific behavior.
+
 ## F-053 — Network topology packs need device semantics in the visuals (2026-06-05, Network side package)
 
 Network diagrams lose most of their value if routers, switches, firewalls, services, zones, and links all look

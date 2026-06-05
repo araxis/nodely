@@ -2,6 +2,7 @@
 
 [![Package](https://img.shields.io/nuget/v/Nodely.Avalonia?label=package)](https://www.nuget.org/packages/Nodely.Avalonia)
 [![Downloads](https://img.shields.io/nuget/dt/Nodely.Avalonia?label=downloads)](https://www.nuget.org/packages/Nodely.Avalonia)
+[![API](https://img.shields.io/nuget/v/Nodely.Avalonia.Api?label=api)](https://www.nuget.org/packages/Nodely.Avalonia.Api)
 [![Database](https://img.shields.io/nuget/v/Nodely.Avalonia.Database?label=database)](https://www.nuget.org/packages/Nodely.Avalonia.Database)
 [![MindMap](https://img.shields.io/nuget/v/Nodely.Avalonia.MindMap?label=mindmap)](https://www.nuget.org/packages/Nodely.Avalonia.MindMap)
 [![Network](https://img.shields.io/nuget/v/Nodely.Avalonia.Network?label=network)](https://www.nuget.org/packages/Nodely.Avalonia.Network)
@@ -16,7 +17,7 @@ theming, read-only mode, serialization, undo/redo, and auto-layout — with **no
 just Avalonia's native rendering.
 
 > Status: **v0.7.0** main packages, with independent side packages. Engine + Avalonia UI are complete and
-> tested on `net8.0` and `net10.0` (206 tests per runtime across the engine, side packages, and Avalonia
+> tested on `net8.0` and `net10.0` (215 tests per runtime across the engine, side packages, and Avalonia
 > headless UI). See
 > [`CHANGELOG.md`](CHANGELOG.md) and the design notes in [`memory/`](memory/).
 
@@ -41,6 +42,7 @@ Optional packages:
 ```powershell
 dotnet add package Nodely.Algorithms
 dotnet add package Nodely.Serialization
+dotnet add package Nodely.Avalonia.Api
 dotnet add package Nodely.Avalonia.Database
 dotnet add package Nodely.Avalonia.MindMap
 dotnet add package Nodely.Avalonia.Network
@@ -55,6 +57,7 @@ Use `Nodely.Core` directly for headless engine scenarios; it is included transit
 |---|---|---|
 | [`Nodely.Core`](https://www.nuget.org/packages/Nodely.Core) | `netstandard2.0`, `net8.0`, `net10.0` | UI-agnostic engine: models, behaviors, geometry, routers, path generators, commands. |
 | [`Nodely.Avalonia`](https://www.nuget.org/packages/Nodely.Avalonia) | `net8.0`, `net10.0` | Avalonia controls: `DiagramCanvas`, `DiagramNavigator`, theming, adorners. |
+| [`Nodely.Avalonia.Api`](https://www.nuget.org/packages/Nodely.Avalonia.Api) | `net8.0`, `net10.0` | Optional side package: API service nodes, endpoint cards, contract nodes, typed ports, links, and arrange helpers. |
 | [`Nodely.Avalonia.Database`](https://www.nuget.org/packages/Nodely.Avalonia.Database) | `net8.0`, `net10.0` | Optional side package: database table/view/procedure renderers, row-aware ports, and relationship links. |
 | [`Nodely.Avalonia.MindMap`](https://www.nuget.org/packages/Nodely.Avalonia.MindMap) | `net8.0`, `net10.0` | Optional side package: root, branch, and leaf topics, branch ports, curved links, collapse state, and arrange helpers. |
 | [`Nodely.Avalonia.Network`](https://www.nuget.org/packages/Nodely.Avalonia.Network) | `net8.0`, `net10.0` | Optional side package: network device renderers, typed ports, topology links, status badges, and arrange helpers. |
@@ -134,6 +137,11 @@ Nodely.Algorithms.LayeredLayout.Arrange(diagram);
 // Serialization (Nodely.Serialization)
 string json = Nodely.Serialization.DiagramSerializer.Serialize(diagram);
 Nodely.Serialization.DiagramSerializer.Deserialize(new NodelyDiagram(), json);
+
+// API pack (Nodely.Avalonia.Api)
+canvas.UseApiNodes();
+Nodely.Avalonia.Api.ApiLayout.Arrange(diagram);
+var apiRegistry = Nodely.Avalonia.Api.ApiNodeFactory.CreateRegistry();
 
 // Database pack (Nodely.Avalonia.Database)
 canvas.UseDatabaseNodes();

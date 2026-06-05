@@ -12,6 +12,7 @@ using Nodely.Avalonia;
 using Nodely.Avalonia.Controls;
 using Nodely.Avalonia.Database;
 using Nodely.Avalonia.MindMap;
+using Nodely.Avalonia.StateMachine;
 using Nodely.Avalonia.Uml;
 using Nodely.Avalonia.Workflow;
 using Nodely.Models;
@@ -202,11 +203,12 @@ public sealed class MainWindow : Window
 
         var diagram = NewDiagram();
         DiagramSerializer.Deserialize(diagram, _savedJson, CreateSerializationRegistry());
-        _host.Content = Editor(diagram, configureCanvas: canvas => canvas.UseDatabaseNodes().UseMindMapNodes().UseUmlNodes().UseWorkflowNodes());
+        _host.Content = Editor(diagram, configureCanvas: canvas => canvas.UseDatabaseNodes().UseMindMapNodes().UseStateMachineNodes().UseUmlNodes().UseWorkflowNodes());
     }
 
     private static DiagramSerializationRegistry CreateSerializationRegistry() => DatabaseNodeFactory.CreateRegistry()
         .UseMindMapNodes()
+        .UseStateMachineNodes()
         .UseUmlNodes()
         .UseWorkflowNodes()
         .RegisterNode(TaskNode.ModelKindKey, ns => new TaskNode(ns.Id, new NodelyPoint(ns.X, ns.Y), ns.Title ?? string.Empty))
@@ -395,18 +397,116 @@ public sealed class MainWindow : Window
     private Control BuildStateMachine()
     {
         var diagram = NewDiagram();
-        var idle = diagram.Nodes.Add(new NodeModel(new NodelyPoint(0, 0)) { Title = "Idle" });
-        var running = diagram.Nodes.Add(new NodeModel(new NodelyPoint(0, 0)) { Title = "Running" });
-        var done = diagram.Nodes.Add(new NodeModel(new NodelyPoint(0, 0)) { Title = "Done" });
-        var error = diagram.Nodes.Add(new NodeModel(new NodelyPoint(0, 0)) { Title = "Error" });
+        var initial = diagram.Nodes.Add(new StateMachineInitialNode(new NodelyPoint(80, 260), "Start"));
+        var idle = diagram.Nodes.Add(new StateMachineStateNode(new NodelyPoint(250, 190), "Idle")
+        {
+            Description = "Waiting for a request",
+            EntryAction = "show ready",
+            ExitAction = "clear ready",
+            AccentColor = "#37A779",
+        });
+        var choice = diagram.Nodes.Add(new StateMachineChoiceNode(new NodelyPoint(560, 230), "Route")
+        {
+            Description = "Validate request",
+            AccentColor = "#8B68B8",
+        });
+        var running = diagram.Nodes.Add(new StateMachineStateNode(new NodelyPoint(820, 150), "Running")
+        {
+            Description = "Processing work",
+            EntryAction = "start timer",
+            ExitAction = "stop timer",
+            AccentColor = "#4D9EFF",
+        });
+        var delayed = diagram.Nodes.Add(new StateMachineStateNode(new NodelyPoint(820, 430), "Delayed")
+        {
+            Description = "Waiting for retry",
+            EntryAction = "schedule retry",
+            AccentColor = "#D18B30",
+        });
+        var failed = diagram.Nodes.Add(new StateMachineStateNode(new NodelyPoint(1120, 420), "Failed")
+        {
+            Description = "Terminal error",
+            EntryAction = "record failure",
+            AccentColor = "#C45552",
+        });
+        var done = diagram.Nodes.Add(new StateMachineFinalNode(new NodelyPoint(1160, 190), "Done"));
+        var note = diagram.Nodes.Add(new StateMachineNoteNode(new NodelyPoint(250, 520),
+            "StateMachine nodes expose runtime-editable names, actions, transition guards, priorities, ports, and accent colors."));
 
-        diagram.Links.Add(new LinkModel(idle, running)).AddLabel("start");
-        diagram.Links.Add(new LinkModel(running, done)).AddLabel("ok");
-        diagram.Links.Add(new LinkModel(running, error)).AddLabel("fail");
-        diagram.Links.Add(new LinkModel(error, idle)).AddLabel("reset");
-        LayeredLayout.Arrange(diagram);
+        var initialOut = initial.AddPort(new StateMachinePortModel(initial, PortAlignment.Right, StateMachinePortRole.Exit, "start"));
+        var idleIn = idle.AddPort(new StateMachinePortModel(idle, PortAlignment.Left, StateMachinePortRole.Entry, "entry"));
+        var idleOut = idle.AddPort(new StateMachinePortModel(idle, PortAlignment.Right, StateMachinePortRole.Exit, "submit"));
+        var choiceIn = choice.AddPort(new StateMachinePortModel(choice, PortAlignment.Left, StateMachinePortRole.Entry, "request"));
+        var choiceOk = choice.AddPort(new StateMachinePortModel(choice, PortAlignment.Right, StateMachinePortRole.Exit, "ok"));
+        var choiceDelay = choice.AddPort(new StateMachinePortModel(choice, PortAlignment.Bottom, StateMachinePortRole.Exit, "delay"));
+        var runningIn = running.AddPort(new StateMachinePortModel(running, PortAlignment.Left, StateMachinePortRole.Entry, "start"));
+        var runningOut = running.AddPort(new StateMachinePortModel(running, PortAlignment.Right, StateMachinePortRole.Exit, "complete"));
+        var delayedIn = delayed.AddPort(new StateMachinePortModel(delayed, PortAlignment.Left, StateMachinePortRole.Entry, "wait"));
+        var delayedOut = delayed.AddPort(new StateMachinePortModel(delayed, PortAlignment.Right, StateMachinePortRole.Exit, "retry"));
+        var failedIn = failed.AddPort(new StateMachinePortModel(failed, PortAlignment.Left, StateMachinePortRole.Entry, "fail"));
+        var doneIn = done.AddPort(new StateMachinePortModel(done, PortAlignment.Left, StateMachinePortRole.Entry, "finish"));
 
-        return Editor(diagram);
+        diagram.Links.Add(new StateMachineTransitionLink(initialOut, idleIn)
+        {
+            Trigger = "created",
+            Action = "initialize",
+            Priority = 1,
+        });
+        diagram.Links.Add(new StateMachineTransitionLink(idleOut, choiceIn, StateMachineTransitionKind.Choice)
+        {
+            Trigger = "submit",
+            Guard = "has payload",
+            Action = "validate",
+            Priority = 2,
+        });
+        diagram.Links.Add(new StateMachineTransitionLink(choiceOk, runningIn)
+        {
+            Trigger = "accepted",
+            Guard = "quota available",
+            Priority = 3,
+        });
+        diagram.Links.Add(new StateMachineTransitionLink(choiceDelay, delayedIn, StateMachineTransitionKind.Timeout)
+        {
+            Trigger = "defer",
+            Guard = "quota full",
+            Action = "schedule",
+            AccentColor = "#D18B30",
+        });
+        diagram.Links.Add(new StateMachineTransitionLink(runningOut, doneIn)
+        {
+            Trigger = "completed",
+            Action = "publish result",
+        });
+        diagram.Links.Add(new StateMachineTransitionLink(running, running, StateMachineTransitionKind.Self)
+        {
+            Trigger = "progress",
+            Guard = "more work",
+            Action = "continue",
+        });
+        diagram.Links.Add(new StateMachineTransitionLink(delayedOut, idleIn, StateMachineTransitionKind.Timeout)
+        {
+            Trigger = "retry",
+            Guard = "window open",
+        });
+        diagram.Links.Add(new StateMachineTransitionLink(delayedOut, failedIn, StateMachineTransitionKind.Error)
+        {
+            Trigger = "retry exhausted",
+            Action = "notify owner",
+            AccentColor = "#C45552",
+        });
+
+        StateMachineLayout.Arrange(diagram);
+        note.SetPosition(250, 520);
+
+        return Editor(
+            diagram,
+            configureCanvas: canvas => canvas.UseStateMachineNodes(),
+            layoutAction: (canvas, targetDiagram) =>
+            {
+                canvas.RunAsUndoableMove(() => StateMachineLayout.Arrange(targetDiagram));
+                canvas.RefreshVisuals();
+                canvas.ZoomToFit();
+            });
     }
 
     private Control BuildInspector()

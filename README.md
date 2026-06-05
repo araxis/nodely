@@ -4,6 +4,7 @@
 [![Downloads](https://img.shields.io/nuget/dt/Nodely.Avalonia?label=downloads)](https://www.nuget.org/packages/Nodely.Avalonia)
 [![Database](https://img.shields.io/nuget/v/Nodely.Avalonia.Database?label=database)](https://www.nuget.org/packages/Nodely.Avalonia.Database)
 [![MindMap](https://img.shields.io/nuget/v/Nodely.Avalonia.MindMap?label=mindmap)](https://www.nuget.org/packages/Nodely.Avalonia.MindMap)
+[![StateMachine](https://img.shields.io/nuget/v/Nodely.Avalonia.StateMachine?label=statemachine)](https://www.nuget.org/packages/Nodely.Avalonia.StateMachine)
 [![UML](https://img.shields.io/nuget/v/Nodely.Avalonia.Uml?label=uml)](https://www.nuget.org/packages/Nodely.Avalonia.Uml)
 [![Workflow](https://img.shields.io/nuget/v/Nodely.Avalonia.Workflow?label=workflow)](https://www.nuget.org/packages/Nodely.Avalonia.Workflow)
 
@@ -14,7 +15,7 @@ theming, read-only mode, serialization, undo/redo, and auto-layout — with **no
 just Avalonia's native rendering.
 
 > Status: **v0.7.0** main packages, with independent side packages. Engine + Avalonia UI are complete and
-> tested on `net8.0` and `net10.0` (188 tests per runtime across the engine, side packages, and Avalonia
+> tested on `net8.0` and `net10.0` (197 tests per runtime across the engine, side packages, and Avalonia
 > headless UI). See
 > [`CHANGELOG.md`](CHANGELOG.md) and the design notes in [`memory/`](memory/).
 
@@ -41,6 +42,7 @@ dotnet add package Nodely.Algorithms
 dotnet add package Nodely.Serialization
 dotnet add package Nodely.Avalonia.Database
 dotnet add package Nodely.Avalonia.MindMap
+dotnet add package Nodely.Avalonia.StateMachine
 dotnet add package Nodely.Avalonia.Uml
 dotnet add package Nodely.Avalonia.Workflow
 ```
@@ -53,6 +55,7 @@ Use `Nodely.Core` directly for headless engine scenarios; it is included transit
 | [`Nodely.Avalonia`](https://www.nuget.org/packages/Nodely.Avalonia) | `net8.0`, `net10.0` | Avalonia controls: `DiagramCanvas`, `DiagramNavigator`, theming, adorners. |
 | [`Nodely.Avalonia.Database`](https://www.nuget.org/packages/Nodely.Avalonia.Database) | `net8.0`, `net10.0` | Optional side package: database table/view/procedure renderers, row-aware ports, and relationship links. |
 | [`Nodely.Avalonia.MindMap`](https://www.nuget.org/packages/Nodely.Avalonia.MindMap) | `net8.0`, `net10.0` | Optional side package: root, branch, and leaf topics, branch ports, curved links, collapse state, and arrange helpers. |
+| [`Nodely.Avalonia.StateMachine`](https://www.nuget.org/packages/Nodely.Avalonia.StateMachine) | `net8.0`, `net10.0` | Optional side package: initial, state, final, choice, and note nodes, visible transition ports, transition links, self loops, and arrange helpers. |
 | [`Nodely.Avalonia.Uml`](https://www.nuget.org/packages/Nodely.Avalonia.Uml) | `net8.0`, `net10.0` | Optional side package: compartmented UML renderers, row-aware ports, packages, notes, and relationship links. |
 | [`Nodely.Avalonia.Workflow`](https://www.nuget.org/packages/Nodely.Avalonia.Workflow) | `net8.0`, `net10.0` | Optional side package: workflow start, end, task, decision, gateway, event, note nodes, and workflow links. |
 | [`Nodely.Algorithms`](https://www.nuget.org/packages/Nodely.Algorithms) | `netstandard2.0`, `net8.0`, `net10.0` | Optional: traversal, connected components, layered auto-layout. |
@@ -137,6 +140,11 @@ var registry = Nodely.Avalonia.Database.DatabaseNodeFactory.CreateRegistry();
 canvas.UseMindMapNodes();
 Nodely.Avalonia.MindMap.MindMapLayout.Arrange(diagram);
 var mindMapRegistry = Nodely.Avalonia.MindMap.MindMapNodeFactory.CreateRegistry();
+
+// StateMachine pack (Nodely.Avalonia.StateMachine)
+canvas.UseStateMachineNodes();
+Nodely.Avalonia.StateMachine.StateMachineLayout.Arrange(diagram);
+var stateMachineRegistry = Nodely.Avalonia.StateMachine.StateMachineNodeFactory.CreateRegistry();
 
 // UML pack (Nodely.Avalonia.Uml)
 canvas.UseUmlNodes();

@@ -3,6 +3,24 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-05 — StateMachine side package
+
+- Package: added `Nodely.Avalonia.StateMachine` as the fifth optional domain pack, starting at side-package
+  version `0.1.0` while main packages remain on `0.7.0`.
+- Models: initial, state, final, choice, and note nodes with state-machine ports and transition links for
+  normal, self, choice, error, and timeout transitions.
+- Rendering/layout: one `UseStateMachineNodes()` canvas extension registers distinct state-machine visuals,
+  visible transition ports, transition glyphs, and self-loop drawing; `StateMachineLayout.Arrange()` provides
+  a small pack-local left-to-right layout.
+- Demo/docs: gallery now includes a StateMachine scene with editable runtime properties, theme switching,
+  save/load, arrange, self transitions, guarded transitions, timeout/error transitions, and visible ports; docs
+  include a StateMachine guide and package matrix updates.
+- **Verified:** build 0/0; `dotnet test` -> Core 111/111 + Avalonia 54/54 + Database 7/7 + MindMap 7/7
+  + StateMachine 7/7 + UML 6/6 + Workflow 5/5 on both `net8.0` and `net10.0`; `dotnet pack` -> main
+  packages `0.7.0`, Database/MindMap/StateMachine/UML/Workflow `0.1.0`; StateMachine package inspection
+  confirmed `lib/net8.0`, `lib/net10.0`, symbol package assets, and main-package `0.7.0` dependency groups;
+  docs install dry-run and docs build passed.
+
 ## 2026-06-05 — MindMap side package
 
 - Package: added `Nodely.Avalonia.MindMap` as the fourth optional domain pack, starting at side-package version

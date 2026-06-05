@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Nodely.Avalonia.Database\Nodely.Avalonia.Database.csproj" />
     <ProjectReference Include="..\..\src\Nodely.Avalonia.MindMap\Nodely.Avalonia.MindMap.csproj" />
+    <ProjectReference Include="..\..\src\Nodely.Avalonia.StateMachine\Nodely.Avalonia.StateMachine.csproj" />
     <ProjectReference Include="..\..\src\Nodely.Avalonia.Uml\Nodely.Avalonia.Uml.csproj" />
     <ProjectReference Include="..\..\src\Nodely.Avalonia.Workflow\Nodely.Avalonia.Workflow.csproj" />
     <ProjectReference Include="..\..\src\Nodely.Avalonia\Nodely.Avalonia.csproj" />

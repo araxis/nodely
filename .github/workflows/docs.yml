@@ -18,6 +18,9 @@ permissions:
   pages: write
   id-token: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 # Allow one concurrent deployment; don't cancel an in-progress production deploy.
 concurrency:
   group: pages

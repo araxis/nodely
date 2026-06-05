@@ -113,8 +113,8 @@ void ChangeWidth(LinkModel link, double nextWidth)
 }
 ```
 
-The desktop gallery includes a side-panel inspector that edits core, Database, UML, Workflow, and sample custom
-model fields at runtime.
+The desktop gallery includes a side-panel inspector that edits core, API, Database, MindMap, Network,
+StateMachine, UML, Workflow, and sample custom model fields at runtime.
 
 ## Custom overlay
 

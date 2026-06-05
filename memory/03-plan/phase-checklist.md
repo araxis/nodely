@@ -2,6 +2,12 @@
 
 Tick items as completed. Mirrors `development-plan.md`. `[ ]` todo, `[~]` in progress, `[x]` done.
 
+## Post-M4 - v0.8.0 package cohesion polish
+- [x] Bump main package version to `0.8.0` while leaving side-package version properties unchanged.
+- [x] Add Architecture gallery scene combining API, Database, Network, and Workflow packs.
+- [x] Add multi-pack composition tests for renderers, ports, link styles, serializer registry, theme switching, and runtime edits.
+- [x] Add package composition and side-package selection docs.
+
 ## Post-M4 — side package roadmap
 - [x] Add `Nodely.Avalonia.Uml` package targeting `net8.0;net10.0`.
 - [x] Add structural UML nodes and relationship links.

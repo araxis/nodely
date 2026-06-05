@@ -3,6 +3,20 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-05 — v0.8.0 package cohesion polish
+
+- Versioning: main packages move to `0.8.0`; side packages stay on independent `0.1.0` version properties
+  because package code did not need a version bump.
+- Demo/docs: gallery now includes an Architecture scene combining API, Database, Network, and Workflow on one
+  canvas; README and docs explain package selection and shared canvas/serializer registration.
+- Tests: added Avalonia headless composition coverage for all side-package renderers, ports, typed link styles,
+  serializer registry ordering, theme switching, and undoable runtime edits.
+- **Verified:** build 0/0; `dotnet test` -> Core 111/111 + Avalonia 61/61 + API 7/7 + Database 7/7
+  + MindMap 7/7 + Network 7/7 + StateMachine 7/7 + UML 6/6 + Workflow 5/5 on both `net8.0` and
+  `net10.0`; `dotnet pack` -> main packages `0.8.0`, side packages `0.1.0`; package inspection confirmed
+  expected target folders and dependency groups; docs install dry-run and docs build passed; `git diff --check`
+  and neutral wording scan passed.
+
 ## 2026-06-05 — API side package
 
 - Package: added `Nodely.Avalonia.Api` as the seventh optional domain pack, starting at side-package version

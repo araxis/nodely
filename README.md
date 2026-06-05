@@ -16,8 +16,8 @@ architecture to Avalonia. Pan/zoom canvas, custom nodes, interactive links, grou
 theming, read-only mode, serialization, undo/redo, and auto-layout — with **no SVG, no JS, no WebView**,
 just Avalonia's native rendering.
 
-> Status: **v0.7.0** main packages, with independent side packages. Engine + Avalonia UI are complete and
-> tested on `net8.0` and `net10.0` (215 tests per runtime across the engine, side packages, and Avalonia
+> Status: **v0.8.0** main packages, with independent side packages. Engine + Avalonia UI are complete and
+> tested on `net8.0` and `net10.0` (218 tests per runtime across the engine, side packages, and Avalonia
 > headless UI). See
 > [`CHANGELOG.md`](CHANGELOG.md) and the design notes in [`memory/`](memory/).
 
@@ -66,6 +66,18 @@ Use `Nodely.Core` directly for headless engine scenarios; it is included transit
 | [`Nodely.Avalonia.Workflow`](https://www.nuget.org/packages/Nodely.Avalonia.Workflow) | `net8.0`, `net10.0` | Optional side package: workflow start, end, task, decision, gateway, event, note nodes, and workflow links. |
 | [`Nodely.Algorithms`](https://www.nuget.org/packages/Nodely.Algorithms) | `netstandard2.0`, `net8.0`, `net10.0` | Optional: traversal, connected components, layered auto-layout. |
 | [`Nodely.Serialization`](https://www.nuget.org/packages/Nodely.Serialization) | `netstandard2.0`, `net8.0`, `net10.0` | Optional: versioned JSON snapshots. |
+
+### Choosing side packages
+
+Pick the package that matches the vocabulary your users expect:
+
+- `Nodely.Avalonia.Api` for service maps, endpoint cards, contracts, and request/response/event links.
+- `Nodely.Avalonia.Database` for schemas, tables, views, procedures, row-aware ports, and relationships.
+- `Nodely.Avalonia.Network` for topology diagrams, devices, zones, status, and protocol/capacity links.
+- `Nodely.Avalonia.Workflow` for process builders and human or service tasks.
+- `Nodely.Avalonia.StateMachine` for lifecycle editors with guards and self transitions.
+- `Nodely.Avalonia.Uml` for structural type diagrams.
+- `Nodely.Avalonia.MindMap` for planning and topic maps.
 
 ## Getting started
 
@@ -169,6 +181,17 @@ var umlRegistry = Nodely.Avalonia.Uml.UmlNodeFactory.CreateRegistry();
 // Workflow pack (Nodely.Avalonia.Workflow)
 canvas.UseWorkflowNodes();
 var workflowRegistry = Nodely.Avalonia.Workflow.WorkflowNodeFactory.CreateRegistry();
+
+// Compose several packs on one canvas
+canvas.UseApiNodes();
+canvas.UseDatabaseNodes();
+canvas.UseNetworkNodes();
+canvas.UseWorkflowNodes();
+
+var composedRegistry = Nodely.Avalonia.Api.ApiNodeFactory.CreateRegistry()
+    .UseDatabaseNodes()
+    .UseNetworkNodes()
+    .UseWorkflowNodes();
 
 // Undo/redo (Nodely.Commands)
 var history = new Nodely.Commands.UndoRedoStack();

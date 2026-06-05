@@ -6,13 +6,24 @@ All notable changes to Nodely are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-06-05
+
 ### Added
+- **Architecture gallery scene:** the desktop gallery now includes a multi-package architecture scene combining
+  API, Database, Network, and Workflow models on one canvas.
+- **Package composition docs:** the documentation site now includes a guide for registering several side
+  packages on one canvas and one serializer registry.
+- **Composition coverage:** Avalonia headless tests now prove all side-package renderers, visible ports, typed
+  link styles, serializer registrations, theme switching, and runtime edits can coexist.
 - **Runtime metadata editing:** `DiagramCanvas.RunAsUndoableEdit()` and `RefreshVisuals()` let host apps wire
   property inspectors into the canvas undo/redo stack.
 - **Gallery inspector:** the desktop gallery now includes a runtime side panel for editing selected core,
-  Database, UML, Workflow, MindMap, StateMachine, and sample custom node/link properties.
+  API, Database, MindMap, Network, StateMachine, UML, Workflow, and sample custom node/link properties.
 
 ### Changed
+- **Version metadata:** main packages move to `0.8.0` while side packages keep their independent `0.1.0`
+  version properties.
+- **Package guidance:** README and docs now clarify side-package selection and shared canvas/serializer setup.
 - **Domain pack visuals:** Database and UML packs now provide richer pack-owned renderers instead of generic
   box styling.
 - **Domain ports:** Database and UML ports can carry pack-specific roles and optional row names, so links can
@@ -225,6 +236,7 @@ No breaking API changes.
   save/load (snapshots gained an `Extra` map).
 - Documentation site gained an **Extensibility** guide (the seam map).
 
+[0.8.0]: /araxis/nodely/releases/tag/v0.8.0
 [0.7.0]: https://github.com/araxis/nodely/releases/tag/v0.7.0
 [0.6.0]: https://github.com/araxis/nodely/releases/tag/v0.6.0
 [0.5.0]: https://github.com/araxis/nodely/releases/tag/v0.5.0

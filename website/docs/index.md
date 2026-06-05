@@ -62,13 +62,20 @@ Nodely ships as focused NuGet packages so you only take what you use:
 
 Most apps reference `Nodely.Avalonia` (which brings in the core) and add the others as needed.
 
+Choose side packages by the vocabulary you want users to see on the canvas. For example, API diagrams use
+service, endpoint, contract, request, and response shapes; database diagrams use tables, rows, and
+relationships; network diagrams use devices, zones, status, and capacity; workflow and state-machine diagrams
+use their own task and transition vocabulary. Multiple side packages can register on the same canvas and
+serializer registry. See [Package composition](./guides/package-composition.md) for the setup pattern.
+
 ## Where to go next
 
 The fastest way in is [Getting started](./getting-started.md) — a working canvas in a few lines. If you'd
 rather start from a complete tiny app, run `samples/Nodely.QuickStart`. If you'd rather understand how the
 pieces fit before writing code, the [Architecture](./architecture.md) page lays out the design. And when you're
 ready to make Nodely your own, the guides cover [custom nodes](./guides/custom-nodes.md),
-[links](./guides/links.md), [the API pack](./guides/api.md), [the database pack](./guides/database.md), [the UML pack](./guides/uml.md),
+[links](./guides/links.md), [package composition](./guides/package-composition.md),
+[the API pack](./guides/api.md), [the database pack](./guides/database.md), [the UML pack](./guides/uml.md),
 [the Workflow pack](./guides/workflow.md), [the MindMap pack](./guides/mindmap.md),
 [the StateMachine pack](./guides/statemachine.md), [the Network pack](./guides/network.md),
 [recipes](./guides/recipes.md), [undo/redo](./guides/undo-redo.md), and the rest.

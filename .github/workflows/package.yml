@@ -20,6 +20,7 @@ on:
           - 'main'
           - 'Nodely.Avalonia.Database'
           - 'Nodely.Avalonia.Uml'
+          - 'Nodely.Avalonia.Workflow'
       publish:
         description: 'Publish packages'
         required: true
@@ -67,10 +68,12 @@ jobs:
           side_package_ids=(
             "Nodely.Avalonia.Database"
             "Nodely.Avalonia.Uml"
+            "Nodely.Avalonia.Workflow"
           )
           side_package_projects=(
             "src/Nodely.Avalonia.Database/Nodely.Avalonia.Database.csproj"
             "src/Nodely.Avalonia.Uml/Nodely.Avalonia.Uml.csproj"
+            "src/Nodely.Avalonia.Workflow/Nodely.Avalonia.Workflow.csproj"
           )
 
           add_side_package() {
@@ -157,6 +160,4 @@ jobs:
             10.0.x
 
       - name: Publish packages and symbols
-        run: |
-          dotnet nuget push "artifacts/packages/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
-          dotnet nuget push "artifacts/packages/*.snupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+        run: dotnet nuget push "artifacts/packages/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate

@@ -4,6 +4,21 @@ All notable changes to Nodely are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [Nodely.Avalonia.Workflow 0.1.0] - 2026-06-05
+
+First Workflow side-package release.
+
+### Added
+- **Workflow package:** `Nodely.Avalonia.Workflow` adds start, end, task, decision, gateway, event, and note nodes.
+- **Workflow links:** sequence, conditional, error, and message links include label and condition metadata.
+- **Renderer registration:** `DiagramCanvas.UseWorkflowNodes()` registers Workflow node renderers, link styling,
+  and compact workflow link markers in one call.
+- **Serialization registration:** `DiagramSerializationRegistry.UseWorkflowNodes()` restores Workflow nodes and
+  links with stable model-kind keys.
+- **Package workflow:** the side-package map now includes Workflow and avoids a duplicate symbol push during
+  package publishing.
+- **Demo and docs:** the desktop gallery and documentation site include a Workflow scene and guide.
+
 ## [Nodely.Avalonia.Uml 0.1.0] - 2026-06-04
 
 First UML side-package release.

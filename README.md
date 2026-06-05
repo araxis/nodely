@@ -2,7 +2,9 @@
 
 [![Package](https://img.shields.io/nuget/v/Nodely.Avalonia?label=package)](https://www.nuget.org/packages/Nodely.Avalonia)
 [![Downloads](https://img.shields.io/nuget/dt/Nodely.Avalonia?label=downloads)](https://www.nuget.org/packages/Nodely.Avalonia)
+[![Database](https://img.shields.io/nuget/v/Nodely.Avalonia.Database?label=database)](https://www.nuget.org/packages/Nodely.Avalonia.Database)
 [![UML](https://img.shields.io/nuget/v/Nodely.Avalonia.Uml?label=uml)](https://www.nuget.org/packages/Nodely.Avalonia.Uml)
+[![Workflow](https://img.shields.io/nuget/v/Nodely.Avalonia.Workflow?label=workflow)](https://www.nuget.org/packages/Nodely.Avalonia.Workflow)
 
 **Nodely** is a native **Avalonia** toolkit for building interactive node / graph / diagram editors — a
 first-party port of the proven [Blazor.Diagrams](https://github.com/Blazor-Diagrams/Blazor.Diagrams)
@@ -11,7 +13,7 @@ theming, read-only mode, serialization, undo/redo, and auto-layout — with **no
 just Avalonia's native rendering.
 
 > Status: **v0.7.0** main packages, with independent side packages. Engine + Avalonia UI are complete and
-> tested on `net8.0` and `net10.0` (167 tests per runtime across the engine, side packages, and Avalonia
+> tested on `net8.0` and `net10.0` (174 tests per runtime across the engine, side packages, and Avalonia
 > headless UI). See
 > [`CHANGELOG.md`](CHANGELOG.md) and the design notes in [`memory/`](memory/).
 
@@ -38,6 +40,7 @@ dotnet add package Nodely.Algorithms
 dotnet add package Nodely.Serialization
 dotnet add package Nodely.Avalonia.Database
 dotnet add package Nodely.Avalonia.Uml
+dotnet add package Nodely.Avalonia.Workflow
 ```
 
 Use `Nodely.Core` directly for headless engine scenarios; it is included transitively by `Nodely.Avalonia`.
@@ -48,6 +51,7 @@ Use `Nodely.Core` directly for headless engine scenarios; it is included transit
 | [`Nodely.Avalonia`](https://www.nuget.org/packages/Nodely.Avalonia) | `net8.0`, `net10.0` | Avalonia controls: `DiagramCanvas`, `DiagramNavigator`, theming, adorners. |
 | [`Nodely.Avalonia.Database`](https://www.nuget.org/packages/Nodely.Avalonia.Database) | `net8.0`, `net10.0` | Optional side package: database table, view, procedure nodes, ports, and relationship links. |
 | [`Nodely.Avalonia.Uml`](https://www.nuget.org/packages/Nodely.Avalonia.Uml) | `net8.0`, `net10.0` | Optional side package: UML class, interface, enum, package, note nodes, and relationship links. |
+| [`Nodely.Avalonia.Workflow`](https://www.nuget.org/packages/Nodely.Avalonia.Workflow) | `net8.0`, `net10.0` | Optional side package: workflow start, end, task, decision, gateway, event, note nodes, and workflow links. |
 | [`Nodely.Algorithms`](https://www.nuget.org/packages/Nodely.Algorithms) | `netstandard2.0`, `net8.0`, `net10.0` | Optional: traversal, connected components, layered auto-layout. |
 | [`Nodely.Serialization`](https://www.nuget.org/packages/Nodely.Serialization) | `netstandard2.0`, `net8.0`, `net10.0` | Optional: versioned JSON snapshots. |
 
@@ -129,6 +133,10 @@ var registry = Nodely.Avalonia.Database.DatabaseNodeFactory.CreateRegistry();
 // UML pack (Nodely.Avalonia.Uml)
 canvas.UseUmlNodes();
 var umlRegistry = Nodely.Avalonia.Uml.UmlNodeFactory.CreateRegistry();
+
+// Workflow pack (Nodely.Avalonia.Workflow)
+canvas.UseWorkflowNodes();
+var workflowRegistry = Nodely.Avalonia.Workflow.WorkflowNodeFactory.CreateRegistry();
 
 // Undo/redo (Nodely.Commands)
 var history = new Nodely.Commands.UndoRedoStack();

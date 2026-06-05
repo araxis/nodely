@@ -11,6 +11,7 @@
     <Project Path="src/Nodely.Avalonia/Nodely.Avalonia.csproj" />
     <Project Path="src/Nodely.Avalonia.Database/Nodely.Avalonia.Database.csproj" />
     <Project Path="src/Nodely.Avalonia.Uml/Nodely.Avalonia.Uml.csproj" />
+    <Project Path="src/Nodely.Avalonia.Workflow/Nodely.Avalonia.Workflow.csproj" />
     <Project Path="src/Nodely.Core/Nodely.Core.csproj" />
     <Project Path="src/Nodely.Serialization/Nodely.Serialization.csproj" />
   </Folder>
@@ -19,5 +20,6 @@
     <Project Path="tests/Nodely.Core.Tests/Nodely.Core.Tests.csproj" />
     <Project Path="tests/Nodely.Database.Tests/Nodely.Database.Tests.csproj" />
     <Project Path="tests/Nodely.Uml.Tests/Nodely.Uml.Tests.csproj" />
+    <Project Path="tests/Nodely.Workflow.Tests/Nodely.Workflow.Tests.csproj" />
   </Folder>
 </Solution>

@@ -13,7 +13,9 @@ Use this checklist for each package release.
 1. Update `NodelyMainVersion` or the affected side-package version property in `Directory.Build.props`.
 2. Update `CHANGELOG.md`, `README.md`, package target tables, and any docs that mention the current version
    or test count.
-3. Run the wording scan before staging so branch names, commit messages, docs, comments, and generated files stay neutral.
+3. For a main-only polish release, leave side-package version properties unchanged unless side-package package
+   code changed.
+4. Run the wording scan before staging so branch names, commit messages, docs, comments, and generated files stay neutral.
 
 ## Validate locally
 

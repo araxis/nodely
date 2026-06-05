@@ -3,6 +3,16 @@
 Durable lessons, gotchas, surprises, and reversed decisions. Add an entry the moment something is
 non-obvious — it's the cheapest insurance we have. Tag each with a date and the phase.
 
+## F-055 — Multi-pack polish belongs in the main release line (2026-06-05, v0.8.0 polish)
+
+After seven side packages, adding another vocabulary was less valuable than proving the existing packages
+compose as one app surface. The weak spots were not package-specific models; they were shared registration,
+serializer setup, demo discoverability, and clear package selection guidance.
+
+Decision: keep side-package code and version properties unchanged for this release. Move the main package line
+to `0.8.0`, add a mixed Architecture gallery scene, add composition tests across all side packages, and document
+the shared canvas/serializer pattern.
+
 ## F-054 — API packs should separate endpoints, contracts, and traffic (2026-06-05, API side package)
 
 API diagrams become hard to read when endpoints, payload shapes, auth policy, and backend operations collapse

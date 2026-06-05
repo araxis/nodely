@@ -135,6 +135,7 @@ public sealed class MainWindow : Window
         AddScene(SceneButton("State machine", BuildStateMachine));
         AddScene(SceneButton("Inspector", BuildInspector));
         AddScene(SceneButton("Extensibility", BuildExtensibility));
+        AddScene(SceneButton("Architecture", BuildArchitecture));
         AddScene(SceneButton("Database", BuildDatabase));
         AddScene(SceneButton("UML", BuildUml));
         AddScene(SceneButton("MindMap", BuildMindMap));
@@ -207,7 +208,7 @@ public sealed class MainWindow : Window
 
         var diagram = NewDiagram();
         DiagramSerializer.Deserialize(diagram, _savedJson, CreateSerializationRegistry());
-        _host.Content = Editor(diagram, configureCanvas: canvas => canvas.UseApiNodes().UseDatabaseNodes().UseMindMapNodes().UseNetworkNodes().UseStateMachineNodes().UseUmlNodes().UseWorkflowNodes());
+        _host.Content = Editor(diagram, configureCanvas: UseAllSidePackages);
     }
 
     private static DiagramSerializationRegistry CreateSerializationRegistry() => ApiNodeFactory.CreateRegistry()
@@ -221,6 +222,18 @@ public sealed class MainWindow : Window
         .RegisterPort(SignalPort.ModelKindKey, (ps, parent) =>
             new SignalPort(ps.Id, parent, Enum.Parse<PortAlignment>(ps.Alignment)))
         .RegisterLink(FlowLink.ModelKindKey, (ls, source, target) => new FlowLink(ls.Id, source, target));
+
+    private static void UseAllSidePackages(DiagramCanvas canvas)
+    {
+        canvas
+            .UseApiNodes()
+            .UseDatabaseNodes()
+            .UseMindMapNodes()
+            .UseNetworkNodes()
+            .UseStateMachineNodes()
+            .UseUmlNodes()
+            .UseWorkflowNodes();
+    }
 
     private Control Editor(
         NodelyDiagram diagram,
@@ -353,6 +366,159 @@ public sealed class MainWindow : Window
         diagram.Options.Groups.Enabled = true;
         diagram.Options.Links.DefaultTargetMarker = LinkMarker.Arrow;
         return diagram;
+    }
+
+    private Control BuildArchitecture()
+    {
+        var diagram = NewDiagram();
+
+        var client = diagram.Nodes.Add(new ApiClientNode(new NodelyPoint(0, 0), "Storefront")
+        {
+            Platform = "desktop and web",
+            Summary = "Customer order entry",
+            Version = "v2",
+        });
+        var gateway = diagram.Nodes.Add(new ApiGatewayNode(new NodelyPoint(0, 0), "Public gateway")
+        {
+            Host = "api.contoso.test",
+            Summary = "Routes public traffic",
+        });
+        var service = diagram.Nodes.Add(new ApiServiceNode(new NodelyPoint(0, 0), "Orders service")
+        {
+            BaseUrl = "orders.internal",
+            Owner = "Commerce",
+            Version = "v1",
+            Summary = "Coordinates order creation",
+        });
+        var endpoint = diagram.Nodes.Add(new ApiEndpointNode(new NodelyPoint(0, 0), "/orders", ApiEndpointMethod.Post)
+        {
+            RequestType = "CreateOrderRequest",
+            ResponseType = "OrderDto",
+            Status = ApiEndpointStatus.Preview,
+            Summary = "Creates an order",
+        });
+        var request = diagram.Nodes.Add(new ApiContractNode(new NodelyPoint(0, 0), "CreateOrderRequest"));
+        request.Fields.Add(new ApiContractField("customerId", "string", required: true));
+        request.Fields.Add(new ApiContractField("items", "OrderItem[]", required: true));
+        request.Fields.Add(new ApiContractField("couponCode", "string"));
+
+        var orders = diagram.Nodes.Add(new DatabaseTableNode(new NodelyPoint(0, 0), "Orders", "sales"));
+        orders.Columns.Add(new DatabaseColumn("OrderId", "uuid", isPrimaryKey: true, isNullable: false));
+        orders.Columns.Add(new DatabaseColumn("CustomerId", "uuid", isNullable: false));
+        orders.Columns.Add(new DatabaseColumn("Status", "text", isNullable: false));
+        var lines = diagram.Nodes.Add(new DatabaseTableNode(new NodelyPoint(0, 0), "OrderLines", "sales"));
+        lines.Columns.Add(new DatabaseColumn("OrderLineId", "uuid", isPrimaryKey: true, isNullable: false));
+        lines.Columns.Add(new DatabaseColumn("OrderId", "uuid", isNullable: false) { IsForeignKey = true });
+        lines.Columns.Add(new DatabaseColumn("Sku", "text", isNullable: false));
+
+        var internet = diagram.Nodes.Add(new NetworkCloudNode(new NodelyPoint(0, 0), "Internet")
+        {
+            Address = "0.0.0.0/0",
+            Zone = "external",
+        });
+        var firewall = diagram.Nodes.Add(new NetworkFirewallNode(new NodelyPoint(0, 0), "Policy edge")
+        {
+            Address = "10.0.0.1",
+            Zone = "edge",
+            Status = NetworkStatus.Online,
+        });
+        var apiHost = diagram.Nodes.Add(new NetworkServiceNode(new NodelyPoint(0, 0), "Orders API")
+        {
+            Address = "orders.internal",
+            Zone = "app",
+            Status = NetworkStatus.Online,
+        });
+        var databaseHost = diagram.Nodes.Add(new NetworkServerNode(new NodelyPoint(0, 0), "Data host")
+        {
+            Address = "10.0.3.12",
+            Zone = "data",
+            Status = NetworkStatus.Online,
+        });
+
+        var start = diagram.Nodes.Add(new WorkflowStartNode(new NodelyPoint(0, 0), "Order received"));
+        var validate = diagram.Nodes.Add(new WorkflowTaskNode(new NodelyPoint(0, 0), "Validate request")
+        {
+            TaskType = WorkflowTaskType.User,
+            Status = WorkflowTaskStatus.Ready,
+        });
+        var callApi = diagram.Nodes.Add(new WorkflowTaskNode(new NodelyPoint(0, 0), "Call Orders API")
+        {
+            TaskType = WorkflowTaskType.Service,
+            Status = WorkflowTaskStatus.Running,
+        });
+        var done = diagram.Nodes.Add(new WorkflowEndNode(new NodelyPoint(0, 0), "Order accepted"));
+
+        var clientOut = client.AddPort(new ApiPortModel(client, PortAlignment.Right, ApiPortRole.Request, "request"));
+        var gatewayIn = gateway.AddPort(new ApiPortModel(gateway, PortAlignment.Left, ApiPortRole.Request, "public"));
+        var gatewayOut = gateway.AddPort(new ApiPortModel(gateway, PortAlignment.Right, ApiPortRole.Request, "route"));
+        var serviceIn = service.AddPort(new ApiPortModel(service, PortAlignment.Left, ApiPortRole.Request, "in"));
+        var serviceOut = service.AddPort(new ApiPortModel(service, PortAlignment.Right, ApiPortRole.Dependency, "handler"));
+        var endpointIn = endpoint.AddPort(new ApiPortModel(endpoint, PortAlignment.Left, ApiPortRole.Request, "POST"));
+        var endpointContract = endpoint.AddPort(new ApiPortModel(endpoint, PortAlignment.Right, ApiPortRole.Dependency, "body"));
+        var contractIn = request.AddPort(new ApiPortModel(request, PortAlignment.Left, ApiPortRole.Dependency, "schema"));
+
+        diagram.Links.Add(new ApiLink(clientOut, gatewayIn, ApiLinkKind.Request) { Label = "submit", Protocol = "HTTPS" });
+        diagram.Links.Add(new ApiLink(gatewayOut, serviceIn, ApiLinkKind.Request) { Label = "route", Protocol = "HTTP" });
+        diagram.Links.Add(new ApiLink(serviceOut, endpointIn, ApiLinkKind.Request) { Label = "create", Protocol = "POST" });
+        diagram.Links.Add(new ApiLink(endpointContract, contractIn, ApiLinkKind.DependsOn) { Label = "body", Payload = "request" });
+
+        var ordersOut = orders.AddPort(new DatabasePortModel(orders, PortAlignment.Right, DatabasePortKind.Relationship, "OrderId"));
+        var linesIn = lines.AddPort(new DatabasePortModel(lines, PortAlignment.Left, DatabasePortKind.Relationship, "OrderId"));
+        diagram.Links.Add(new DatabaseRelationshipLink(ordersOut, linesIn, RelationshipKind.OneToMany)
+        {
+            SourceCardinality = "1",
+            TargetCardinality = "many",
+        }).AddLabel("order lines", 0.5, new NodelyPoint(0, -16));
+        diagram.Links.Add(new DatabaseRelationshipLink(service, orders, RelationshipKind.Dependency)).AddLabel("persists", 0.5, new NodelyPoint(0, 16));
+
+        var internetOut = internet.AddPort(new NetworkPortModel(internet, PortAlignment.Right, NetworkPortRole.Wan, "public"));
+        var firewallIn = firewall.AddPort(new NetworkPortModel(firewall, PortAlignment.Left, NetworkPortRole.Wan, "wan"));
+        var firewallOut = firewall.AddPort(new NetworkPortModel(firewall, PortAlignment.Right, NetworkPortRole.Service, "https"));
+        var apiIn = apiHost.AddPort(new NetworkPortModel(apiHost, PortAlignment.Left, NetworkPortRole.Service, "443"));
+        var dbIn = databaseHost.AddPort(new NetworkPortModel(databaseHost, PortAlignment.Left, NetworkPortRole.Service, "5432"));
+        diagram.Links.Add(new NetworkLink(internetOut, firewallIn, NetworkLinkKind.Fiber) { Label = "public", Protocol = "TLS" });
+        diagram.Links.Add(new NetworkLink(firewallOut, apiIn, NetworkLinkKind.VpnTunnel) { Label = "edge route", Protocol = "HTTPS" });
+        diagram.Links.Add(new NetworkLink(apiIn, dbIn, NetworkLinkKind.Dependency) { Label = "queries", Protocol = "SQL" });
+        diagram.Links.Add(new NetworkLink(apiHost, service, NetworkLinkKind.Dependency) { Label = "hosts", Protocol = "HTTP" });
+
+        diagram.Links.Add(new WorkflowLink(start, validate, WorkflowLinkKind.Sequence) { Label = "start" });
+        diagram.Links.Add(new WorkflowLink(validate, callApi, WorkflowLinkKind.Conditional) { Label = "valid", Condition = "has items" });
+        diagram.Links.Add(new WorkflowLink(callApi, endpoint, WorkflowLinkKind.Message) { Label = "invokes" });
+        diagram.Links.Add(new WorkflowLink(callApi, done, WorkflowLinkKind.Sequence) { Label = "accepted" });
+
+        Arrange();
+
+        return Editor(
+            diagram,
+            configureCanvas: UseAllSidePackages,
+            layoutAction: (canvas, _) =>
+            {
+                canvas.RunAsUndoableMove(Arrange);
+                canvas.RefreshVisuals();
+                canvas.ZoomToFit();
+            });
+
+        void Arrange()
+        {
+            internet.SetPosition(70, 70);
+            firewall.SetPosition(340, 50);
+            apiHost.SetPosition(620, 50);
+            databaseHost.SetPosition(910, 50);
+
+            client.SetPosition(70, 245);
+            gateway.SetPosition(340, 230);
+            service.SetPosition(620, 225);
+            endpoint.SetPosition(920, 230);
+            request.SetPosition(1220, 220);
+
+            orders.SetPosition(610, 520);
+            lines.SetPosition(920, 520);
+
+            start.SetPosition(70, 720);
+            validate.SetPosition(340, 690);
+            callApi.SetPosition(620, 690);
+            done.SetPosition(920, 720);
+        }
     }
 
     private Control BuildWorkflow()

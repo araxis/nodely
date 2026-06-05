@@ -97,4 +97,5 @@ Once you have a canvas running, the natural next step is making the nodes look l
 custom overlays, see [Recipes](./guides/recipes.md). For ready-made domain shapes, see the
 [API pack](./guides/api.md), [Database pack](./guides/database.md), [MindMap pack](./guides/mindmap.md),
 [StateMachine pack](./guides/statemachine.md), [Network pack](./guides/network.md), [UML pack](./guides/uml.md), and
-[Workflow pack](./guides/workflow.md).
+[Workflow pack](./guides/workflow.md). If one editor needs several vocabularies at once, use the
+[Package composition](./guides/package-composition.md) guide.

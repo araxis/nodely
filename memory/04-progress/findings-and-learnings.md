@@ -3,6 +3,18 @@
 Durable lessons, gotchas, surprises, and reversed decisions. Add an entry the moment something is
 non-obvious — it's the cheapest insurance we have. Tag each with a date and the phase.
 
+## F-053 — Network topology packs need device semantics in the visuals (2026-06-05, Network side package)
+
+Network diagrams lose most of their value if routers, switches, firewalls, services, zones, and links all look
+like generic boxes connected by plain paths. The package needs to show device roles, visible port groups, status,
+capacity, and connection type directly in the rendered vocabulary so a topology is readable before a user opens
+an inspector.
+
+Decision: `Nodely.Avalonia.Network` owns device-shaped node renderers, switch port rows, typed network ports,
+status badges, link glyphs, link metadata, and `NetworkLayout.Arrange()` inside the side package. Core stays
+unchanged, and future topology-style packs should follow this pattern instead of asking the main packages for
+domain-specific render APIs.
+
 ## F-052 — StateMachine self loops can stay pack-owned (2026-06-05, StateMachine side package)
 
 State-machine self transitions need a loop shape and label placement that generic link routing does not provide.

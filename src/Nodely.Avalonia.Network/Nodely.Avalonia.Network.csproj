@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>Nodely.Avalonia.Network</PackageId>
+    <Title>Nodely.Avalonia.Network</Title>
+    <Description>Optional network topology node pack for Nodely Avalonia: device nodes, typed network ports, topology links, status metadata, renderers, and arrange helpers.</Description>
+    <PackageVersion>$(NodelyAvaloniaNetworkVersion)</PackageVersion>
+    <Version>$(NodelyAvaloniaNetworkVersion)</Version>
+    <PackageTags>avalonia;diagram;diagrams;graph;node-editor;network;topology;canvas</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nodely.Avalonia\Nodely.Avalonia.csproj" />
+    <ProjectReference Include="..\Nodely.Serialization\Nodely.Serialization.csproj" />
+  </ItemGroup>
+
+</Project>

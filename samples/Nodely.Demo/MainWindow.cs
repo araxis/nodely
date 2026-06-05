@@ -12,6 +12,7 @@ using Nodely.Avalonia;
 using Nodely.Avalonia.Controls;
 using Nodely.Avalonia.Database;
 using Nodely.Avalonia.MindMap;
+using Nodely.Avalonia.Network;
 using Nodely.Avalonia.StateMachine;
 using Nodely.Avalonia.Uml;
 using Nodely.Avalonia.Workflow;
@@ -136,6 +137,7 @@ public sealed class MainWindow : Window
         AddScene(SceneButton("Database", BuildDatabase));
         AddScene(SceneButton("UML", BuildUml));
         AddScene(SceneButton("MindMap", BuildMindMap));
+        AddScene(SceneButton("Network", BuildNetwork));
         AddScene(new Border { Width = 24 });
         AddScene(ToolButton("Theme", ToggleTheme));
         AddScene(ToolButton("Save", Save));
@@ -203,11 +205,12 @@ public sealed class MainWindow : Window
 
         var diagram = NewDiagram();
         DiagramSerializer.Deserialize(diagram, _savedJson, CreateSerializationRegistry());
-        _host.Content = Editor(diagram, configureCanvas: canvas => canvas.UseDatabaseNodes().UseMindMapNodes().UseStateMachineNodes().UseUmlNodes().UseWorkflowNodes());
+        _host.Content = Editor(diagram, configureCanvas: canvas => canvas.UseDatabaseNodes().UseMindMapNodes().UseNetworkNodes().UseStateMachineNodes().UseUmlNodes().UseWorkflowNodes());
     }
 
     private static DiagramSerializationRegistry CreateSerializationRegistry() => DatabaseNodeFactory.CreateRegistry()
         .UseMindMapNodes()
+        .UseNetworkNodes()
         .UseStateMachineNodes()
         .UseUmlNodes()
         .UseWorkflowNodes()
@@ -854,5 +857,152 @@ public sealed class MainWindow : Window
                 AccentColor = accent,
             });
         }
+    }
+
+    private Control BuildNetwork()
+    {
+        var diagram = NewDiagram();
+
+        var internet = diagram.Nodes.Add(new NetworkCloudNode(new NodelyPoint(0, 0), "Internet")
+        {
+            Address = "0.0.0.0/0",
+            Zone = "external",
+            Notes = "Public traffic source",
+            AccentColor = "#4D9EFF",
+        });
+        var admin = diagram.Nodes.Add(new NetworkClientNode(new NodelyPoint(0, 0), "Admin laptop")
+        {
+            Address = "10.9.0.24",
+            Zone = "users",
+            Status = NetworkStatus.Online,
+        });
+        var router = diagram.Nodes.Add(new NetworkRouterNode(new NodelyPoint(0, 0), "Edge router")
+        {
+            Address = "203.0.113.10",
+            Zone = "edge",
+            Notes = "Dual WAN edge",
+        });
+        var firewall = diagram.Nodes.Add(new NetworkFirewallNode(new NodelyPoint(0, 0), "Policy gateway")
+        {
+            Address = "10.0.0.1",
+            Zone = "edge",
+            Status = NetworkStatus.Maintenance,
+            Notes = "Change window active",
+        });
+        var balancer = diagram.Nodes.Add(new NetworkLoadBalancerNode(new NodelyPoint(0, 0), "Public LB")
+        {
+            Address = "10.0.1.10",
+            Zone = "dmz",
+        });
+        var switchNode = diagram.Nodes.Add(new NetworkSwitchNode(new NodelyPoint(0, 0), "Core switch")
+        {
+            Address = "10.0.2.2",
+            Zone = "core",
+            PortCount = 24,
+            ActivePorts = 19,
+        });
+        var appZone = diagram.Nodes.Add(new NetworkZoneNode(new NodelyPoint(0, 0), "App subnet")
+        {
+            Address = "10.0.2.0/24",
+            Zone = "prod",
+            Status = NetworkStatus.Online,
+        });
+        var api = diagram.Nodes.Add(new NetworkServiceNode(new NodelyPoint(0, 0), "Orders API")
+        {
+            Address = "orders.internal",
+            Zone = "prod",
+            Status = NetworkStatus.Online,
+        });
+        var worker = diagram.Nodes.Add(new NetworkServerNode(new NodelyPoint(0, 0), "Worker host")
+        {
+            Address = "10.0.2.42",
+            Zone = "prod",
+            Status = NetworkStatus.Warning,
+            Notes = "High latency",
+        });
+        var database = diagram.Nodes.Add(new NetworkServerNode(new NodelyPoint(0, 0), "Database host")
+        {
+            Address = "10.0.3.12",
+            Zone = "data",
+            Status = NetworkStatus.Online,
+        });
+
+        var internetWan = internet.AddPort(new NetworkPortModel(internet, PortAlignment.Right, NetworkPortRole.Wan, "internet"));
+        var routerWan = router.AddPort(new NetworkPortModel(router, PortAlignment.Left, NetworkPortRole.Wan, "wan0"));
+        var routerLan = router.AddPort(new NetworkPortModel(router, PortAlignment.Right, NetworkPortRole.Lan, "lan0"));
+        var firewallWan = firewall.AddPort(new NetworkPortModel(firewall, PortAlignment.Left, NetworkPortRole.Wan, "outside"));
+        var firewallLan = firewall.AddPort(new NetworkPortModel(firewall, PortAlignment.Right, NetworkPortRole.Lan, "inside"));
+        var balancerIn = balancer.AddPort(new NetworkPortModel(balancer, PortAlignment.Left, NetworkPortRole.Service, "https"));
+        var balancerOut = balancer.AddPort(new NetworkPortModel(balancer, PortAlignment.Right, NetworkPortRole.Service, "pool"));
+        var switchIn = switchNode.AddPort(new NetworkPortModel(switchNode, PortAlignment.Left, NetworkPortRole.Uplink, "uplink", index: 0));
+        var switchApi = switchNode.AddPort(new NetworkPortModel(switchNode, PortAlignment.Right, NetworkPortRole.Downlink, "api", index: 4));
+        var switchWorker = switchNode.AddPort(new NetworkPortModel(switchNode, PortAlignment.Right, NetworkPortRole.Downlink, "worker", index: 5));
+        var apiPort = api.AddPort(new NetworkPortModel(api, PortAlignment.Left, NetworkPortRole.Service, "443"));
+        var workerPort = worker.AddPort(new NetworkPortModel(worker, PortAlignment.Left, NetworkPortRole.Service, "jobs"));
+        var databasePort = database.AddPort(new NetworkPortModel(database, PortAlignment.Left, NetworkPortRole.Service, "5432"));
+        var adminPort = admin.AddPort(new NetworkPortModel(admin, PortAlignment.Right, NetworkPortRole.Client, "vpn"));
+
+        diagram.Links.Add(new NetworkLink(internetWan, routerWan, NetworkLinkKind.Fiber)
+        {
+            Label = "primary",
+            Protocol = "BGP",
+            Bandwidth = "10Gbps",
+            Latency = "3ms",
+            Direction = NetworkLinkDirection.Bidirectional,
+        });
+        diagram.Links.Add(new NetworkLink(routerLan, firewallWan, NetworkLinkKind.Ethernet)
+        {
+            Label = "edge",
+            Bandwidth = "10Gbps",
+        });
+        diagram.Links.Add(new NetworkLink(firewallLan, balancerIn, NetworkLinkKind.VpnTunnel)
+        {
+            Label = "dmz tunnel",
+            Protocol = "IPsec",
+            Status = NetworkStatus.Warning,
+            AccentColor = "#8B68B8",
+        });
+        diagram.Links.Add(new NetworkLink(balancerOut, switchIn, NetworkLinkKind.Ethernet)
+        {
+            Label = "app uplink",
+            Bandwidth = "10Gbps",
+        });
+        diagram.Links.Add(new NetworkLink(switchApi, apiPort, NetworkLinkKind.Ethernet)
+        {
+            Label = "orders",
+            Protocol = "HTTPS",
+            Bandwidth = "1Gbps",
+        });
+        diagram.Links.Add(new NetworkLink(switchWorker, workerPort, NetworkLinkKind.Wireless)
+        {
+            Label = "telemetry",
+            Protocol = "MQTT",
+            Latency = "18ms",
+            Status = NetworkStatus.Warning,
+        });
+        diagram.Links.Add(new NetworkLink(apiPort, databasePort, NetworkLinkKind.Dependency)
+        {
+            Label = "queries",
+            Protocol = "SQL",
+            Direction = NetworkLinkDirection.SourceToTarget,
+        });
+        diagram.Links.Add(new NetworkLink(adminPort, firewallWan, NetworkLinkKind.Blocked)
+        {
+            Label = "blocked admin",
+            Protocol = "SSH",
+            Status = NetworkStatus.Blocked,
+        });
+
+        NetworkLayout.Arrange(diagram);
+
+        return Editor(
+            diagram,
+            configureCanvas: canvas => canvas.UseNetworkNodes(),
+            layoutAction: (canvas, targetDiagram) =>
+            {
+                canvas.RunAsUndoableMove(() => NetworkLayout.Arrange(targetDiagram));
+                canvas.RefreshVisuals();
+                canvas.ZoomToFit();
+            });
     }
 }

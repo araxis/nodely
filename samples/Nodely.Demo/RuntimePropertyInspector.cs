@@ -12,6 +12,7 @@ using Nodely;
 using Nodely.Avalonia.Controls;
 using Nodely.Avalonia.Database;
 using Nodely.Avalonia.MindMap;
+using Nodely.Avalonia.Network;
 using Nodely.Avalonia.StateMachine;
 using Nodely.Avalonia.Uml;
 using Nodely.Avalonia.Workflow;
@@ -135,6 +136,9 @@ internal sealed class RuntimePropertyInspector : IDisposable
                 content.Children.Add(Section("State machine note"));
                 content.Children.Add(TextField("Text", note.Text, value => note.Text = value, note, multiline: true));
                 content.Children.Add(TextField("Accent", note.AccentColor, value => note.AccentColor = value, note));
+                break;
+            case NetworkNodeBase network:
+                BuildNetworkNode(content, network);
                 break;
             case WorkflowNodeBase workflow:
                 BuildWorkflowNode(content, workflow);
@@ -343,6 +347,26 @@ internal sealed class RuntimePropertyInspector : IDisposable
         }
     }
 
+    private void BuildNetworkNode(StackPanel content, NetworkNodeBase node)
+    {
+        content.Children.Add(Section("Network node"));
+        content.Children.Add(TextField("Name", node.Name, value => node.Name = value, node));
+        content.Children.Add(TextField("Address", node.Address ?? "", value => node.Address = NormalizeOptional(value), node));
+        content.Children.Add(EnumField("Status", node.Status, value => node.Status = value, node));
+        content.Children.Add(TextField("Role", node.Role, value => node.Role = value, node));
+        content.Children.Add(TextField("Zone", node.Zone ?? "", value => node.Zone = NormalizeOptional(value), node));
+        content.Children.Add(TextField("Notes", node.Notes ?? "", value => node.Notes = NormalizeOptional(value), node, multiline: true));
+        content.Children.Add(TextField("Accent", node.AccentColor, value => node.AccentColor = value, node));
+        content.Children.Add(TextField("Icon", node.IconKey ?? "", value => node.IconKey = NormalizeOptional(value), node));
+
+        if (node is NetworkSwitchNode switchNode)
+        {
+            content.Children.Add(Section("Switch ports"));
+            content.Children.Add(NumberField("Total", switchNode.PortCount, value => switchNode.PortCount = Math.Max(4, (int)Math.Round(value)), switchNode));
+            content.Children.Add(NumberField("Active", switchNode.ActivePorts, value => switchNode.ActivePorts = Math.Max(0, (int)Math.Round(value)), switchNode));
+        }
+    }
+
     private void BuildLink(StackPanel content, BaseLinkModel link)
     {
         content.Children.Add(Section("Link"));
@@ -390,6 +414,17 @@ internal sealed class RuntimePropertyInspector : IDisposable
                 content.Children.Add(TextField("Action", transition.Action ?? "", value => transition.Action = NormalizeOptional(value), transition));
                 content.Children.Add(NumberField("Priority", transition.Priority, value => transition.Priority = Math.Max(0, (int)Math.Round(value)), transition));
                 content.Children.Add(TextField("Accent", transition.AccentColor ?? "", value => transition.AccentColor = NormalizeOptional(value), transition));
+                break;
+            case NetworkLink network:
+                content.Children.Add(Section("Network link"));
+                content.Children.Add(EnumField("Kind", network.Kind, value => network.Kind = value, network));
+                content.Children.Add(TextField("Label", network.Label ?? "", value => network.Label = NormalizeOptional(value), network));
+                content.Children.Add(TextField("Protocol", network.Protocol ?? "", value => network.Protocol = NormalizeOptional(value), network));
+                content.Children.Add(TextField("Bandwidth", network.Bandwidth ?? "", value => network.Bandwidth = NormalizeOptional(value), network));
+                content.Children.Add(TextField("Latency", network.Latency ?? "", value => network.Latency = NormalizeOptional(value), network));
+                content.Children.Add(EnumField("Status", network.Status, value => network.Status = value, network));
+                content.Children.Add(EnumField("Direction", network.Direction, value => network.Direction = value, network));
+                content.Children.Add(TextField("Accent", network.AccentColor ?? "", value => network.AccentColor = NormalizeOptional(value), network));
                 break;
             case FlowLink flow:
                 content.Children.Add(Section("Flow"));

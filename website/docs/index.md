@@ -52,6 +52,7 @@ Nodely ships as focused NuGet packages so you only take what you use:
 | `Nodely.Avalonia` | net8.0, net10.0 | The `DiagramCanvas`, node/port/link/group rendering, adorners, the minimap, theming |
 | `Nodely.Avalonia.Database` | net8.0, net10.0 | Optional side package: database table/view/procedure renderers, row-aware ports, and relationship links |
 | `Nodely.Avalonia.MindMap` | net8.0, net10.0 | Optional side package: root, branch, and leaf topics, branch ports, curved links, collapse state, and arrange helpers |
+| `Nodely.Avalonia.Network` | net8.0, net10.0 | Optional side package: network device renderers, typed ports, topology links, status badges, and arrange helpers |
 | `Nodely.Avalonia.StateMachine` | net8.0, net10.0 | Optional side package: initial, state, final, choice, and note nodes, transition ports, transition links, self loops, and arrange helpers |
 | `Nodely.Avalonia.Uml` | net8.0, net10.0 | Optional side package: compartmented UML renderers, row-aware ports, packages, notes, and relationship links |
 | `Nodely.Avalonia.Workflow` | net8.0, net10.0 | Optional side package: workflow start, end, task, decision, gateway, event, note nodes, and workflow links |
@@ -68,5 +69,5 @@ pieces fit before writing code, the [Architecture](./architecture.md) page lays 
 ready to make Nodely your own, the guides cover [custom nodes](./guides/custom-nodes.md),
 [links](./guides/links.md), [the database pack](./guides/database.md), [the UML pack](./guides/uml.md),
 [the Workflow pack](./guides/workflow.md), [the MindMap pack](./guides/mindmap.md),
-[the StateMachine pack](./guides/statemachine.md), [recipes](./guides/recipes.md), [undo/redo](./guides/undo-redo.md),
-and the rest.
+[the StateMachine pack](./guides/statemachine.md), [the Network pack](./guides/network.md),
+[recipes](./guides/recipes.md), [undo/redo](./guides/undo-redo.md), and the rest.

@@ -2,6 +2,7 @@ using System.Linq;
 using Nodely;
 using Nodely.Avalonia.Uml;
 using Nodely.Geometry;
+using Nodely.Models;
 using Nodely.Serialization;
 using Shouldly;
 using Xunit;
@@ -68,7 +69,9 @@ public class UmlModelTests
 
         var repository = diagram.Nodes.Add(new UmlInterfaceNode("repo", new Point(300, 20), "ICustomerRepository"));
         repository.Operations.Add(new UmlOperation("Get", "Customer"));
-        var link = diagram.Links.Add(new UmlRelationshipLink(customer, repository, UmlRelationshipKind.Realization)
+        var customerPort = customer.AddPort(new UmlPortModel("customer-realization", customer, PortAlignment.Right, UmlPortKind.Realization, "Rename"));
+        var repositoryPort = repository.AddPort(new UmlPortModel("repo-realization", repository, PortAlignment.Left, UmlPortKind.Realization, "Get"));
+        var link = diagram.Links.Add(new UmlRelationshipLink(customerPort, repositoryPort, UmlRelationshipKind.Realization)
         {
             Label = "implements",
             SourceMultiplicity = "1",
@@ -86,6 +89,9 @@ public class UmlModelTests
         restored.Stereotypes.Single().ShouldBe("entity");
         restored.Members.Single().Name.ShouldBe("Id");
         restored.Operations.Single().Parameters.Single().Name.ShouldBe("name");
+        var restoredPort = restored.Ports.Single().ShouldBeOfType<UmlPortModel>();
+        restoredPort.Kind.ShouldBe(UmlPortKind.Realization);
+        restoredPort.Name.ShouldBe("Rename");
 
         var restoredLink = loaded.Links.Single().ShouldBeOfType<UmlRelationshipLink>();
         restoredLink.Id.ShouldBe(link.Id);
@@ -94,6 +100,28 @@ public class UmlModelTests
         restoredLink.Labels.Select(label => label.Content).ShouldBe(new[] { "implements", "1", "1" });
         restoredLink.SourceMultiplicity.ShouldBe("1");
         restoredLink.TargetMultiplicity.ShouldBe("1");
+    }
+
+    [Fact]
+    public void Named_uml_port_attaches_to_matching_member_row()
+    {
+        var node = new UmlClassNode(new Point(100, 100), "Order")
+        {
+            Size = new Size(300, 200),
+        };
+        node.Members.Add(new UmlMember("Id", "Guid"));
+        node.Members.Add(new UmlMember("Status", "OrderStatus"));
+        node.Operations.Add(new UmlOperation("Submit", "void"));
+
+        var port = new UmlPortModel(node, PortAlignment.Right, UmlPortKind.Association, "Status")
+        {
+            Size = new Size(18, 18),
+        };
+
+        var center = port.GetPortCenter();
+
+        center.X.ShouldBe(400);
+        center.Y.ShouldBe(237.5, 0.001);
     }
 
     [Fact]

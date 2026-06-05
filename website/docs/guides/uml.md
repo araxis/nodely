@@ -27,6 +27,21 @@ var canvas = new DiagramCanvas { Diagram = diagram };
 canvas.UseUmlNodes();
 ```
 
+That one call registers compartmented UML nodes, UML-specific ports, relationship styling, and pack-owned
+relationship markers.
+
+## Visual vocabulary
+
+The UML pack owns its own visual language:
+
+- classes, interfaces, and enums render as typed compartments with stereotypes, flags, members, operations, and
+  literals;
+- packages render with a package tab, and notes render with a folded corner;
+- association, inheritance, realization, dependency, aggregation, and composition ports use role-specific
+  shapes;
+- named ports can attach to a matching member, operation, or enum literal row;
+- relationship links draw UML-specific markers through the pack renderer.
+
 ## Create UML nodes
 
 ```csharp
@@ -41,7 +56,21 @@ customer.Members.Add(new UmlMember("Id", "Guid"));
 var repository = diagram.Nodes.Add(new UmlInterfaceNode(new Point(440, 160), "ICustomerRepository"));
 repository.Operations.Add(new UmlOperation("Get", "Customer"));
 
-var link = diagram.Links.Add(new UmlRelationshipLink(customer, repository, UmlRelationshipKind.Realization)
+var customerPort = customer.AddPort(new UmlPortModel(
+    customer,
+    PortAlignment.Right,
+    UmlPortKind.Realization,
+    "Id"));
+var repositoryPort = repository.AddPort(new UmlPortModel(
+    repository,
+    PortAlignment.Left,
+    UmlPortKind.Realization,
+    "Get"));
+
+var link = diagram.Links.Add(new UmlRelationshipLink(
+    customerPort,
+    repositoryPort,
+    UmlRelationshipKind.Realization)
 {
     Label = "implements",
     SourceMultiplicity = "1",
@@ -50,7 +79,8 @@ var link = diagram.Links.Add(new UmlRelationshipLink(customer, repository, UmlRe
 ```
 
 The first release includes class, interface, enum, package, and note nodes plus association, inheritance,
-realization, dependency, aggregation, and composition links.
+realization, dependency, aggregation, and composition links. Port names are optional; when a name matches a
+member, operation, or literal, the port aligns with that row during layout.
 
 ## Save and load
 
@@ -66,4 +96,5 @@ var loaded = new NodelyDiagram();
 DiagramSerializer.Deserialize(loaded, json, UmlNodeFactory.CreateRegistry());
 ```
 
-The registry restores UML nodes, relationship links, labels, multiplicities, and custom member/operation data.
+The registry restores UML nodes, ports, relationship links, labels, multiplicities, and custom
+member/operation data.

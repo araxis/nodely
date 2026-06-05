@@ -26,6 +26,9 @@ public static class UmlSerializationRegistryExtensions
         registry.RegisterNode(UmlNoteNode.ModelKindKey,
             snapshot => new UmlNoteNode(snapshot.Id, new Point(snapshot.X, snapshot.Y), snapshot.Title ?? "Note"));
 
+        registry.RegisterPort(UmlPortModel.ModelKindKey, (snapshot, parent) =>
+            new UmlPortModel(snapshot.Id, parent, ParseAlignment(snapshot.Alignment), position: parent.Position));
+
         registry.RegisterLink(UmlRelationshipLink.ModelKindKey, CreateRelationship);
 
         return registry;
@@ -33,4 +36,7 @@ public static class UmlSerializationRegistryExtensions
 
     private static UmlRelationshipLink CreateRelationship(LinkSnapshot snapshot, Anchor source, Anchor target)
         => new(snapshot.Id, source, target);
+
+    private static PortAlignment ParseAlignment(string alignment)
+        => Enum.TryParse<PortAlignment>(alignment, out var parsed) ? parsed : PortAlignment.Right;
 }

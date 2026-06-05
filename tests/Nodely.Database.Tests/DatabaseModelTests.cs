@@ -121,7 +121,29 @@ public class DatabaseModelTests
     }
 
     [Fact]
-    public void Relationship_link_sets_metadata_and_markers()
+    public void Named_database_port_attaches_to_matching_field_row()
+    {
+        var table = new DatabaseTableNode(new Point(100, 100), "Orders")
+        {
+            Size = new Size(270, 158),
+        };
+        table.Columns.Add(new DatabaseColumn("OrderId", "int", isPrimaryKey: true, isNullable: false));
+        table.Columns.Add(new DatabaseColumn("CustomerId", "int") { IsForeignKey = true, IsNullable = false });
+        table.Columns.Add(new DatabaseColumn("Total", "decimal(12,2)", isNullable: false));
+
+        var port = new DatabasePortModel(table, PortAlignment.Right, DatabasePortKind.Relationship, "CustomerId")
+        {
+            Size = new Size(20, 16),
+        };
+
+        var center = port.GetPortCenter();
+
+        center.X.ShouldBe(370);
+        center.Y.ShouldBe(209);
+    }
+
+    [Fact]
+    public void Relationship_link_sets_metadata_and_defers_endpoint_markers_to_renderer()
     {
         var source = new NodeModel(new Point(0, 0));
         var target = new NodeModel(new Point(100, 0));
@@ -133,8 +155,8 @@ public class DatabaseModelTests
 
         link.Kind.ShouldBe(RelationshipKind.ManyToMany);
         link.Segmentable.ShouldBeTrue();
-        link.SourceMarker.ShouldNotBeNull();
-        link.TargetMarker.ShouldNotBeNull();
+        link.SourceMarker.ShouldBeNull();
+        link.TargetMarker.ShouldBeNull();
         link.SourceCardinality.ShouldBe("many");
         link.TargetCardinality.ShouldBe("many");
     }

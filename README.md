@@ -13,7 +13,7 @@ theming, read-only mode, serialization, undo/redo, and auto-layout — with **no
 just Avalonia's native rendering.
 
 > Status: **v0.7.0** main packages, with independent side packages. Engine + Avalonia UI are complete and
-> tested on `net8.0` and `net10.0` (174 tests per runtime across the engine, side packages, and Avalonia
+> tested on `net8.0` and `net10.0` (177 tests per runtime across the engine, side packages, and Avalonia
 > headless UI). See
 > [`CHANGELOG.md`](CHANGELOG.md) and the design notes in [`memory/`](memory/).
 
@@ -49,8 +49,8 @@ Use `Nodely.Core` directly for headless engine scenarios; it is included transit
 |---|---|---|
 | [`Nodely.Core`](https://www.nuget.org/packages/Nodely.Core) | `netstandard2.0`, `net8.0`, `net10.0` | UI-agnostic engine: models, behaviors, geometry, routers, path generators, commands. |
 | [`Nodely.Avalonia`](https://www.nuget.org/packages/Nodely.Avalonia) | `net8.0`, `net10.0` | Avalonia controls: `DiagramCanvas`, `DiagramNavigator`, theming, adorners. |
-| [`Nodely.Avalonia.Database`](https://www.nuget.org/packages/Nodely.Avalonia.Database) | `net8.0`, `net10.0` | Optional side package: database table, view, procedure nodes, ports, and relationship links. |
-| [`Nodely.Avalonia.Uml`](https://www.nuget.org/packages/Nodely.Avalonia.Uml) | `net8.0`, `net10.0` | Optional side package: UML class, interface, enum, package, note nodes, and relationship links. |
+| [`Nodely.Avalonia.Database`](https://www.nuget.org/packages/Nodely.Avalonia.Database) | `net8.0`, `net10.0` | Optional side package: database table/view/procedure renderers, row-aware ports, and relationship links. |
+| [`Nodely.Avalonia.Uml`](https://www.nuget.org/packages/Nodely.Avalonia.Uml) | `net8.0`, `net10.0` | Optional side package: compartmented UML renderers, row-aware ports, packages, notes, and relationship links. |
 | [`Nodely.Avalonia.Workflow`](https://www.nuget.org/packages/Nodely.Avalonia.Workflow) | `net8.0`, `net10.0` | Optional side package: workflow start, end, task, decision, gateway, event, note nodes, and workflow links. |
 | [`Nodely.Algorithms`](https://www.nuget.org/packages/Nodely.Algorithms) | `netstandard2.0`, `net8.0`, `net10.0` | Optional: traversal, connected components, layered auto-layout. |
 | [`Nodely.Serialization`](https://www.nuget.org/packages/Nodely.Serialization) | `netstandard2.0`, `net8.0`, `net10.0` | Optional: versioned JSON snapshots. |

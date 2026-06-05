@@ -50,6 +50,33 @@ public sealed class DatabasePortModel : PortModel
     public override string ModelKind => ModelKindKey;
 
     /// <inheritdoc />
+    public override Point GetPortCenter()
+    {
+        if (Parent.Size is not { } parentSize ||
+            string.IsNullOrWhiteSpace(Name) ||
+            Alignment is not (PortAlignment.Left or PortAlignment.Right))
+        {
+            return base.GetPortCenter();
+        }
+
+        var rowIndex = FindRowIndex();
+        if (rowIndex < 0)
+            return base.GetPortCenter();
+
+        var centerY = Parent.Position.Y +
+            DatabaseVisualMetrics.HeaderHeight +
+            DatabaseVisualMetrics.BodyTopPadding +
+            rowIndex * DatabaseVisualMetrics.RowHeight +
+            DatabaseVisualMetrics.RowHeight / 2;
+
+        var x = Alignment == PortAlignment.Left
+            ? Parent.Position.X
+            : Parent.Position.X + parentSize.Width;
+
+        return new Point(x, centerY);
+    }
+
+    /// <inheritdoc />
     public override IReadOnlyDictionary<string, object?> GetExtraData()
     {
         var extra = new Dictionary<string, object?> { ["PortKind"] = Kind.ToString() };
@@ -70,5 +97,44 @@ public sealed class DatabasePortModel : PortModel
 
         if (data.TryGetValue("Name", out var name) && name is string nameText)
             Name = nameText;
+    }
+
+    private int FindRowIndex()
+    {
+        var name = Name ?? string.Empty;
+        return Parent switch
+        {
+            DatabaseTableNode table => FindColumn(table, name),
+            DatabaseViewNode view => FindColumn(view, name),
+            DatabaseProcedureNode procedure => FindParameter(procedure, name),
+            _ => -1,
+        };
+    }
+
+    private static int FindColumn(DatabaseTableNode table, string name)
+    {
+        for (var i = 0; i < table.Columns.Count; i++)
+            if (string.Equals(table.Columns[i].Name, name, StringComparison.OrdinalIgnoreCase))
+                return i;
+
+        return -1;
+    }
+
+    private static int FindColumn(DatabaseViewNode view, string name)
+    {
+        for (var i = 0; i < view.Columns.Count; i++)
+            if (string.Equals(view.Columns[i].Name, name, StringComparison.OrdinalIgnoreCase))
+                return i;
+
+        return -1;
+    }
+
+    private static int FindParameter(DatabaseProcedureNode procedure, string name)
+    {
+        for (var i = 0; i < procedure.Parameters.Count; i++)
+            if (string.Equals(procedure.Parameters[i].Name, name, StringComparison.OrdinalIgnoreCase))
+                return i;
+
+        return -1;
     }
 }

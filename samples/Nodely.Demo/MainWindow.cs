@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Nodely;
 using Nodely.Algorithms;
 using Nodely.Anchors;
@@ -124,17 +125,23 @@ public sealed class MainWindow : Window
         Width = 1180;
         Height = 760;
 
-        var scenes = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(10) };
-        scenes.Children.Add(SceneButton("Workflow", BuildWorkflow));
-        scenes.Children.Add(SceneButton("State machine", BuildStateMachine));
-        scenes.Children.Add(SceneButton("Inspector", BuildInspector));
-        scenes.Children.Add(SceneButton("Extensibility", BuildExtensibility));
-        scenes.Children.Add(SceneButton("Database", BuildDatabase));
-        scenes.Children.Add(SceneButton("UML", BuildUml));
-        scenes.Children.Add(new Border { Width = 24 });
-        scenes.Children.Add(ToolButton("Theme", ToggleTheme));
-        scenes.Children.Add(ToolButton("Save", Save));
-        scenes.Children.Add(ToolButton("Load", Load));
+        var scenes = new WrapPanel { Margin = new Thickness(10, 10, 10, 4) };
+        AddScene(SceneButton("Workflow", BuildWorkflow));
+        AddScene(SceneButton("State machine", BuildStateMachine));
+        AddScene(SceneButton("Inspector", BuildInspector));
+        AddScene(SceneButton("Extensibility", BuildExtensibility));
+        AddScene(SceneButton("Database", BuildDatabase));
+        AddScene(SceneButton("UML", BuildUml));
+        AddScene(new Border { Width = 24 });
+        AddScene(ToolButton("Theme", ToggleTheme));
+        AddScene(ToolButton("Save", Save));
+        AddScene(ToolButton("Load", Load));
+
+        void AddScene(Control control)
+        {
+            control.Margin = new Thickness(0, 0, 6, 6);
+            scenes.Children.Add(control);
+        }
 
         var root = new DockPanel();
         DockPanel.SetDock(scenes, Dock.Top);
@@ -147,14 +154,26 @@ public sealed class MainWindow : Window
 
     private Button SceneButton(string text, Func<Control> build)
     {
-        var button = new Button { Content = text, MinWidth = 96 };
+        var button = new Button
+        {
+            Content = text,
+            MinWidth = 72,
+            FontSize = 14,
+            Padding = new Thickness(12, 6),
+        };
         button.Click += (_, _) => _host.Content = build();
         return button;
     }
 
     private static Button ToolButton(string text, Action onClick)
     {
-        var button = new Button { Content = text, MinWidth = 42 };
+        var button = new Button
+        {
+            Content = text,
+            MinWidth = 40,
+            FontSize = 14,
+            Padding = new Thickness(10, 6),
+        };
         button.Click += (_, _) => onClick();
         return button;
     }
@@ -195,6 +214,8 @@ public sealed class MainWindow : Window
         _currentDiagram = diagram;
 
         var canvas = new DiagramCanvas { Diagram = diagram, Palette = _palette, IsReadOnly = readOnly };
+        canvas.AttachedToVisualTree += (_, _) =>
+            Dispatcher.UIThread.Post(() => canvas.ZoomToFit(48), DispatcherPriority.Loaded);
         _currentCanvas = canvas;
         RegisterTaskNode(canvas);
         configureCanvas?.Invoke(canvas);
@@ -209,8 +230,13 @@ public sealed class MainWindow : Window
             Margin = new Thickness(12),
         };
 
+        var surface = new Grid { Children = { canvas, navigator } };
         var toolbar = BuildEditorToolbar(canvas, diagram, readOnly);
-        return new Grid { Children = { canvas, navigator, toolbar } };
+        var editor = new DockPanel();
+        DockPanel.SetDock(toolbar, Dock.Top);
+        editor.Children.Add(toolbar);
+        editor.Children.Add(surface);
+        return editor;
     }
 
     private StackPanel BuildEditorToolbar(DiagramCanvas canvas, NodelyDiagram diagram, bool readOnly)
@@ -220,8 +246,8 @@ public sealed class MainWindow : Window
             Orientation = Orientation.Horizontal,
             Spacing = 4,
             HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(12),
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(8),
         };
 
         bar.Children.Add(ToolButton("+", canvas.ZoomIn));
@@ -421,32 +447,55 @@ public sealed class MainWindow : Window
     {
         var diagram = NewDiagram();
 
-        var customers = diagram.Nodes.Add(new DatabaseTableNode(new NodelyPoint(120, 160), "Customers", "sales"));
+        var customers = diagram.Nodes.Add(new DatabaseTableNode(new NodelyPoint(90, 150), "Customers", "sales"));
         customers.Columns.Add(new DatabaseColumn("CustomerId", "int", isPrimaryKey: true, isNullable: false));
         customers.Columns.Add(new DatabaseColumn("Name", "nvarchar(120)", isNullable: false));
         customers.Columns.Add(new DatabaseColumn("Email", "nvarchar(180)"));
+        customers.Columns.Add(new DatabaseColumn("CreatedAt", "datetime2", isNullable: false));
 
-        var orders = diagram.Nodes.Add(new DatabaseTableNode(new NodelyPoint(450, 130), "Orders", "sales"));
+        var orders = diagram.Nodes.Add(new DatabaseTableNode(new NodelyPoint(420, 120), "Orders", "sales"));
         orders.Columns.Add(new DatabaseColumn("OrderId", "int", isPrimaryKey: true, isNullable: false));
         orders.Columns.Add(new DatabaseColumn("CustomerId", "int", isNullable: false) { IsForeignKey = true });
+        orders.Columns.Add(new DatabaseColumn("Status", "nvarchar(24)", isNullable: false));
         orders.Columns.Add(new DatabaseColumn("Total", "decimal(12,2)", isNullable: false));
         orders.Columns.Add(new DatabaseColumn("CreatedAt", "datetime2", isNullable: false));
 
-        var summary = diagram.Nodes.Add(new DatabaseViewNode(new NodelyPoint(780, 150), "CustomerOrderSummary", "reporting"));
+        var lines = diagram.Nodes.Add(new DatabaseTableNode(new NodelyPoint(760, 150), "OrderLines", "sales"));
+        lines.Columns.Add(new DatabaseColumn("OrderLineId", "int", isPrimaryKey: true, isNullable: false));
+        lines.Columns.Add(new DatabaseColumn("OrderId", "int", isNullable: false) { IsForeignKey = true });
+        lines.Columns.Add(new DatabaseColumn("ProductId", "int", isNullable: false) { IsForeignKey = true });
+        lines.Columns.Add(new DatabaseColumn("Quantity", "int", isNullable: false));
+        lines.Columns.Add(new DatabaseColumn("UnitPrice", "decimal(12,2)", isNullable: false));
+
+        var products = diagram.Nodes.Add(new DatabaseTableNode(new NodelyPoint(1090, 150), "Products", "catalog"));
+        products.Columns.Add(new DatabaseColumn("ProductId", "int", isPrimaryKey: true, isNullable: false));
+        products.Columns.Add(new DatabaseColumn("Sku", "nvarchar(48)", isNullable: false));
+        products.Columns.Add(new DatabaseColumn("Name", "nvarchar(160)", isNullable: false));
+        products.Columns.Add(new DatabaseColumn("IsActive", "bit", isNullable: false));
+
+        var summary = diagram.Nodes.Add(new DatabaseViewNode(new NodelyPoint(760, 470), "CustomerOrderSummary", "reporting"));
         summary.Columns.Add(new DatabaseColumn("CustomerId", "int"));
         summary.Columns.Add(new DatabaseColumn("OrderCount", "int"));
+        summary.Columns.Add(new DatabaseColumn("LineCount", "int"));
         summary.Columns.Add(new DatabaseColumn("TotalSales", "decimal(12,2)"));
 
-        var refresh = diagram.Nodes.Add(new DatabaseProcedureNode(new NodelyPoint(450, 390), "RefreshCustomerSummary", "reporting"));
+        var refresh = diagram.Nodes.Add(new DatabaseProcedureNode(new NodelyPoint(420, 500), "RefreshCustomerSummary", "reporting"));
         refresh.Parameters.Add(new DatabaseParameter("@customerId", "int"));
         refresh.Parameters.Add(new DatabaseParameter("@fromDate", "datetime2"));
+        refresh.Parameters.Add(new DatabaseParameter("@includeInactive", "bit"));
 
         var customersOut = customers.AddPort(new DatabasePortModel(customers, PortAlignment.Right, DatabasePortKind.Relationship, "CustomerId"));
         var ordersIn = orders.AddPort(new DatabasePortModel(orders, PortAlignment.Left, DatabasePortKind.Relationship, "CustomerId"));
-        var ordersOut = orders.AddPort(new DatabasePortModel(orders, PortAlignment.Right, DatabasePortKind.Dependency));
-        var summaryIn = summary.AddPort(new DatabasePortModel(summary, PortAlignment.Left, DatabasePortKind.Dependency));
-        var refreshOut = refresh.AddPort(new DatabasePortModel(refresh, PortAlignment.Top, DatabasePortKind.Output));
-        var ordersBottom = orders.AddPort(new DatabasePortModel(orders, PortAlignment.Bottom, DatabasePortKind.Input));
+        var ordersOut = orders.AddPort(new DatabasePortModel(orders, PortAlignment.Right, DatabasePortKind.Relationship, "OrderId"));
+        var linesOrderIn = lines.AddPort(new DatabasePortModel(lines, PortAlignment.Left, DatabasePortKind.Relationship, "OrderId"));
+        var linesProductOut = lines.AddPort(new DatabasePortModel(lines, PortAlignment.Right, DatabasePortKind.Relationship, "ProductId"));
+        var productsIn = products.AddPort(new DatabasePortModel(products, PortAlignment.Left, DatabasePortKind.Relationship, "ProductId"));
+        var ordersDependency = orders.AddPort(new DatabasePortModel(orders, PortAlignment.Bottom, DatabasePortKind.Dependency));
+        var linesDependency = lines.AddPort(new DatabasePortModel(lines, PortAlignment.Bottom, DatabasePortKind.Dependency));
+        var summaryOrdersIn = summary.AddPort(new DatabasePortModel(summary, PortAlignment.Left, DatabasePortKind.Dependency, "OrderCount"));
+        var summaryLinesIn = summary.AddPort(new DatabasePortModel(summary, PortAlignment.Right, DatabasePortKind.Dependency, "LineCount"));
+        var refreshOut = refresh.AddPort(new DatabasePortModel(refresh, PortAlignment.Right, DatabasePortKind.Output));
+        var summaryRefreshIn = summary.AddPort(new DatabasePortModel(summary, PortAlignment.Bottom, DatabasePortKind.Input));
 
         var relationship = diagram.Links.Add(new DatabaseRelationshipLink(customersOut, ordersIn, RelationshipKind.OneToMany)
         {
@@ -455,11 +504,28 @@ public sealed class MainWindow : Window
         });
         relationship.AddLabel("customer orders", 0.5, new NodelyPoint(0, -16));
 
-        var viewDependency = diagram.Links.Add(new DatabaseRelationshipLink(ordersOut, summaryIn, RelationshipKind.Dependency));
-        viewDependency.AddLabel("feeds view", 0.5, new NodelyPoint(0, 14));
+        var orderLines = diagram.Links.Add(new DatabaseRelationshipLink(ordersOut, linesOrderIn, RelationshipKind.OneToMany)
+        {
+            SourceCardinality = "1",
+            TargetCardinality = "many",
+        });
+        orderLines.AddLabel("order lines", 0.5, new NodelyPoint(0, -16));
 
-        var procedureDependency = diagram.Links.Add(new DatabaseRelationshipLink(refreshOut, ordersBottom, RelationshipKind.Dependency));
-        procedureDependency.AddLabel("refresh reads", 0.5, new NodelyPoint(0, 14));
+        var productLines = diagram.Links.Add(new DatabaseRelationshipLink(productsIn, linesProductOut, RelationshipKind.OneToMany)
+        {
+            SourceCardinality = "1",
+            TargetCardinality = "many",
+        });
+        productLines.AddLabel("product lines", 0.5, new NodelyPoint(0, -16));
+
+        var orderSummary = diagram.Links.Add(new DatabaseRelationshipLink(ordersDependency, summaryOrdersIn, RelationshipKind.Dependency));
+        orderSummary.AddLabel("feeds view", 0.5, new NodelyPoint(0, 14));
+
+        var lineSummary = diagram.Links.Add(new DatabaseRelationshipLink(linesDependency, summaryLinesIn, RelationshipKind.Dependency));
+        lineSummary.AddLabel("line totals", 0.5, new NodelyPoint(0, 14));
+
+        var procedureDependency = diagram.Links.Add(new DatabaseRelationshipLink(refreshOut, summaryRefreshIn, RelationshipKind.Dependency));
+        procedureDependency.AddLabel("refreshes", 0.5, new NodelyPoint(0, 14));
 
         return Editor(diagram, configureCanvas: canvas => canvas.UseDatabaseNodes());
     }
@@ -469,65 +535,93 @@ public sealed class MainWindow : Window
         var diagram = NewDiagram();
 
         var domain = diagram.Nodes.Add(new UmlPackageNode(new NodelyPoint(80, 80), "Sales.Domain"));
+        domain.Stereotypes.Add("bounded context");
 
-        var customer = diagram.Nodes.Add(new UmlClassNode(new NodelyPoint(120, 180), "Customer")
+        var customer = diagram.Nodes.Add(new UmlClassNode(new NodelyPoint(130, 210), "Customer")
         {
             IsAbstract = true,
         });
         customer.Stereotypes.Add("entity");
         customer.Members.Add(new UmlMember("Id", "Guid", UmlVisibility.Public));
         customer.Members.Add(new UmlMember("Name", "string", UmlVisibility.Private));
+        customer.Members.Add(new UmlMember("CreatedAt", "Instant", UmlVisibility.Protected));
         var rename = new UmlOperation("Rename", "void");
         rename.Parameters.Add(new UmlParameter("name", "string"));
         customer.Operations.Add(rename);
 
-        var preferred = diagram.Nodes.Add(new UmlClassNode(new NodelyPoint(120, 430), "PreferredCustomer"));
-        preferred.Members.Add(new UmlMember("DiscountRate", "decimal"));
+        var preferred = diagram.Nodes.Add(new UmlClassNode(new NodelyPoint(130, 540), "PreferredCustomer"));
+        preferred.Stereotypes.Add("specialization");
+        preferred.Members.Add(new UmlMember("DiscountRate", "decimal", UmlVisibility.Private));
+        preferred.Operations.Add(new UmlOperation("ApplyDiscount", "Money"));
 
-        var order = diagram.Nodes.Add(new UmlClassNode(new NodelyPoint(450, 180), "Order"));
+        var order = diagram.Nodes.Add(new UmlClassNode(new NodelyPoint(560, 210), "Order"));
+        order.Stereotypes.Add("aggregate");
         order.Members.Add(new UmlMember("OrderId", "Guid"));
+        order.Members.Add(new UmlMember("CustomerId", "Guid", UmlVisibility.Private));
         order.Members.Add(new UmlMember("Status", "OrderStatus"));
-        order.Operations.Add(new UmlOperation("Submit", "void"));
+        var submit = new UmlOperation("Submit", "void");
+        submit.Parameters.Add(new UmlParameter("at", "Instant"));
+        order.Operations.Add(submit);
 
-        var status = diagram.Nodes.Add(new UmlEnumNode(new NodelyPoint(780, 170), "OrderStatus"));
+        var status = diagram.Nodes.Add(new UmlEnumNode(new NodelyPoint(990, 220), "OrderStatus"));
         status.Literals.Add("Draft");
         status.Literals.Add("Submitted");
         status.Literals.Add("Cancelled");
 
-        var repository = diagram.Nodes.Add(new UmlInterfaceNode(new NodelyPoint(780, 410), "IOrderRepository"));
+        var repository = diagram.Nodes.Add(new UmlInterfaceNode(new NodelyPoint(990, 500), "IOrderRepository"));
         repository.Operations.Add(new UmlOperation("Get", "Order"));
         repository.Operations.Add(new UmlOperation("Save", "void"));
 
-        var sqlRepository = diagram.Nodes.Add(new UmlClassNode(new NodelyPoint(450, 430), "SqlOrderRepository"));
+        var sqlRepository = diagram.Nodes.Add(new UmlClassNode(new NodelyPoint(560, 540), "SqlOrderRepository"));
         sqlRepository.Stereotypes.Add("adapter");
+        sqlRepository.Members.Add(new UmlMember("_connection", "IDbConnection", UmlVisibility.Private));
+        sqlRepository.Operations.Add(new UmlOperation("Get", "Order"));
         sqlRepository.Operations.Add(new UmlOperation("Save", "void"));
 
-        var note = diagram.Nodes.Add(new UmlNoteNode(new NodelyPoint(1060, 180), "Structural UML nodes are plain Nodely models and serialize with the UML registry."));
+        var note = diagram.Nodes.Add(new UmlNoteNode(new NodelyPoint(1370, 250), "Ports attach to UML members, operations, literals, and relationship roles."));
 
-        diagram.Links.Add(new UmlRelationshipLink(preferred, customer, UmlRelationshipKind.Inheritance)
+        var packageOut = domain.AddPort(new UmlPortModel(domain, PortAlignment.Bottom, UmlPortKind.Dependency));
+        var customerPackage = customer.AddPort(new UmlPortModel(customer, PortAlignment.Top, UmlPortKind.Dependency));
+        var customerBase = customer.AddPort(new UmlPortModel(customer, PortAlignment.Bottom, UmlPortKind.Inheritance));
+        var preferredBase = preferred.AddPort(new UmlPortModel(preferred, PortAlignment.Top, UmlPortKind.Inheritance));
+        var customerOrders = customer.AddPort(new UmlPortModel(customer, PortAlignment.Right, UmlPortKind.Aggregation, "Id"));
+        var orderCustomer = order.AddPort(new UmlPortModel(order, PortAlignment.Left, UmlPortKind.Aggregation, "CustomerId"));
+        var orderStatus = order.AddPort(new UmlPortModel(order, PortAlignment.Right, UmlPortKind.Association, "Status"));
+        var statusLiteral = status.AddPort(new UmlPortModel(status, PortAlignment.Left, UmlPortKind.Association, "Submitted"));
+        var sqlRealization = sqlRepository.AddPort(new UmlPortModel(sqlRepository, PortAlignment.Top, UmlPortKind.Realization, "Save"));
+        var repoRealization = repository.AddPort(new UmlPortModel(repository, PortAlignment.Bottom, UmlPortKind.Realization, "Save"));
+        var sqlDependency = sqlRepository.AddPort(new UmlPortModel(sqlRepository, PortAlignment.Right, UmlPortKind.Dependency, "Get"));
+        var orderDependency = order.AddPort(new UmlPortModel(order, PortAlignment.Bottom, UmlPortKind.Dependency, "Submit"));
+        var noteDependency = note.AddPort(new UmlPortModel(note, PortAlignment.Left, UmlPortKind.Dependency));
+        var orderNote = order.AddPort(new UmlPortModel(order, PortAlignment.Right, UmlPortKind.Dependency, "OrderId"));
+
+        diagram.Links.Add(new UmlRelationshipLink(preferredBase, customerBase, UmlRelationshipKind.Inheritance)
         {
             Label = "inherits",
         });
-        diagram.Links.Add(new UmlRelationshipLink(customer, order, UmlRelationshipKind.Aggregation)
+        diagram.Links.Add(new UmlRelationshipLink(customerOrders, orderCustomer, UmlRelationshipKind.Aggregation)
         {
             SourceMultiplicity = "1",
             TargetMultiplicity = "0..*",
             Label = "places",
         });
-        diagram.Links.Add(new UmlRelationshipLink(order, status, UmlRelationshipKind.Association)
+        diagram.Links.Add(new UmlRelationshipLink(orderStatus, statusLiteral, UmlRelationshipKind.Association)
         {
             Label = "status",
         });
-        diagram.Links.Add(new UmlRelationshipLink(sqlRepository, repository, UmlRelationshipKind.Realization)
+        diagram.Links.Add(new UmlRelationshipLink(sqlRealization, repoRealization, UmlRelationshipKind.Realization)
         {
             Label = "implements",
         });
-        diagram.Links.Add(new UmlRelationshipLink(sqlRepository, order, UmlRelationshipKind.Dependency)
+        diagram.Links.Add(new UmlRelationshipLink(sqlDependency, orderDependency, UmlRelationshipKind.Dependency)
         {
             Label = "persists",
         });
-        diagram.Links.Add(new UmlRelationshipLink(domain, customer, UmlRelationshipKind.Dependency));
-        diagram.Links.Add(new UmlRelationshipLink(note, order, UmlRelationshipKind.Dependency)
+        diagram.Links.Add(new UmlRelationshipLink(packageOut, customerPackage, UmlRelationshipKind.Dependency)
+        {
+            Label = "contains",
+        });
+        diagram.Links.Add(new UmlRelationshipLink(noteDependency, orderNote, UmlRelationshipKind.Dependency)
         {
             Label = "documents",
         });

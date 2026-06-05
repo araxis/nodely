@@ -4,6 +4,18 @@ All notable changes to Nodely are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- **Domain pack visuals:** Database and UML packs now provide richer pack-owned renderers instead of generic
+  box styling.
+- **Domain ports:** Database and UML ports can carry pack-specific roles and optional row names, so links can
+  attach to columns, parameters, members, operations, or literals.
+- **Demo gallery:** Database and UML scenes now use domain-specific ports, relationship markers, labels,
+  theme-aware visuals, and zoom-to-fit framing.
+- **Renderer refresh:** registering a node renderer now rebuilds existing node views, so pack registration can
+  happen after a diagram is bound.
+
 ## [Nodely.Avalonia.Workflow 0.1.0] - 2026-06-05
 
 First Workflow side-package release.

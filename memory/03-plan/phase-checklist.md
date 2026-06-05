@@ -12,6 +12,7 @@ Tick items as completed. Mirrors `development-plan.md`. `[ ]` todo, `[~]` in pro
 - [x] Add Workflow start, end, task, decision, gateway, event, note nodes, and workflow links.
 - [x] Add `UseWorkflowNodes()` renderer registration, serializer registration, and `WorkflowNodeFactory`.
 - [x] Add Workflow demo scene, documentation guide, and focused tests.
+- [x] Upgrade Database and UML pack visuals with domain-specific ports, row-aware endpoints, and richer demo scenes.
 - [ ] Add `Nodely.Avalonia.MindMap` as the third independent side package.
 
 ## Post-M4 — v0.7.0 database pack

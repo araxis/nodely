@@ -3,6 +3,20 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-05 — domain pack visual polish
+
+- Database: upgraded table, view, and procedure renderers with object-specific headers, field rows, key/null
+  badges, row-aware database ports, relationship endpoint styling, and richer gallery data.
+- UML: upgraded class, interface, enum, package, and note renderers with compartments, stereotypes, flags,
+  folded notes, row-aware UML ports, relationship endpoint styling, and a port-based gallery scene.
+- Core/Avalonia: `PortModel.GetPortCenter()` now gives packs a stable endpoint override, port layout measures
+  pack-owned port visuals, and late node renderer registration rebuilds existing node views.
+- Docs/memory: README, docs index, Database guide, UML guide, changelog, progress notes, checklist, and findings
+  now record the side-package visual standard.
+- **Verified:** build 0/0; `dotnet test` -> Core 110/110 + Avalonia 49/49 + Database 7/7 + UML 6/6
+  + Workflow 5/5 on both `net8.0` and `net10.0`; `dotnet pack` -> main packages `0.7.0`, Database
+  `0.1.0`, UML `0.1.0`, and Workflow `0.1.0`; docs install dry-run and docs build passed.
+
 ## 2026-06-05 — Workflow side package
 
 - Package: added `Nodely.Avalonia.Workflow` as the third optional domain pack, starting at side-package version

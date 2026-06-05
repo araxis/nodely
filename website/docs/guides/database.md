@@ -32,6 +32,18 @@ canvas.UseDatabaseNodes();
 
 That one call registers the table, view, procedure, port, and relationship styling.
 
+## Visual vocabulary
+
+The database pack owns its own visual language:
+
+- table, view, and procedure headers use different object treatments;
+- columns and parameters render as rows with type text and key/nullability badges;
+- relationship, dependency, input, and output ports use database-specific shapes;
+- named ports can attach to a matching column or parameter row instead of only the node edge;
+- relationship links draw database endpoints and cardinality labels through the pack renderer.
+
+This keeps app code small while still producing diagrams that look like database diagrams, not generic boxes.
+
 ## Build a schema diagram
 
 ```csharp
@@ -50,13 +62,22 @@ var orders = diagram.Nodes.Add(new DatabaseTableNode(new Point(380, 100), "Order
 orders.Columns.Add(new DatabaseColumn("OrderId", "int", isPrimaryKey: true, isNullable: false));
 orders.Columns.Add(new DatabaseColumn("CustomerId", "int", isNullable: false) { IsForeignKey = true });
 
-var outPort = customers.AddPort(new DatabasePortModel(customers, PortAlignment.Right));
-var inPort = orders.AddPort(new DatabasePortModel(orders, PortAlignment.Left));
+var outPort = customers.AddPort(new DatabasePortModel(
+    customers,
+    PortAlignment.Right,
+    DatabasePortKind.Relationship,
+    "CustomerId"));
+var inPort = orders.AddPort(new DatabasePortModel(
+    orders,
+    PortAlignment.Left,
+    DatabasePortKind.Relationship,
+    "CustomerId"));
 
 diagram.Links.Add(new DatabaseRelationshipLink(outPort, inPort, RelationshipKind.OneToMany));
 ```
 
-Tables and views expose mutable `Columns` collections. Procedures expose mutable `Parameters`.
+Tables and views expose mutable `Columns` collections. Procedures expose mutable `Parameters`. When the port
+name matches a column or parameter, the port aligns with that row during layout.
 
 ## Save and load
 

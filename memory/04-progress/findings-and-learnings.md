@@ -3,6 +3,16 @@
 Durable lessons, gotchas, surprises, and reversed decisions. Add an entry the moment something is
 non-obvious — it's the cheapest insurance we have. Tag each with a date and the phase.
 
+## F-049 — Side packages must own a real visual vocabulary (2026-06-05, domain pack polish)
+
+A side package is not enough if it only ships new model types with generic boxes and plain links. Category
+packages are valuable when they make the diagram immediately recognizable in that domain: distinct node shapes,
+row-level ports, relationship-specific endpoints, labels, badges, and theme-aware styling.
+
+Decision: future side packages must include domain-specific renderers, port roles, save/load coverage for port
+metadata, and at least one gallery scene that uses those pieces together. Core should only expose the stable
+extension surface; pack-owned visuals and metadata stay inside the pack.
+
 ## F-048 — Workflow stays model/render/serializer only (2026-06-05, Workflow side package)
 
 Workflow could easily grow into swimlanes, execution state machines, timers, and layout rules. The first side

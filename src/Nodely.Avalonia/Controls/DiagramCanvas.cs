@@ -166,6 +166,7 @@ public class DiagramCanvas : Panel
             throw new ArgumentNullException(nameof(factory));
 
         _nodeFactories[typeof(TNode)] = (node, context) => factory((TNode)node, context);
+        _nodes?.Rebuild();
     }
 
     /// <summary>
@@ -293,7 +294,14 @@ public class DiagramCanvas : Panel
             if (_portFactories.TryGetValue(type, out var factory))
                 return factory(port, _renderContext);
 
-        return new Ellipse { Fill = Palette.PortFill, Stroke = Palette.PortStroke, StrokeThickness = 1.5 };
+        return new Ellipse
+        {
+            Width = 12,
+            Height = 12,
+            Fill = Palette.PortFill,
+            Stroke = Palette.PortStroke,
+            StrokeThickness = 1.5,
+        };
     }
 
     /// <summary>Builds the content control for a group (used by <see cref="GroupView"/>).</summary>

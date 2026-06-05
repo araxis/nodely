@@ -16,7 +16,7 @@ namespace Nodely.Avalonia.Controls;
 /// </summary>
 internal sealed class PortsLayer : Panel
 {
-    private const double PortSize = 12;
+    private const double DefaultPortSize = 12;
 
     private readonly DiagramCanvas _owner;
     private readonly Dictionary<PortModel, PortView> _views = new();
@@ -115,7 +115,7 @@ internal sealed class PortsLayer : Panel
     {
         Sync();
         foreach (var view in _views.Values)
-            view.Measure(new Size(PortSize, PortSize));
+            view.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
 
         var w = double.IsInfinity(availableSize.Width) ? 0 : availableSize.Width;
         var h = double.IsInfinity(availableSize.Height) ? 0 : availableSize.Height;
@@ -136,16 +136,17 @@ internal sealed class PortsLayer : Panel
                     if (!_views.TryGetValue(port, out var view))
                         continue;
 
-                    var center = EdgeCenter(node, port.Alignment);
-                    var newPos = new NodelyPoint(center.X - PortSize / 2, center.Y - PortSize / 2);
+                    var viewSize = ResolveViewSize(view);
+                    port.Size = new NodelySize(viewSize.Width, viewSize.Height);
+                    var center = port.GetPortCenter();
+                    var newPos = new NodelyPoint(center.X - viewSize.Width / 2, center.Y - viewSize.Height / 2);
                     var oldPos = port.Position;
 
                     port.Position = newPos;
-                    port.Size = new NodelySize(PortSize, PortSize);
                     var wasInitialized = port.Initialized;
                     port.Initialized = true;
 
-                    view.Arrange(new Rect(newPos.X, newPos.Y, PortSize, PortSize));
+                    view.Arrange(new Rect(newPos.X, newPos.Y, viewSize.Width, viewSize.Height));
 
                     // (Re)generate attached links when a port first initializes or actually moves.
                     if (!wasInitialized || !oldPos.Equals(newPos))
@@ -157,23 +158,13 @@ internal sealed class PortsLayer : Panel
         return finalSize;
     }
 
-    private static NodelyPoint EdgeCenter(NodeModel node, PortAlignment alignment)
+    private static Size ResolveViewSize(Control view)
     {
-        var p = node.Position;
-        var s = node.Size!;
-        double cx = p.X + s.Width / 2, cy = p.Y + s.Height / 2;
-
-        return alignment switch
-        {
-            PortAlignment.Top => new NodelyPoint(cx, p.Y),
-            PortAlignment.TopRight => new NodelyPoint(p.X + s.Width, p.Y),
-            PortAlignment.Right => new NodelyPoint(p.X + s.Width, cy),
-            PortAlignment.BottomRight => new NodelyPoint(p.X + s.Width, p.Y + s.Height),
-            PortAlignment.Bottom => new NodelyPoint(cx, p.Y + s.Height),
-            PortAlignment.BottomLeft => new NodelyPoint(p.X, p.Y + s.Height),
-            PortAlignment.Left => new NodelyPoint(p.X, cy),
-            PortAlignment.TopLeft => new NodelyPoint(p.X, p.Y),
-            _ => new NodelyPoint(cx, cy),
-        };
+        var desired = view.DesiredSize;
+        var width = IsUsable(desired.Width) ? desired.Width : DefaultPortSize;
+        var height = IsUsable(desired.Height) ? desired.Height : DefaultPortSize;
+        return new Size(width, height);
     }
+
+    private static bool IsUsable(double value) => !double.IsNaN(value) && !double.IsInfinity(value) && value > 0;
 }

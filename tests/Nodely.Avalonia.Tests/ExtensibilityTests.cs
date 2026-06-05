@@ -24,6 +24,19 @@ public class ExtensibilityTests
     }
 
     [AvaloniaFact]
+    public void RegisterNode_rebuilds_existing_node_views()
+    {
+        var diagram = new NodelyDiagram();
+        diagram.Nodes.Add(new NodeModel(new NodelyPoint(50, 50)) { Title = "A" });
+
+        var canvas = new DiagramCanvas { Diagram = diagram };
+        canvas.RegisterNode<NodeModel>(_ => new Border { Tag = "custom-node" });
+        Show(canvas);
+
+        canvas.GetVisualDescendants().OfType<Border>().Any(x => Equals(x.Tag, "custom-node")).ShouldBeTrue();
+    }
+
+    [AvaloniaFact]
     public void RegisterPort_renders_a_custom_control()
     {
         var diagram = new NodelyDiagram();

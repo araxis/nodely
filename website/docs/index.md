@@ -50,8 +50,8 @@ Nodely ships as focused NuGet packages so you only take what you use:
 | --- | --- | --- |
 | `Nodely.Core` | netstandard2.0, net8.0, net10.0 | The UI-agnostic engine: geometry, models, behaviors, routers, path generators, commands |
 | `Nodely.Avalonia` | net8.0, net10.0 | The `DiagramCanvas`, node/port/link/group rendering, adorners, the minimap, theming |
-| `Nodely.Avalonia.Database` | net8.0, net10.0 | Optional side package: database table, view, procedure nodes, ports, and relationship links |
-| `Nodely.Avalonia.Uml` | net8.0, net10.0 | Optional side package: UML class, interface, enum, package, note nodes, and relationship links |
+| `Nodely.Avalonia.Database` | net8.0, net10.0 | Optional side package: database table/view/procedure renderers, row-aware ports, and relationship links |
+| `Nodely.Avalonia.Uml` | net8.0, net10.0 | Optional side package: compartmented UML renderers, row-aware ports, packages, notes, and relationship links |
 | `Nodely.Avalonia.Workflow` | net8.0, net10.0 | Optional side package: workflow start, end, task, decision, gateway, event, note nodes, and workflow links |
 | `Nodely.Serialization` | netstandard2.0, net8.0, net10.0 | Versioned JSON snapshots that round-trip exactly |
 | `Nodely.Algorithms` | netstandard2.0, net8.0, net10.0 | Graph queries and a layered auto-layout |

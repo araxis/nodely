@@ -76,6 +76,31 @@ public class PortModel : Model, IHasBounds, IHasShape, ILinkable
     /// <summary>The port's bounds.</summary>
     public Rectangle GetBounds() => new(Position, Size);
 
+    /// <summary>
+    /// Resolves the center point for this port on its parent. Override this for semantic ports that need
+    /// to attach to a specific row, field, or shape inside the node instead of the alignment's default edge.
+    /// </summary>
+    public virtual Point GetPortCenter()
+    {
+        var nodePosition = Parent.Position;
+        var nodeSize = Parent.Size ?? Size.Zero;
+        var cx = nodePosition.X + nodeSize.Width / 2;
+        var cy = nodePosition.Y + nodeSize.Height / 2;
+
+        return Alignment switch
+        {
+            PortAlignment.Top => new Point(cx, nodePosition.Y),
+            PortAlignment.TopRight => new Point(nodePosition.X + nodeSize.Width, nodePosition.Y),
+            PortAlignment.Right => new Point(nodePosition.X + nodeSize.Width, cy),
+            PortAlignment.BottomRight => new Point(nodePosition.X + nodeSize.Width, nodePosition.Y + nodeSize.Height),
+            PortAlignment.Bottom => new Point(cx, nodePosition.Y + nodeSize.Height),
+            PortAlignment.BottomLeft => new Point(nodePosition.X, nodePosition.Y + nodeSize.Height),
+            PortAlignment.Left => new Point(nodePosition.X, cy),
+            PortAlignment.TopLeft => new Point(nodePosition.X, nodePosition.Y),
+            _ => new Point(cx, cy),
+        };
+    }
+
     /// <summary>The shape links use to attach to this port (a circle by default).</summary>
     public virtual IShape GetShape() => Shapes.Circle(this);
 

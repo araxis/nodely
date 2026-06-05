@@ -25,6 +25,20 @@ public sealed class UmlRelationshipLink : LinkModel
         Kind = kind;
     }
 
+    /// <summary>Creates a UML relationship between two ports.</summary>
+    public UmlRelationshipLink(PortModel sourcePort, PortModel targetPort, UmlRelationshipKind kind = UmlRelationshipKind.Association)
+        : base(sourcePort, targetPort)
+    {
+        Kind = kind;
+    }
+
+    /// <summary>Creates a UML relationship with the given id between two ports.</summary>
+    public UmlRelationshipLink(string id, PortModel sourcePort, PortModel targetPort, UmlRelationshipKind kind = UmlRelationshipKind.Association)
+        : base(id, sourcePort, targetPort)
+    {
+        Kind = kind;
+    }
+
     /// <summary>Creates a UML relationship with the given id between two anchors.</summary>
     public UmlRelationshipLink(string id, Anchor source, Anchor target, UmlRelationshipKind kind = UmlRelationshipKind.Association)
         : base(id, source, target)

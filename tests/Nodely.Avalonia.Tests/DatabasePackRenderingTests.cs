@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Controls.Shapes;
 using Avalonia.Headless.XUnit;
 using Nodely.Avalonia.Controls;
 using Nodely.Avalonia.Database;
@@ -31,8 +30,9 @@ public class DatabasePackRenderingTests
         canvas.BuildNodeContent(table).ShouldBeOfType<Border>().Tag.ShouldBe("database-table-node");
         canvas.BuildNodeContent(view).ShouldBeOfType<Border>().Tag.ShouldBe("database-view-node");
         canvas.BuildNodeContent(procedure).ShouldBeOfType<Border>().Tag.ShouldBe("database-procedure-node");
-        canvas.BuildPortContent((DatabasePortModel)tableOut).ShouldBeOfType<Ellipse>().Tag.ShouldBe("database-port");
+        canvas.BuildPortContent((DatabasePortModel)tableOut).ShouldBeOfType<Grid>().Tag.ShouldBe("database-relationship-port");
         canvas.ResolveLinkStyle(relationship).Width.ShouldBe(relationship.Width);
+        canvas.ResolveLinkDrawer(relationship).ShouldNotBeNull();
     }
 
     [AvaloniaFact]

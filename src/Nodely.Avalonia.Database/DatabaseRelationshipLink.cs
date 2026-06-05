@@ -92,8 +92,8 @@ public sealed class DatabaseRelationshipLink : LinkModel
     private void ApplyKindDefaults()
     {
         Segmentable = true;
-        SourceMarker = Kind == RelationshipKind.ManyToMany ? LinkMarker.Arrow : null;
-        TargetMarker = Kind == RelationshipKind.Association ? null : LinkMarker.Arrow;
+        SourceMarker = null;
+        TargetMarker = null;
         Width = Kind == RelationshipKind.Dependency ? 1.75 : 2.4;
     }
 }

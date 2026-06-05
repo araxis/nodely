@@ -18,6 +18,10 @@ Tick items as completed. Mirrors `development-plan.md`. `[ ]` todo, `[~]` in pro
 - [x] Add StateMachine initial, state, final, choice, note nodes, transition ports, transition links, and self-loop rendering.
 - [x] Add `UseStateMachineNodes()` renderer registration, serializer registration, and `StateMachineNodeFactory`.
 - [x] Add StateMachine demo scene, documentation guide, runtime inspector fields, and focused tests.
+- [x] Add `Nodely.Avalonia.Network` as the next independent side package.
+- [x] Add Network device nodes, typed ports, topology links, status metadata, link glyphs, and arrange helper.
+- [x] Add `UseNetworkNodes()` renderer registration, serializer registration, and `NetworkNodeFactory`.
+- [x] Add Network demo scene, documentation guide, runtime inspector fields, and focused tests.
 
 ## Post-M4 — v0.7.0 database pack
 - [x] Add `Nodely.Avalonia.Database` package targeting `net8.0;net10.0`.

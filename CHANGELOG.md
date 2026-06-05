@@ -24,6 +24,25 @@ All notable changes to Nodely are documented here. The format is based on
 - **Visibility rendering:** link and port layers now honor model `Visible` state so collapse helpers can hide
   dependent paths and handles cleanly.
 
+## [Nodely.Avalonia.Network 0.1.0] - 2026-06-05
+
+First Network side-package release.
+
+### Added
+- **Network package:** `Nodely.Avalonia.Network` adds router, switch, firewall, load balancer, server, client,
+  cloud, service, and zone nodes with names, addresses, status, role, notes, accent, icon, and zone metadata.
+- **Typed ports and topology links:** network ports carry LAN, WAN, uplink, downlink, management, service, and
+  client roles, while network links carry ethernet, fiber, wireless, VPN tunnel, dependency, and blocked kinds
+  plus protocol, bandwidth, latency, status, direction, label, and accent metadata.
+- **Pack-owned visuals:** `DiagramCanvas.UseNetworkNodes()` registers recognizable device renderers, switch port
+  rows, firewall brick bodies, cloud visuals, visible network ports, topology link styling, and link glyphs.
+- **Arrange helper:** `NetworkLayout.Arrange()` places topology nodes into readable external, edge, security,
+  switching, service, and server columns.
+- **Serialization registration:** `DiagramSerializationRegistry.UseNetworkNodes()` restores network nodes, ports,
+  links, and metadata with stable model-kind keys.
+- **Demo and docs:** the desktop gallery, runtime inspector, documentation site, package matrix, and package
+  workflow include the Network pack.
+
 ## [Nodely.Avalonia.StateMachine 0.1.0] - 2026-06-05
 
 First StateMachine side-package release.

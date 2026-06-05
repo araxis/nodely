@@ -7,7 +7,7 @@ on:
     branches: [ main ]
     tags:
       - 'v*.*.*'
-      - 'Nodely.Avalonia.Database/v*.*.*'
+      - 'Nodely.Avalonia.*/v*.*.*'
   workflow_dispatch:
     inputs:
       package:
@@ -19,6 +19,7 @@ on:
           - 'all'
           - 'main'
           - 'Nodely.Avalonia.Database'
+          - 'Nodely.Avalonia.Uml'
       publish:
         description: 'Publish packages'
         required: true
@@ -63,7 +64,33 @@ jobs:
             "src/Nodely.Algorithms/Nodely.Algorithms.csproj"
             "src/Nodely.Serialization/Nodely.Serialization.csproj"
           )
-          database_projects=("src/Nodely.Avalonia.Database/Nodely.Avalonia.Database.csproj")
+          side_package_ids=(
+            "Nodely.Avalonia.Database"
+            "Nodely.Avalonia.Uml"
+          )
+          side_package_projects=(
+            "src/Nodely.Avalonia.Database/Nodely.Avalonia.Database.csproj"
+            "src/Nodely.Avalonia.Uml/Nodely.Avalonia.Uml.csproj"
+          )
+
+          add_side_package() {
+            local package_id="$1"
+            for i in "${!side_package_ids[@]}"; do
+              if [[ "${side_package_ids[$i]}" == "$package_id" ]]; then
+                projects+=("${side_package_projects[$i]}")
+                return 0
+              fi
+            done
+
+            echo "Unknown package set: $package_id" >&2
+            exit 1
+          }
+
+          add_all_side_packages() {
+            for project in "${side_package_projects[@]}"; do
+              projects+=("$project")
+            done
+          }
 
           package_input="${{ github.event.inputs.package }}"
           if [[ -z "$package_input" ]]; then
@@ -71,16 +98,19 @@ jobs:
           fi
 
           projects=()
-          if [[ "$GITHUB_REF" == refs/tags/Nodely.Avalonia.Database/v* ]]; then
-            projects=("${database_projects[@]}")
+          if [[ "$GITHUB_REF" == refs/tags/Nodely.Avalonia.*/v* ]]; then
+            package_from_tag="${GITHUB_REF#refs/tags/}"
+            package_from_tag="${package_from_tag%/v*}"
+            add_side_package "$package_from_tag"
           elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             projects=("${main_projects[@]}")
           elif [[ "$package_input" == "main" ]]; then
             projects=("${main_projects[@]}")
-          elif [[ "$package_input" == "Nodely.Avalonia.Database" ]]; then
-            projects=("${database_projects[@]}")
+          elif [[ "$package_input" == Nodely.Avalonia.* ]]; then
+            add_side_package "$package_input"
           else
-            projects=("${main_projects[@]}" "${database_projects[@]}")
+            projects=("${main_projects[@]}")
+            add_all_side_packages
           fi
 
           {
@@ -109,7 +139,7 @@ jobs:
 
   publish:
     needs: pack
-    if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/tags/Nodely.Avalonia.Database/v') || (github.event_name == 'workflow_dispatch' && inputs.publish == 'true')
+    if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/tags/Nodely.Avalonia.') || (github.event_name == 'workflow_dispatch' && inputs.publish == 'true')
     runs-on: ubuntu-latest
     environment: package-publish
     steps:
@@ -127,4 +157,6 @@ jobs:
             10.0.x
 
       - name: Publish packages and symbols
-        run: dotnet nuget push "artifacts/packages/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+        run: |
+          dotnet nuget push "artifacts/packages/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+          dotnet nuget push "artifacts/packages/*.snupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate

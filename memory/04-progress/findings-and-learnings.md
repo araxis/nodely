@@ -3,6 +3,19 @@
 Durable lessons, gotchas, surprises, and reversed decisions. Add an entry the moment something is
 non-obvious — it's the cheapest insurance we have. Tag each with a date and the phase.
 
+## F-047 — Second side package proves the contract scales (2026-06-04, UML side package)
+
+UML stressed a different shape than Database: no domain ports, more node varieties, nested operation
+parameters, and relationship markers that are better drawn by a pack-owned link drawer than by changing core
+marker APIs.
+
+Decision: keep UML side-package-only. `UmlRelationshipLink` stores labels/multiplicities through extra data,
+overrides diagram default markers with zero-size markers, and `UseUmlNodes()` draws UML-specific triangle,
+open-arrow, aggregation, and composition markers in the pack renderer.
+
+Workflow/MindMap should follow the same package contract and add only their own model/render/serializer
+vocabulary unless a concrete shared need appears.
+
 ## F-046 — Side packages need a stronger extension contract before public release (2026-06-04, extension audit)
 
 The database pack proved the package pattern, but the current extension surface is too fragile to use as the

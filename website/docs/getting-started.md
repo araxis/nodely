@@ -23,6 +23,7 @@ If you need to save diagrams or arrange them automatically, add those packages t
 dotnet add package Nodely.Serialization   # JSON save / load
 dotnet add package Nodely.Algorithms      # auto-layout & graph queries
 dotnet add package Nodely.Avalonia.Database  # database nodes and relationship links
+dotnet add package Nodely.Avalonia.Uml       # UML nodes and relationship links
 ```
 
 ## Your first canvas
@@ -88,5 +89,5 @@ diagram.Options.GridSize = 24;            // snap dragged nodes to a 24-pixel gr
 
 Once you have a canvas running, the natural next step is making the nodes look like *your* data — that's
 [Custom nodes](./guides/custom-nodes.md). For copyable app patterns, including command-aware toolbars and
-custom overlays, see [Recipes](./guides/recipes.md). For ready-made table/view/procedure shapes, see the
-[Database pack](./guides/database.md).
+custom overlays, see [Recipes](./guides/recipes.md). For ready-made domain shapes, see the
+[Database pack](./guides/database.md) and [UML pack](./guides/uml.md).

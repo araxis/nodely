@@ -2,6 +2,7 @@
 
 [![Package](https://img.shields.io/nuget/v/Nodely.Avalonia?label=package)](https://www.nuget.org/packages/Nodely.Avalonia)
 [![Downloads](https://img.shields.io/nuget/dt/Nodely.Avalonia?label=downloads)](https://www.nuget.org/packages/Nodely.Avalonia)
+[![UML](https://img.shields.io/nuget/v/Nodely.Avalonia.Uml?label=uml)](https://www.nuget.org/packages/Nodely.Avalonia.Uml)
 
 **Nodely** is a native **Avalonia** toolkit for building interactive node / graph / diagram editors — a
 first-party port of the proven [Blazor.Diagrams](https://github.com/Blazor-Diagrams/Blazor.Diagrams)
@@ -9,8 +10,9 @@ architecture to Avalonia. Pan/zoom canvas, custom nodes, interactive links, grou
 theming, read-only mode, serialization, undo/redo, and auto-layout — with **no SVG, no JS, no WebView**,
 just Avalonia's native rendering.
 
-> Status: **v0.7.0**. Engine + Avalonia UI are complete and tested on `net8.0` and `net10.0`
-> (160 tests per runtime across the engine, database pack, and Avalonia headless UI). See
+> Status: **v0.7.0** main packages, with independent side packages. Engine + Avalonia UI are complete and
+> tested on `net8.0` and `net10.0` (167 tests per runtime across the engine, side packages, and Avalonia
+> headless UI). See
 > [`CHANGELOG.md`](CHANGELOG.md) and the design notes in [`memory/`](memory/).
 
 ## Why
@@ -35,6 +37,7 @@ Optional packages:
 dotnet add package Nodely.Algorithms
 dotnet add package Nodely.Serialization
 dotnet add package Nodely.Avalonia.Database
+dotnet add package Nodely.Avalonia.Uml
 ```
 
 Use `Nodely.Core` directly for headless engine scenarios; it is included transitively by `Nodely.Avalonia`.
@@ -44,6 +47,7 @@ Use `Nodely.Core` directly for headless engine scenarios; it is included transit
 | [`Nodely.Core`](https://www.nuget.org/packages/Nodely.Core) | `netstandard2.0`, `net8.0`, `net10.0` | UI-agnostic engine: models, behaviors, geometry, routers, path generators, commands. |
 | [`Nodely.Avalonia`](https://www.nuget.org/packages/Nodely.Avalonia) | `net8.0`, `net10.0` | Avalonia controls: `DiagramCanvas`, `DiagramNavigator`, theming, adorners. |
 | [`Nodely.Avalonia.Database`](https://www.nuget.org/packages/Nodely.Avalonia.Database) | `net8.0`, `net10.0` | Optional side package: database table, view, procedure nodes, ports, and relationship links. |
+| [`Nodely.Avalonia.Uml`](https://www.nuget.org/packages/Nodely.Avalonia.Uml) | `net8.0`, `net10.0` | Optional side package: UML class, interface, enum, package, note nodes, and relationship links. |
 | [`Nodely.Algorithms`](https://www.nuget.org/packages/Nodely.Algorithms) | `netstandard2.0`, `net8.0`, `net10.0` | Optional: traversal, connected components, layered auto-layout. |
 | [`Nodely.Serialization`](https://www.nuget.org/packages/Nodely.Serialization) | `netstandard2.0`, `net8.0`, `net10.0` | Optional: versioned JSON snapshots. |
 
@@ -122,6 +126,10 @@ Nodely.Serialization.DiagramSerializer.Deserialize(new NodelyDiagram(), json);
 canvas.UseDatabaseNodes();
 var registry = Nodely.Avalonia.Database.DatabaseNodeFactory.CreateRegistry();
 
+// UML pack (Nodely.Avalonia.Uml)
+canvas.UseUmlNodes();
+var umlRegistry = Nodely.Avalonia.Uml.UmlNodeFactory.CreateRegistry();
+
 // Undo/redo (Nodely.Commands)
 var history = new Nodely.Commands.UndoRedoStack();
 history.Execute(new Nodely.Commands.AddNodeCommand(diagram, new NodeModel()));
@@ -137,9 +145,9 @@ groupButton.IsEnabled = canvas.CanGroupSelection;
 ## Repository layout
 
 ```
-src/        Nodely.Core, Nodely.Avalonia, Nodely.Avalonia.Database, Nodely.Algorithms, Nodely.Serialization
+src/        Nodely.Core, Nodely.Avalonia, side packages, Nodely.Algorithms, Nodely.Serialization
 samples/    Nodely.Demo (Avalonia desktop gallery), Nodely.QuickStart (minimal copyable app)
-tests/      Nodely.Core.Tests, Nodely.Database.Tests, Nodely.Avalonia.Tests (Avalonia headless)
+tests/      Nodely.Core.Tests, side-package tests, Nodely.Avalonia.Tests (Avalonia headless)
 bench/      Nodely.Benchmarks (engine throughput)
 memory/     Design decisions (ADRs), research, the development plan, progress, learnings
 ```

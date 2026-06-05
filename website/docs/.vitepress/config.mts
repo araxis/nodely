@@ -30,6 +30,7 @@ export default withMermaid({
           { text: 'Theming', link: '/guides/theming' },
           { text: 'Extensibility', link: '/guides/extensibility' },
           { text: 'Database pack', link: '/guides/database' },
+          { text: 'UML pack', link: '/guides/uml' },
           { text: 'Recipes', link: '/guides/recipes' },
           { text: 'Release checklist', link: '/guides/release-checklist' },
         ],

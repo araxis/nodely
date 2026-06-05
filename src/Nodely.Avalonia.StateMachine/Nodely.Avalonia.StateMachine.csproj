@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>Nodely.Avalonia.StateMachine</PackageId>
+    <Title>Nodely.Avalonia.StateMachine</Title>
+    <Description>Optional state-machine node pack for Nodely Avalonia: initial, state, final, choice, note nodes, transition ports, transition links, self loops, and arrange helpers.</Description>
+    <PackageVersion>$(NodelyAvaloniaStateMachineVersion)</PackageVersion>
+    <Version>$(NodelyAvaloniaStateMachineVersion)</Version>
+    <PackageTags>avalonia;diagram;diagrams;graph;node-editor;state-machine;statechart;canvas</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nodely.Avalonia\Nodely.Avalonia.csproj" />
+    <ProjectReference Include="..\Nodely.Serialization\Nodely.Serialization.csproj" />
+  </ItemGroup>
+
+</Project>

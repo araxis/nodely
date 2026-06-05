@@ -12,6 +12,7 @@ using Nodely;
 using Nodely.Avalonia.Controls;
 using Nodely.Avalonia.Database;
 using Nodely.Avalonia.MindMap;
+using Nodely.Avalonia.StateMachine;
 using Nodely.Avalonia.Uml;
 using Nodely.Avalonia.Workflow;
 using Nodely.Models;
@@ -126,6 +127,14 @@ internal sealed class RuntimePropertyInspector : IDisposable
                 break;
             case MindMapTopicNode mindMap:
                 BuildMindMapNode(content, mindMap);
+                break;
+            case StateMachineNodeBase stateMachine:
+                BuildStateMachineNode(content, stateMachine);
+                break;
+            case StateMachineNoteNode note:
+                content.Children.Add(Section("State machine note"));
+                content.Children.Add(TextField("Text", note.Text, value => note.Text = value, note, multiline: true));
+                content.Children.Add(TextField("Accent", note.AccentColor, value => note.AccentColor = value, note));
                 break;
             case WorkflowNodeBase workflow:
                 BuildWorkflowNode(content, workflow);
@@ -319,6 +328,21 @@ internal sealed class RuntimePropertyInspector : IDisposable
         content.Children.Add(EnumField("Side", node.Side, value => node.Side = value, node));
     }
 
+    private void BuildStateMachineNode(StackPanel content, StateMachineNodeBase node)
+    {
+        content.Children.Add(Section("State machine node"));
+        content.Children.Add(TextField("Name", node.Name, value => node.Name = value, node));
+        content.Children.Add(TextField("Description", node.Description ?? "", value => node.Description = NormalizeOptional(value), node, multiline: true));
+        content.Children.Add(TextField("Accent", node.AccentColor, value => node.AccentColor = value, node));
+
+        if (node is StateMachineStateNode state)
+        {
+            content.Children.Add(Section("Actions"));
+            content.Children.Add(TextField("Entry", state.EntryAction ?? "", value => state.EntryAction = NormalizeOptional(value), state));
+            content.Children.Add(TextField("Exit", state.ExitAction ?? "", value => state.ExitAction = NormalizeOptional(value), state));
+        }
+    }
+
     private void BuildLink(StackPanel content, BaseLinkModel link)
     {
         content.Children.Add(Section("Link"));
@@ -357,6 +381,15 @@ internal sealed class RuntimePropertyInspector : IDisposable
                 content.Children.Add(EnumField("Kind", mindMap.Kind, value => mindMap.Kind = value, mindMap));
                 content.Children.Add(TextField("Label", mindMap.Label ?? "", value => mindMap.Label = NormalizeOptional(value), mindMap));
                 content.Children.Add(TextField("Accent", mindMap.AccentColor ?? "", value => mindMap.AccentColor = NormalizeOptional(value), mindMap));
+                break;
+            case StateMachineTransitionLink transition:
+                content.Children.Add(Section("State machine transition"));
+                content.Children.Add(EnumField("Kind", transition.Kind, value => transition.Kind = value, transition));
+                content.Children.Add(TextField("Trigger", transition.Trigger ?? "", value => transition.Trigger = NormalizeOptional(value), transition));
+                content.Children.Add(TextField("Guard", transition.Guard ?? "", value => transition.Guard = NormalizeOptional(value), transition));
+                content.Children.Add(TextField("Action", transition.Action ?? "", value => transition.Action = NormalizeOptional(value), transition));
+                content.Children.Add(NumberField("Priority", transition.Priority, value => transition.Priority = Math.Max(0, (int)Math.Round(value)), transition));
+                content.Children.Add(TextField("Accent", transition.AccentColor ?? "", value => transition.AccentColor = NormalizeOptional(value), transition));
                 break;
             case FlowLink flow:
                 content.Children.Add(Section("Flow"));

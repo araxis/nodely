@@ -10,7 +10,7 @@ All notable changes to Nodely are documented here. The format is based on
 - **Runtime metadata editing:** `DiagramCanvas.RunAsUndoableEdit()` and `RefreshVisuals()` let host apps wire
   property inspectors into the canvas undo/redo stack.
 - **Gallery inspector:** the desktop gallery now includes a runtime side panel for editing selected core,
-  Database, UML, Workflow, MindMap, and sample custom node/link properties.
+  Database, UML, Workflow, MindMap, StateMachine, and sample custom node/link properties.
 
 ### Changed
 - **Domain pack visuals:** Database and UML packs now provide richer pack-owned renderers instead of generic
@@ -23,6 +23,24 @@ All notable changes to Nodely are documented here. The format is based on
   happen after a diagram is bound.
 - **Visibility rendering:** link and port layers now honor model `Visible` state so collapse helpers can hide
   dependent paths and handles cleanly.
+
+## [Nodely.Avalonia.StateMachine 0.1.0] - 2026-06-05
+
+First StateMachine side-package release.
+
+### Added
+- **StateMachine package:** `Nodely.Avalonia.StateMachine` adds initial, state, final, choice, and note nodes
+  with names, descriptions, accent colors, and state entry/exit action metadata.
+- **Transition ports and links:** state-machine ports carry entry/exit/transition roles, while transition links
+  carry normal, self, choice, error, and timeout kinds plus trigger, guard, action, priority, and accent metadata.
+- **Self-loop rendering:** `DiagramCanvas.UseStateMachineNodes()` registers pack-owned visuals, visible ports,
+  typed transition styling, transition glyphs, and custom self-loop drawing in one call.
+- **Arrange helper:** `StateMachineLayout.Arrange()` places reachable states in left-to-right columns and ignores
+  self transitions when computing levels.
+- **Serialization registration:** `DiagramSerializationRegistry.UseStateMachineNodes()` restores state-machine
+  nodes, ports, transitions, and metadata with stable model-kind keys.
+- **Demo and docs:** the desktop gallery, runtime inspector, documentation site, and package workflow include the
+  StateMachine pack.
 
 ## [Nodely.Avalonia.MindMap 0.1.0] - 2026-06-05
 

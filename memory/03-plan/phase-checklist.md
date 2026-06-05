@@ -14,6 +14,10 @@ Tick items as completed. Mirrors `development-plan.md`. `[ ]` todo, `[~]` in pro
 - [x] Add Workflow demo scene, documentation guide, and focused tests.
 - [x] Upgrade Database and UML pack visuals with domain-specific ports, row-aware endpoints, and richer demo scenes.
 - [x] Add `Nodely.Avalonia.MindMap` as the third independent side package.
+- [x] Add `Nodely.Avalonia.StateMachine` as the next independent side package.
+- [x] Add StateMachine initial, state, final, choice, note nodes, transition ports, transition links, and self-loop rendering.
+- [x] Add `UseStateMachineNodes()` renderer registration, serializer registration, and `StateMachineNodeFactory`.
+- [x] Add StateMachine demo scene, documentation guide, runtime inspector fields, and focused tests.
 
 ## Post-M4 — v0.7.0 database pack
 - [x] Add `Nodely.Avalonia.Database` package targeting `net8.0;net10.0`.

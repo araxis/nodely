@@ -31,6 +31,7 @@ export default withMermaid({
           { text: 'Extensibility', link: '/guides/extensibility' },
           { text: 'Database pack', link: '/guides/database' },
           { text: 'MindMap pack', link: '/guides/mindmap' },
+          { text: 'StateMachine pack', link: '/guides/statemachine' },
           { text: 'UML pack', link: '/guides/uml' },
           { text: 'Workflow pack', link: '/guides/workflow' },
           { text: 'Recipes', link: '/guides/recipes' },

@@ -3,6 +3,16 @@
 Durable lessons, gotchas, surprises, and reversed decisions. Add an entry the moment something is
 non-obvious — it's the cheapest insurance we have. Tag each with a date and the phase.
 
+## F-052 — StateMachine self loops can stay pack-owned (2026-06-05, StateMachine side package)
+
+State-machine self transitions need a loop shape and label placement that generic link routing does not provide.
+Adding a shared self-loop path generator to core would solve one domain-specific case but would also make the
+core API larger before enough apps need it.
+
+Decision: `Nodely.Avalonia.StateMachine` keeps self-loop drawing inside its typed link drawer. Normal
+transitions still use existing routers, path generators, labels, and typed link styles. This proves a pack can
+own specialized link drawing without adding marker or router APIs to the main packages.
+
 ## F-051 — MindMap needs a small domain layout without changing core (2026-06-05, MindMap side package)
 
 Mind maps have a recognizable workflow that generic graph layout does not cover well: a central root, left/right

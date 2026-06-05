@@ -65,6 +65,57 @@ RefreshButtons();
 
 The state helpers are read-only. They reflect selection, clipboard, history, read-only mode, and diagram swaps.
 
+## Runtime property inspector
+
+Host apps can edit selected-node or selected-link metadata through the same undo/redo stack used by drag,
+layout, grouping, and delete. Use `RunAsUndoableEdit` for the reversible mutation; it rebuilds the canvas after
+apply and undo. Refresh the edited model inside the action when link paths, labels, or dependent links need to
+recompute.
+
+```csharp
+void Rename(NodeModel node, string nextTitle)
+{
+    var previousTitle = node.Title;
+    if (previousTitle == nextTitle)
+        return;
+
+    canvas.RunAsUndoableEdit(
+        apply: () =>
+        {
+            node.Title = nextTitle;
+            node.RefreshAll();
+        },
+        undo: () =>
+        {
+            node.Title = previousTitle;
+            node.RefreshAll();
+        });
+}
+```
+
+For links, edit the concrete link model the same way:
+
+```csharp
+void ChangeWidth(LinkModel link, double nextWidth)
+{
+    var previousWidth = link.Width;
+    canvas.RunAsUndoableEdit(
+        apply: () =>
+        {
+            link.Width = nextWidth;
+            link.Refresh();
+        },
+        undo: () =>
+        {
+            link.Width = previousWidth;
+            link.Refresh();
+        });
+}
+```
+
+The desktop gallery includes a side-panel inspector that edits core, Database, UML, Workflow, and sample custom
+model fields at runtime.
+
 ## Custom overlay
 
 Use `DiagramLayer` for overlays that should pan and zoom with the diagram, such as rulers, guides, heatmaps, or

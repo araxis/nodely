@@ -6,6 +6,12 @@ All notable changes to Nodely are documented here. The format is based on
 
 ## [Unreleased]
 
+### Added
+- **Runtime metadata editing:** `DiagramCanvas.RunAsUndoableEdit()` and `RefreshVisuals()` let host apps wire
+  property inspectors into the canvas undo/redo stack.
+- **Gallery inspector:** the desktop gallery now includes a runtime side panel for editing selected core,
+  Database, UML, Workflow, and sample custom node/link properties.
+
 ### Changed
 - **Domain pack visuals:** Database and UML packs now provide richer pack-owned renderers instead of generic
   box styling.

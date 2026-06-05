@@ -3,6 +3,21 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-05 — runtime property editing
+
+- Public API: added `EditModelCommand`, `DiagramCanvas.RunAsUndoableEdit()`, and `DiagramCanvas.RefreshVisuals()`
+  so host apps can route metadata edits through the same undo/redo history as movement, layout, grouping, and
+  delete.
+- Demo gallery: added a side-panel property inspector that edits selected core nodes/links, sample custom
+  nodes/links, Database tables/views/procedures/relationships, UML classes/interfaces/enums/relationships, and
+  Workflow nodes/links at runtime.
+- Save/load: gallery load now registers Database, UML, and Workflow renderers after deserializing through the
+  shared registry, so edited side-package diagrams come back with pack renderers active.
+- Docs: README, changelog, and Recipes now document the runtime edit pattern.
+- **Verified:** `dotnet build samples\Nodely.Demo\Nodely.Demo.csproj --configuration Debug --no-restore
+  --disable-build-servers /nr:false`; `dotnet test` -> Core 111/111 and Avalonia 50/50 on both `net8.0`
+  and `net10.0`.
+
 ## 2026-06-05 — domain pack visual polish
 
 - Database: upgraded table, view, and procedure renderers with object-specific headers, field rows, key/null

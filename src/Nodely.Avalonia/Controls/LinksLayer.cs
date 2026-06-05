@@ -44,7 +44,10 @@ internal sealed class LinksLayer : Control
             _diagram.Links.Added -= OnLinkAdded;
             _diagram.Links.Removed -= OnLinkRemoved;
             foreach (var link in _diagram.Links)
+            {
                 link.Changed -= OnLinkChanged;
+                link.VisibilityChanged -= OnLinkVisibilityChanged;
+            }
         }
 
         _geometryCache.Clear();
@@ -56,7 +59,10 @@ internal sealed class LinksLayer : Control
             diagram.Links.Added += OnLinkAdded;
             diagram.Links.Removed += OnLinkRemoved;
             foreach (var link in diagram.Links)
+            {
                 link.Changed += OnLinkChanged;
+                link.VisibilityChanged += OnLinkVisibilityChanged;
+            }
         }
 
         UpdateTransform();
@@ -77,12 +83,14 @@ internal sealed class LinksLayer : Control
     private void OnLinkAdded(BaseLinkModel link)
     {
         link.Changed += OnLinkChanged;
+        link.VisibilityChanged += OnLinkVisibilityChanged;
         InvalidateVisual();
     }
 
     private void OnLinkRemoved(BaseLinkModel link)
     {
         link.Changed -= OnLinkChanged;
+        link.VisibilityChanged -= OnLinkVisibilityChanged;
         _geometryCache.Remove(link);
         InvalidateVisual();
     }
@@ -94,6 +102,8 @@ internal sealed class LinksLayer : Control
         InvalidateVisual();
     }
 
+    private void OnLinkVisibilityChanged(Model m) => InvalidateVisual();
+
     public override void Render(DrawingContext context)
     {
         var d = _diagram;
@@ -102,6 +112,9 @@ internal sealed class LinksLayer : Control
 
         foreach (var link in d.Links)
         {
+            if (!link.Visible)
+                continue;
+
             var result = link.PathGeneratorResult;
             if (result == null)
                 continue;
@@ -198,6 +211,9 @@ internal sealed class LinksLayer : Control
 
         foreach (var link in d.Links)
         {
+            if (!link.Visible)
+                continue;
+
             var result = link.PathGeneratorResult;
             if (result == null)
                 continue;

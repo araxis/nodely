@@ -3,6 +3,26 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-05 — MindMap side package
+
+- Package: added `Nodely.Avalonia.MindMap` as the fourth optional domain pack, starting at side-package version
+  `0.1.0` while main packages remain on `0.7.0`.
+- Models: root, branch, and leaf topics with topic text, notes, accent color, icon key, collapse state, side
+  hints, MindMap ports, and branch/association links.
+- Rendering/layout: one `UseMindMapNodes()` canvas extension registers topic visuals, visible branch ports,
+  curved link styling, and collapse badges; `MindMapLayout.Arrange()` and `ApplyCollapseState()` provide the
+  pack-local root/branch workflow.
+- Demo/docs: gallery now includes a MindMap scene with editable runtime properties, theme switching,
+  save/load, arrange, collapsed branches, branch links, and association links; docs include a MindMap guide and
+  package matrix updates.
+- Renderer correctness: Avalonia link and port layers now honor model visibility so collapse state hides
+  dependent paths and handles.
+- **Verified:** build 0/0; `dotnet test` -> Core 111/111 + Avalonia 52/52 + Database 7/7 + MindMap 7/7
+  + UML 6/6 + Workflow 5/5 on both `net8.0` and `net10.0`; `dotnet pack` -> main packages `0.7.0`,
+  Database/UML/Workflow `0.1.0`, and MindMap `0.1.0`; MindMap package inspection confirmed `lib/net8.0`,
+  `lib/net10.0`, symbol package assets, and main-package `0.7.0` dependency groups; docs install dry-run and
+  docs build passed.
+
 ## 2026-06-05 — runtime property editing
 
 - Public API: added `EditModelCommand`, `DiagramCanvas.RunAsUndoableEdit()`, and `DiagramCanvas.RefreshVisuals()`

@@ -11,6 +11,7 @@ using Nodely.Anchors;
 using Nodely.Avalonia;
 using Nodely.Avalonia.Controls;
 using Nodely.Avalonia.Database;
+using Nodely.Avalonia.MindMap;
 using Nodely.Avalonia.Uml;
 using Nodely.Avalonia.Workflow;
 using Nodely.Models;
@@ -133,6 +134,7 @@ public sealed class MainWindow : Window
         AddScene(SceneButton("Extensibility", BuildExtensibility));
         AddScene(SceneButton("Database", BuildDatabase));
         AddScene(SceneButton("UML", BuildUml));
+        AddScene(SceneButton("MindMap", BuildMindMap));
         AddScene(new Border { Width = 24 });
         AddScene(ToolButton("Theme", ToggleTheme));
         AddScene(ToolButton("Save", Save));
@@ -200,10 +202,11 @@ public sealed class MainWindow : Window
 
         var diagram = NewDiagram();
         DiagramSerializer.Deserialize(diagram, _savedJson, CreateSerializationRegistry());
-        _host.Content = Editor(diagram, configureCanvas: canvas => canvas.UseDatabaseNodes().UseUmlNodes().UseWorkflowNodes());
+        _host.Content = Editor(diagram, configureCanvas: canvas => canvas.UseDatabaseNodes().UseMindMapNodes().UseUmlNodes().UseWorkflowNodes());
     }
 
     private static DiagramSerializationRegistry CreateSerializationRegistry() => DatabaseNodeFactory.CreateRegistry()
+        .UseMindMapNodes()
         .UseUmlNodes()
         .UseWorkflowNodes()
         .RegisterNode(TaskNode.ModelKindKey, ns => new TaskNode(ns.Id, new NodelyPoint(ns.X, ns.Y), ns.Title ?? string.Empty))
@@ -211,7 +214,11 @@ public sealed class MainWindow : Window
             new SignalPort(ps.Id, parent, Enum.Parse<PortAlignment>(ps.Alignment)))
         .RegisterLink(FlowLink.ModelKindKey, (ls, source, target) => new FlowLink(ls.Id, source, target));
 
-    private Control Editor(NodelyDiagram diagram, bool readOnly = false, Action<DiagramCanvas>? configureCanvas = null)
+    private Control Editor(
+        NodelyDiagram diagram,
+        bool readOnly = false,
+        Action<DiagramCanvas>? configureCanvas = null,
+        Action<DiagramCanvas, NodelyDiagram>? layoutAction = null)
     {
         _propertyInspector?.Dispose();
         _propertyInspector = null;
@@ -244,7 +251,7 @@ public sealed class MainWindow : Window
         };
         Grid.SetColumn(inspector.View, 1);
 
-        var toolbar = BuildEditorToolbar(canvas, diagram, readOnly);
+        var toolbar = BuildEditorToolbar(canvas, diagram, readOnly, layoutAction);
         var editor = new DockPanel();
         DockPanel.SetDock(toolbar, Dock.Top);
         editor.Children.Add(toolbar);
@@ -252,7 +259,11 @@ public sealed class MainWindow : Window
         return editor;
     }
 
-    private StackPanel BuildEditorToolbar(DiagramCanvas canvas, NodelyDiagram diagram, bool readOnly)
+    private StackPanel BuildEditorToolbar(
+        DiagramCanvas canvas,
+        NodelyDiagram diagram,
+        bool readOnly,
+        Action<DiagramCanvas, NodelyDiagram>? layoutAction)
     {
         var bar = new StackPanel
         {
@@ -267,11 +278,12 @@ public sealed class MainWindow : Window
         bar.Children.Add(ToolButton("-", canvas.ZoomOut));
         bar.Children.Add(ToolButton("Fit", () => canvas.ZoomToFit()));
 
-        var layout = ToolButton("Layout", () =>
+        layoutAction ??= (targetCanvas, targetDiagram) =>
         {
-            canvas.RunAsUndoableMove(() => LayeredLayout.Arrange(diagram));
-            canvas.ZoomToFit();
-        });
+            targetCanvas.RunAsUndoableMove(() => LayeredLayout.Arrange(targetDiagram));
+            targetCanvas.ZoomToFit();
+        };
+        var layout = ToolButton("Layout", () => layoutAction(canvas, diagram));
         layout.IsEnabled = !readOnly;
         bar.Children.Add(layout);
 
@@ -640,5 +652,107 @@ public sealed class MainWindow : Window
         });
 
         return Editor(diagram, configureCanvas: canvas => canvas.UseUmlNodes());
+    }
+
+    private Control BuildMindMap()
+    {
+        var diagram = NewDiagram();
+
+        var root = diagram.Nodes.Add(new MindMapRootNode(new NodelyPoint(0, 0), "Nodely 0.8 planning")
+        {
+            Notes = "Adoption polish after side packs",
+            IconKey = "plan",
+            AccentColor = "#4D9EFF",
+        });
+
+        var evaluate = diagram.Nodes.Add(new MindMapBranchNode(new NodelyPoint(0, 0), "Evaluate")
+        {
+            Notes = "Copyable samples and docs paths",
+            IconKey = "E",
+            AccentColor = "#37A779",
+            Side = MindMapTopicSide.Right,
+        });
+        var runtime = diagram.Nodes.Add(new MindMapBranchNode(new NodelyPoint(0, 0), "Runtime editing")
+        {
+            Notes = "Inspector updates model metadata",
+            IconKey = "R",
+            AccentColor = "#D89C35",
+            Side = MindMapTopicSide.Right,
+        });
+        var questions = diagram.Nodes.Add(new MindMapBranchNode(new NodelyPoint(0, 0), "Open questions")
+        {
+            Notes = "Keep small, decide quickly",
+            IconKey = "?",
+            AccentColor = "#9779CD",
+            Side = MindMapTopicSide.Left,
+            Collapsed = true,
+        });
+        var quality = diagram.Nodes.Add(new MindMapBranchNode(new NodelyPoint(0, 0), "Quality")
+        {
+            Notes = "Build, test, pack, docs",
+            IconKey = "Q",
+            AccentColor = "#3A9DAA",
+            Side = MindMapTopicSide.Left,
+        });
+
+        var quickstart = diagram.Nodes.Add(new MindMapLeafNode(new NodelyPoint(0, 0), "QuickStart"));
+        var recipes = diagram.Nodes.Add(new MindMapLeafNode(new NodelyPoint(0, 0), "Recipes"));
+        var database = diagram.Nodes.Add(new MindMapLeafNode(new NodelyPoint(0, 0), "Database editor"));
+        var uml = diagram.Nodes.Add(new MindMapLeafNode(new NodelyPoint(0, 0), "UML editor"));
+        var versioning = diagram.Nodes.Add(new MindMapLeafNode(new NodelyPoint(0, 0), "Version policy"));
+        var layout = diagram.Nodes.Add(new MindMapLeafNode(new NodelyPoint(0, 0), "Layout rules"));
+        var headless = diagram.Nodes.Add(new MindMapLeafNode(new NodelyPoint(0, 0), "Headless tests"));
+        var packageCheck = diagram.Nodes.Add(new MindMapLeafNode(new NodelyPoint(0, 0), "Package check"));
+
+        AddBranch(root, evaluate, PortAlignment.TopRight, PortAlignment.Left, "#37A779", "scope");
+        AddBranch(root, runtime, PortAlignment.BottomRight, PortAlignment.Left, "#D89C35", "edit");
+        AddBranch(root, questions, PortAlignment.TopLeft, PortAlignment.Right, "#9779CD", "decide");
+        AddBranch(root, quality, PortAlignment.BottomLeft, PortAlignment.Right, "#3A9DAA", "verify");
+
+        AddBranch(evaluate, quickstart, PortAlignment.Right, PortAlignment.Left, "#37A779");
+        AddBranch(evaluate, recipes, PortAlignment.Right, PortAlignment.Left, "#37A779");
+        AddBranch(runtime, database, PortAlignment.Right, PortAlignment.Left, "#D89C35");
+        AddBranch(runtime, uml, PortAlignment.Right, PortAlignment.Left, "#D89C35");
+        AddBranch(questions, versioning, PortAlignment.Left, PortAlignment.Right, "#9779CD");
+        AddBranch(questions, layout, PortAlignment.Left, PortAlignment.Right, "#9779CD");
+        AddBranch(quality, headless, PortAlignment.Left, PortAlignment.Right, "#3A9DAA");
+        AddBranch(quality, packageCheck, PortAlignment.Left, PortAlignment.Right, "#3A9DAA");
+
+        var runtimeAssociation = runtime.AddPort(new MindMapPortModel(runtime, PortAlignment.Bottom, MindMapPortRole.Association, "runtime"));
+        var qualityAssociation = quality.AddPort(new MindMapPortModel(quality, PortAlignment.Top, MindMapPortRole.Association, "quality"));
+        diagram.Links.Add(new MindMapLink(runtimeAssociation, qualityAssociation, MindMapLinkKind.Association)
+        {
+            Label = "verified by",
+            AccentColor = "#9779CD",
+        });
+
+        MindMapLayout.Arrange(diagram);
+
+        return Editor(
+            diagram,
+            configureCanvas: canvas => canvas.UseMindMapNodes(),
+            layoutAction: (canvas, targetDiagram) =>
+            {
+                canvas.RunAsUndoableMove(() => MindMapLayout.Arrange(targetDiagram));
+                canvas.RefreshVisuals();
+                canvas.ZoomToFit();
+            });
+
+        void AddBranch(
+            MindMapTopicNode source,
+            MindMapTopicNode target,
+            PortAlignment sourceAlignment,
+            PortAlignment targetAlignment,
+            string accent,
+            string? label = null)
+        {
+            var sourcePort = source.AddPort(new MindMapPortModel(source, sourceAlignment, MindMapPortRole.Branch, source.Topic));
+            var targetPort = target.AddPort(new MindMapPortModel(target, targetAlignment, MindMapPortRole.Branch, target.Topic));
+            diagram.Links.Add(new MindMapLink(sourcePort, targetPort, MindMapLinkKind.Branch)
+            {
+                Label = label,
+                AccentColor = accent,
+            });
+        }
     }
 }

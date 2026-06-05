@@ -10,7 +10,7 @@ All notable changes to Nodely are documented here. The format is based on
 - **Runtime metadata editing:** `DiagramCanvas.RunAsUndoableEdit()` and `RefreshVisuals()` let host apps wire
   property inspectors into the canvas undo/redo stack.
 - **Gallery inspector:** the desktop gallery now includes a runtime side panel for editing selected core,
-  Database, UML, Workflow, and sample custom node/link properties.
+  Database, UML, Workflow, MindMap, and sample custom node/link properties.
 
 ### Changed
 - **Domain pack visuals:** Database and UML packs now provide richer pack-owned renderers instead of generic
@@ -21,6 +21,27 @@ All notable changes to Nodely are documented here. The format is based on
   theme-aware visuals, and zoom-to-fit framing.
 - **Renderer refresh:** registering a node renderer now rebuilds existing node views, so pack registration can
   happen after a diagram is bound.
+- **Visibility rendering:** link and port layers now honor model `Visible` state so collapse helpers can hide
+  dependent paths and handles cleanly.
+
+## [Nodely.Avalonia.MindMap 0.1.0] - 2026-06-05
+
+First MindMap side-package release.
+
+### Added
+- **MindMap package:** `Nodely.Avalonia.MindMap` adds root, branch, and leaf topic nodes with topic text,
+  notes, accent color, icon key, collapse state, and side hints.
+- **MindMap ports and links:** branch and association ports pair with curved branch/association links, labels,
+  and accent metadata.
+- **Arrange helpers:** `MindMapLayout.Arrange()` centers the root, alternates automatic first-level branches,
+  honors explicit left/right sides, and gives descendants their parent side.
+- **Collapse helpers:** `MindMapLayout.ApplyCollapseState()` hides descendant topics and branch links through
+  model visibility.
+- **Renderer registration:** `DiagramCanvas.UseMindMapNodes()` registers topic visuals, visible branch ports,
+  curved link styling, and collapse badges in one call.
+- **Serialization registration:** `DiagramSerializationRegistry.UseMindMapNodes()` restores MindMap topics,
+  ports, links, side hints, and collapse state with stable model-kind keys.
+- **Demo and docs:** the desktop gallery and documentation site include a MindMap scene and guide.
 
 ## [Nodely.Avalonia.Workflow 0.1.0] - 2026-06-05
 

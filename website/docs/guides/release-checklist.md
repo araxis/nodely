@@ -31,6 +31,7 @@ Inspect `artifacts/packages` for all `.nupkg` files and matching `.snupkg` symbo
 - `Nodely.Core`
 - `Nodely.Avalonia`
 - `Nodely.Avalonia.Database`
+- `Nodely.Avalonia.MindMap`
 - `Nodely.Avalonia.Uml`
 - `Nodely.Avalonia.Workflow`
 - `Nodely.Algorithms`
@@ -39,8 +40,8 @@ Inspect `artifacts/packages` for all `.nupkg` files and matching `.snupkg` symbo
 For compatibility releases, also inspect package contents:
 
 - `Nodely.Avalonia`: `lib/net8.0` and `lib/net10.0`
-- Side packages such as `Nodely.Avalonia.Database`, `Nodely.Avalonia.Uml`, and
-  `Nodely.Avalonia.Workflow`: `lib/net8.0` and `lib/net10.0`
+- Side packages such as `Nodely.Avalonia.Database`, `Nodely.Avalonia.MindMap`,
+  `Nodely.Avalonia.Uml`, and `Nodely.Avalonia.Workflow`: `lib/net8.0` and `lib/net10.0`
 - `Nodely.Core`, `Nodely.Algorithms`, `Nodely.Serialization`: `lib/netstandard2.0`, `lib/net8.0`, and `lib/net10.0`
 
 ## Publish
@@ -50,7 +51,7 @@ For compatibility releases, also inspect package contents:
 3. Create and push a tag:
    - `vX.Y.Z` for the main package group.
    - `Nodely.Avalonia.PackageName/vX.Y.Z` for one side package, for example
-     `Nodely.Avalonia.Uml/v0.1.0` or `Nodely.Avalonia.Workflow/v0.1.0`.
+     `Nodely.Avalonia.MindMap/v0.1.0` or `Nodely.Avalonia.Workflow/v0.1.0`.
 4. Confirm the `Package` workflow publishes only the selected package set from the tag using the
    `NUGET_API_KEY` repository secret.
 5. Create a GitHub release from the changelog entry.

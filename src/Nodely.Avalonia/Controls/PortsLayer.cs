@@ -98,6 +98,7 @@ internal sealed class PortsLayer : Panel
                 continue;
 
             var view = new PortView(port, _owner);
+            view.IsVisible = node.Visible && port.Visible;
             _views[port] = view;
             Children.Add(view);
         }
@@ -136,6 +137,7 @@ internal sealed class PortsLayer : Panel
                     if (!_views.TryGetValue(port, out var view))
                         continue;
 
+                    view.IsVisible = node.Visible && port.Visible;
                     var viewSize = ResolveViewSize(view);
                     port.Size = new NodelySize(viewSize.Width, viewSize.Height);
                     var center = port.GetPortCenter();

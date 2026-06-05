@@ -3,6 +3,18 @@
 Durable lessons, gotchas, surprises, and reversed decisions. Add an entry the moment something is
 non-obvious — it's the cheapest insurance we have. Tag each with a date and the phase.
 
+## F-051 — MindMap needs a small domain layout without changing core (2026-06-05, MindMap side package)
+
+Mind maps have a recognizable workflow that generic graph layout does not cover well: a central root, left/right
+branch sides, descendants that inherit side, and collapse state that hides branch descendants. Putting that into
+core would make the engine domain-aware, but leaving it out of the side package would make the package feel like
+plain boxes and lines.
+
+Decision: `Nodely.Avalonia.MindMap` owns `MindMapLayout.Arrange()` and `ApplyCollapseState()` as pack-local
+helpers. The helpers use existing model position and `Visible` state; core stays domain-neutral. This also
+surfaced a renderer correctness fix: Avalonia link and port layers must honor model visibility so domain packs
+can hide dependent visuals without custom layer hacks.
+
 ## F-050 — Runtime property editing needs an undoable metadata path (2026-06-05, gallery polish)
 
 Domain packs expose meaningful mutable fields, but users need a runtime way to edit those fields in real apps.

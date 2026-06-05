@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>Nodely.Avalonia.MindMap</PackageId>
+    <Title>Nodely.Avalonia.MindMap</Title>
+    <Version>$(NodelyAvaloniaMindMapVersion)</Version>
+    <PackageVersion>$(NodelyAvaloniaMindMapVersion)</PackageVersion>
+    <Description>Optional mind-map node pack for Nodely Avalonia: root, branch, leaf topics, topic ports, curved links, collapse state, and arrange helpers.</Description>
+    <PackageTags>avalonia;diagram;diagrams;graph;node-editor;mindmap;mind-map;canvas</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nodely.Avalonia\Nodely.Avalonia.csproj" />
+    <ProjectReference Include="..\Nodely.Serialization\Nodely.Serialization.csproj" />
+  </ItemGroup>
+
+</Project>

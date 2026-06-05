@@ -11,6 +11,7 @@ using Avalonia.Media;
 using Nodely;
 using Nodely.Avalonia.Controls;
 using Nodely.Avalonia.Database;
+using Nodely.Avalonia.MindMap;
 using Nodely.Avalonia.Uml;
 using Nodely.Avalonia.Workflow;
 using Nodely.Models;
@@ -122,6 +123,9 @@ internal sealed class RuntimePropertyInspector : IDisposable
             case UmlNoteNode note:
                 content.Children.Add(Section("UML note"));
                 content.Children.Add(TextField("Text", note.Text, value => note.Text = value, note, multiline: true));
+                break;
+            case MindMapTopicNode mindMap:
+                BuildMindMapNode(content, mindMap);
                 break;
             case WorkflowNodeBase workflow:
                 BuildWorkflowNode(content, workflow);
@@ -300,6 +304,21 @@ internal sealed class RuntimePropertyInspector : IDisposable
         }
     }
 
+    private void BuildMindMapNode(StackPanel content, MindMapTopicNode node)
+    {
+        content.Children.Add(Section("Mind map topic"));
+        content.Children.Add(TextField("Topic", node.Topic, value => node.Topic = value, node));
+        content.Children.Add(TextField("Notes", node.Notes ?? "", value => node.Notes = NormalizeOptional(value), node, multiline: true));
+        content.Children.Add(TextField("Accent", node.AccentColor, value => node.AccentColor = value, node));
+        content.Children.Add(TextField("Icon", node.IconKey ?? "", value => node.IconKey = NormalizeOptional(value), node));
+        content.Children.Add(BoolField("Collapsed", node.Collapsed, value =>
+        {
+            node.Collapsed = value;
+            MindMapLayout.ApplyCollapseState(_diagram);
+        }, node));
+        content.Children.Add(EnumField("Side", node.Side, value => node.Side = value, node));
+    }
+
     private void BuildLink(StackPanel content, BaseLinkModel link)
     {
         content.Children.Add(Section("Link"));
@@ -332,6 +351,12 @@ internal sealed class RuntimePropertyInspector : IDisposable
                 content.Children.Add(EnumField("Kind", workflow.Kind, value => workflow.Kind = value, workflow));
                 content.Children.Add(TextField("Label", workflow.Label ?? "", value => workflow.Label = NormalizeOptional(value), workflow));
                 content.Children.Add(TextField("Condition", workflow.Condition ?? "", value => workflow.Condition = NormalizeOptional(value), workflow));
+                break;
+            case MindMapLink mindMap:
+                content.Children.Add(Section("Mind map link"));
+                content.Children.Add(EnumField("Kind", mindMap.Kind, value => mindMap.Kind = value, mindMap));
+                content.Children.Add(TextField("Label", mindMap.Label ?? "", value => mindMap.Label = NormalizeOptional(value), mindMap));
+                content.Children.Add(TextField("Accent", mindMap.AccentColor ?? "", value => mindMap.AccentColor = NormalizeOptional(value), mindMap));
                 break;
             case FlowLink flow:
                 content.Children.Add(Section("Flow"));

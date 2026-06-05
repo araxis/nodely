@@ -35,7 +35,8 @@ Then: precise, mature, well-designed, SOLID/KISS, vertical-slice, testable, sour
 - Faithful feature parity with Blazor.Diagrams' core capabilities (see `02-research/api-surface-and-mapping.md`).
 - C#-only UI (no XAML required to build or consume), per project convention.
 - Multi-package: a reusable headless brain (`Nodely.Core`) + Avalonia controls (`Nodely.Avalonia`) +
-  optional `Nodely.Algorithms` and `Nodely.Serialization`.
+  optional `Nodely.Algorithms`, `Nodely.Serialization`, and side packages such as Database, UML, Workflow,
+  and MindMap.
 - Strong test coverage: pure unit tests for the brain, Avalonia headless tests for controls/interaction.
 
 ## Non-goals (initially)

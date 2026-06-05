@@ -10,6 +10,7 @@
     <Project Path="src/Nodely.Algorithms/Nodely.Algorithms.csproj" />
     <Project Path="src/Nodely.Avalonia/Nodely.Avalonia.csproj" />
     <Project Path="src/Nodely.Avalonia.Database/Nodely.Avalonia.Database.csproj" />
+    <Project Path="src/Nodely.Avalonia.MindMap/Nodely.Avalonia.MindMap.csproj" />
     <Project Path="src/Nodely.Avalonia.Uml/Nodely.Avalonia.Uml.csproj" />
     <Project Path="src/Nodely.Avalonia.Workflow/Nodely.Avalonia.Workflow.csproj" />
     <Project Path="src/Nodely.Core/Nodely.Core.csproj" />
@@ -19,6 +20,7 @@
     <Project Path="tests/Nodely.Avalonia.Tests/Nodely.Avalonia.Tests.csproj" />
     <Project Path="tests/Nodely.Core.Tests/Nodely.Core.Tests.csproj" />
     <Project Path="tests/Nodely.Database.Tests/Nodely.Database.Tests.csproj" />
+    <Project Path="tests/Nodely.MindMap.Tests/Nodely.MindMap.Tests.csproj" />
     <Project Path="tests/Nodely.Uml.Tests/Nodely.Uml.Tests.csproj" />
     <Project Path="tests/Nodely.Workflow.Tests/Nodely.Workflow.Tests.csproj" />
   </Folder>

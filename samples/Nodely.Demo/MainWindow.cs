@@ -11,6 +11,7 @@ using Nodely.Avalonia;
 using Nodely.Avalonia.Controls;
 using Nodely.Avalonia.Database;
 using Nodely.Avalonia.Uml;
+using Nodely.Avalonia.Workflow;
 using Nodely.Models;
 using Nodely.Serialization;
 using NodelyPoint = Nodely.Geometry.Point;
@@ -183,6 +184,7 @@ public sealed class MainWindow : Window
 
     private static DiagramSerializationRegistry CreateSerializationRegistry() => DatabaseNodeFactory.CreateRegistry()
         .UseUmlNodes()
+        .UseWorkflowNodes()
         .RegisterNode(TaskNode.ModelKindKey, ns => new TaskNode(ns.Id, new NodelyPoint(ns.X, ns.Y), ns.Title ?? string.Empty))
         .RegisterPort(SignalPort.ModelKindKey, (ps, parent) =>
             new SignalPort(ps.Id, parent, Enum.Parse<PortAlignment>(ps.Alignment)))
@@ -297,22 +299,46 @@ public sealed class MainWindow : Window
     private Control BuildWorkflow()
     {
         var diagram = NewDiagram();
-        var start = diagram.Nodes.Add(new NodeModel(new NodelyPoint(120, 230)) { Title = "Start" });
-        var build = diagram.Nodes.Add(new TaskNode(new NodelyPoint(420, 160), "Build") { Status = "Running" });
-        var test = diagram.Nodes.Add(new TaskNode(new NodelyPoint(690, 160), "Test") { Status = "Queued" });
-        var deploy = diagram.Nodes.Add(new TaskNode(new NodelyPoint(420, 330), "Deploy") { Status = "Pending" });
+        var start = diagram.Nodes.Add(new WorkflowStartNode(new NodelyPoint(100, 250), "Request received"));
+        var triage = diagram.Nodes.Add(new WorkflowTaskNode(new NodelyPoint(340, 170), "Triage")
+        {
+            TaskType = WorkflowTaskType.User,
+            Status = WorkflowTaskStatus.Ready,
+            Notes = "Assign owner",
+        });
+        var decision = diagram.Nodes.Add(new WorkflowDecisionNode(new NodelyPoint(610, 170), "Valid request?")
+        {
+            Condition = "required fields present",
+        });
+        var service = diagram.Nodes.Add(new WorkflowTaskNode(new NodelyPoint(880, 130), "Provision access")
+        {
+            TaskType = WorkflowTaskType.Service,
+            Status = WorkflowTaskStatus.Running,
+        });
+        var gateway = diagram.Nodes.Add(new WorkflowGatewayNode(new NodelyPoint(880, 340), "Notify")
+        {
+            GatewayKind = WorkflowGatewayKind.Parallel,
+        });
+        var timeout = diagram.Nodes.Add(new WorkflowEventNode(new NodelyPoint(610, 380), "SLA timer")
+        {
+            EventKind = WorkflowEventKind.Timer,
+        });
+        var done = diagram.Nodes.Add(new WorkflowEndNode(new NodelyPoint(1140, 210), "Complete"));
+        var note = diagram.Nodes.Add(new WorkflowNoteNode(new NodelyPoint(100, 430), "Workflow pack nodes are models/renderers only. Execution stays in the host app."));
 
-        var startOut = start.AddPort(PortAlignment.Right);
-        var buildLink = diagram.Links.Add(new LinkModel(startOut, build.AddPort(PortAlignment.Left))) as LinkModel;
-        buildLink!.Segmentable = true;
-        buildLink.AddVertex(new NodelyPoint(300, 120));
-        diagram.Links.Add(new LinkModel(build.AddPort(PortAlignment.Right), test.AddPort(PortAlignment.Left))).AddLabel("green");
-        var deployLink = diagram.Links.Add(new LinkModel(startOut, deploy.AddPort(PortAlignment.Left))) as LinkModel;
-        deployLink!.Segmentable = true;
-        deployLink.SourceMarker = LinkMarker.Circle;
-        diagram.Groups.Group(build, deploy);
+        diagram.Links.Add(new WorkflowLink(start, triage, WorkflowLinkKind.Sequence) { Label = "submit" });
+        diagram.Links.Add(new WorkflowLink(triage, decision, WorkflowLinkKind.Conditional)
+        {
+            Label = "check",
+            Condition = "valid",
+        });
+        diagram.Links.Add(new WorkflowLink(decision, service, WorkflowLinkKind.Sequence) { Label = "yes" });
+        diagram.Links.Add(new WorkflowLink(decision, timeout, WorkflowLinkKind.Error) { Label = "missing data" });
+        diagram.Links.Add(new WorkflowLink(service, gateway, WorkflowLinkKind.Message) { Label = "notify" });
+        diagram.Links.Add(new WorkflowLink(gateway, done, WorkflowLinkKind.Sequence) { Label = "finish" });
+        diagram.Links.Add(new WorkflowLink(timeout, triage, WorkflowLinkKind.Message) { Label = "retry" });
 
-        return Editor(diagram);
+        return Editor(diagram, configureCanvas: canvas => canvas.UseWorkflowNodes());
     }
 
     private Control BuildStateMachine()

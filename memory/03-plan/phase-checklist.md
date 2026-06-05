@@ -8,7 +8,10 @@ Tick items as completed. Mirrors `development-plan.md`. `[ ]` todo, `[~]` in pro
 - [x] Add `UseUmlNodes()` renderer registration, serializer registration, and `UmlNodeFactory`.
 - [x] Generalize side-package package workflow selection with a package map.
 - [x] Add UML demo scene, documentation guide, and focused tests.
-- [ ] Add `Nodely.Avalonia.Workflow` as the next independent side package.
+- [x] Add `Nodely.Avalonia.Workflow` as the next independent side package.
+- [x] Add Workflow start, end, task, decision, gateway, event, note nodes, and workflow links.
+- [x] Add `UseWorkflowNodes()` renderer registration, serializer registration, and `WorkflowNodeFactory`.
+- [x] Add Workflow demo scene, documentation guide, and focused tests.
 - [ ] Add `Nodely.Avalonia.MindMap` as the third independent side package.
 
 ## Post-M4 — v0.7.0 database pack

@@ -43,7 +43,7 @@ memory/
 
 ## Quick status
 
-- Phase: **side-package roadmap.** 167 tests per app runtime currently expected across Core, side-package,
+- Phase: **side-package roadmap.** 174 tests per app runtime currently expected across Core, side-package,
   and Avalonia suites on both `net8.0` and `net10.0`.
 - v0.1.0: 15 phases (0–14), M1–M4. v0.2.0 (F-027…F-039): editor/interaction wave. v0.3.0 (F-041): 10 extension
   seams (render hooks for links/ports/groups, custom layers, adorners, validation delegates, behaviors,
@@ -55,5 +55,6 @@ memory/
 - v0.7.0 (F-045, F-046): first optional domain pack plus stable side-pack contract: serializer registry,
   typed style registration, render context, and independent side-package versioning.
 - UML side package (F-047): second optional domain pack and generalized side-package package workflow.
+- Workflow side package (F-048): third optional domain pack, kept to models/renderers/serialization only.
 - Docs: static documentation site (F-040) + Extensibility guide; GitHub Pages pipeline.
-- Last updated: 2026-06-04
+- Last updated: 2026-06-05

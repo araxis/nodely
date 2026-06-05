@@ -3,6 +3,16 @@
 Durable lessons, gotchas, surprises, and reversed decisions. Add an entry the moment something is
 non-obvious — it's the cheapest insurance we have. Tag each with a date and the phase.
 
+## F-048 — Workflow stays model/render/serializer only (2026-06-05, Workflow side package)
+
+Workflow could easily grow into swimlanes, execution state machines, timers, and layout rules. The first side
+package intentionally avoids those behaviors and provides only a diagram vocabulary: nodes, links, renderer
+registration, and serializer registration.
+
+Decision: keep workflow execution and orchestration in the host app. `Nodely.Avalonia.Workflow` owns visual
+workflow shapes and metadata, while core remains domain-neutral and future workflow behavior can be added only
+when a concrete app contract needs it.
+
 ## F-047 — Second side package proves the contract scales (2026-06-04, UML side package)
 
 UML stressed a different shape than Database: no domain ports, more node varieties, nested operation

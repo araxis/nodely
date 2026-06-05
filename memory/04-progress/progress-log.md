@@ -3,6 +3,21 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-05 — Workflow side package
+
+- Package: added `Nodely.Avalonia.Workflow` as the third optional domain pack, starting at side-package version
+  `0.1.0`.
+- Models: workflow start, end, task, decision, gateway, event, note, and workflow link types.
+- Rendering: one `UseWorkflowNodes()` canvas extension registers Workflow node renderers, link styling, and
+  compact workflow link markers.
+- Serialization: `WorkflowNodeFactory.CreateRegistry()` restores Workflow nodes and links through
+  `DiagramSerializationRegistry`.
+- Workflow: package workflow now includes Workflow in the side-package map and avoids a duplicate symbol push.
+- **Verified:** build 0/0; `dotnet test` -> Core 110/110 + Avalonia 48/48 + Database 6/6 + UML 5/5
+  + Workflow 5/5 on both `net8.0` and `net10.0`; `dotnet pack` -> main packages `0.7.0`, Database
+  `0.1.0`, UML `0.1.0`, and Workflow `0.1.0`; Workflow package inspection confirmed `lib/net8.0` and
+  `lib/net10.0` assets plus dependency groups; docs install dry-run and docs build passed.
+
 ## 2026-06-04 — UML side package
 
 - Package: added `Nodely.Avalonia.Uml` as the second optional domain pack, starting at side-package version

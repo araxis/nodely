@@ -25,6 +25,7 @@
     <NodelyMainVersion>0.7.0</NodelyMainVersion>
     <NodelyAvaloniaDatabaseVersion>0.1.0</NodelyAvaloniaDatabaseVersion>
     <NodelyAvaloniaUmlVersion>0.1.0</NodelyAvaloniaUmlVersion>
+    <NodelyAvaloniaWorkflowVersion>0.1.0</NodelyAvaloniaWorkflowVersion>
     <Version>$(NodelyMainVersion)</Version>
     <PackageVersion>$(NodelyMainVersion)</PackageVersion>
     <PackageProjectUrl>https://github.com/araxis/nodely</PackageProjectUrl>

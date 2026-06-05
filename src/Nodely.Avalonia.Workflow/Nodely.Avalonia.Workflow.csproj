@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>Nodely.Avalonia.Workflow</PackageId>
+    <Title>Nodely.Avalonia.Workflow</Title>
+    <Version>$(NodelyAvaloniaWorkflowVersion)</Version>
+    <PackageVersion>$(NodelyAvaloniaWorkflowVersion)</PackageVersion>
+    <Description>Optional workflow diagram node pack for Nodely Avalonia: start, end, task, decision, gateway, event, note nodes, and workflow links.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nodely.Avalonia\Nodely.Avalonia.csproj" />
+    <ProjectReference Include="..\Nodely.Serialization\Nodely.Serialization.csproj" />
+  </ItemGroup>
+
+</Project>

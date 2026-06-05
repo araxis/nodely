@@ -151,6 +151,33 @@ public class NodeRenderingTests
     }
 
     [AvaloniaFact]
+    public void RunAsUndoableEdit_rebuilds_visuals_and_supports_undo_redo()
+    {
+        var canvas = new DiagramCanvas();
+        canvas.RegisterNode<NodeModel>(node => new TextBlock { Text = node.Title });
+        var (_, _, diagram) = Show(canvas);
+        var node = diagram.Nodes.Add(new NodeModel(new NodelyPoint(0, 0)) { Title = "Before" });
+        Dispatcher.UIThread.RunJobs();
+
+        canvas.RunAsUndoableEdit(
+            () => node.Title = "After",
+            () => node.Title = "Before");
+        Dispatcher.UIThread.RunJobs();
+
+        canvas.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text).ShouldContain("After");
+
+        canvas.Undo();
+        Dispatcher.UIThread.RunJobs();
+
+        canvas.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text).ShouldContain("Before");
+
+        canvas.Redo();
+        Dispatcher.UIThread.RunJobs();
+
+        canvas.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text).ShouldContain("After");
+    }
+
+    [AvaloniaFact]
     public void Bring_selection_to_front_is_undoable()
     {
         var (_, canvas, diagram) = Show();

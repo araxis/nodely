@@ -3,6 +3,16 @@
 Durable lessons, gotchas, surprises, and reversed decisions. Add an entry the moment something is
 non-obvious — it's the cheapest insurance we have. Tag each with a date and the phase.
 
+## F-050 — Runtime property editing needs an undoable metadata path (2026-06-05, gallery polish)
+
+Domain packs expose meaningful mutable fields, but users need a runtime way to edit those fields in real apps.
+Trying to put one universal property grid in core would force domain decisions into the shared package.
+
+Decision: core provides the small reusable pieces: `EditModelCommand`, `DiagramCanvas.RunAsUndoableEdit()`, and
+`DiagramCanvas.RefreshVisuals()`. Host apps and samples own the actual inspector UI and field choices. The
+gallery inspector proves the path across core, Database, UML, Workflow, and custom demo models while preserving
+undo/redo and save/load.
+
 ## F-049 — Side packages must own a real visual vocabulary (2026-06-05, domain pack polish)
 
 A side package is not enough if it only ships new model types with generic boxes and plain links. Category

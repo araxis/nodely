@@ -44,6 +44,25 @@ public class CommandTests
     }
 
     [Fact]
+    public void Edit_model_command_applies_and_undoes_metadata_changes()
+    {
+        var node = new NodeModel(new Point(10, 10)) { Title = "Before" };
+        var stack = new UndoRedoStack();
+
+        stack.Execute(new EditModelCommand(
+            () => node.Title = "After",
+            () => node.Title = "Before"));
+
+        node.Title.ShouldBe("After");
+
+        stack.Undo();
+        node.Title.ShouldBe("Before");
+
+        stack.Redo();
+        node.Title.ShouldBe("After");
+    }
+
+    [Fact]
     public void Set_model_orders_undo_restores_the_previous_z_order()
     {
         var d = new NodelyDiagram(null, registerDefaultBehaviors: false);

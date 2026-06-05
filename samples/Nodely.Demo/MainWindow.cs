@@ -117,6 +117,7 @@ public sealed class MainWindow : Window
     private NodelyPalette _palette = NodelyPalettes.Dark;
     private NodelyDiagram? _currentDiagram;
     private DiagramCanvas? _currentCanvas;
+    private RuntimePropertyInspector? _propertyInspector;
     private string? _savedJson;
 
     public MainWindow()
@@ -183,6 +184,7 @@ public sealed class MainWindow : Window
         _palette = _palette == NodelyPalettes.Dark ? NodelyPalettes.Light : NodelyPalettes.Dark;
         if (_currentCanvas != null)
             _currentCanvas.Palette = _palette;
+        _propertyInspector?.Refresh();
     }
 
     private void Save()
@@ -198,7 +200,7 @@ public sealed class MainWindow : Window
 
         var diagram = NewDiagram();
         DiagramSerializer.Deserialize(diagram, _savedJson, CreateSerializationRegistry());
-        _host.Content = Editor(diagram);
+        _host.Content = Editor(diagram, configureCanvas: canvas => canvas.UseDatabaseNodes().UseUmlNodes().UseWorkflowNodes());
     }
 
     private static DiagramSerializationRegistry CreateSerializationRegistry() => DatabaseNodeFactory.CreateRegistry()
@@ -211,6 +213,8 @@ public sealed class MainWindow : Window
 
     private Control Editor(NodelyDiagram diagram, bool readOnly = false, Action<DiagramCanvas>? configureCanvas = null)
     {
+        _propertyInspector?.Dispose();
+        _propertyInspector = null;
         _currentDiagram = diagram;
 
         var canvas = new DiagramCanvas { Diagram = diagram, Palette = _palette, IsReadOnly = readOnly };
@@ -231,11 +235,20 @@ public sealed class MainWindow : Window
         };
 
         var surface = new Grid { Children = { canvas, navigator } };
+        var inspector = new RuntimePropertyInspector(canvas, diagram, readOnly);
+        _propertyInspector = inspector;
+        var body = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("*,340"),
+            Children = { surface, inspector.View },
+        };
+        Grid.SetColumn(inspector.View, 1);
+
         var toolbar = BuildEditorToolbar(canvas, diagram, readOnly);
         var editor = new DockPanel();
         DockPanel.SetDock(toolbar, Dock.Top);
         editor.Children.Add(toolbar);
-        editor.Children.Add(surface);
+        editor.Children.Add(body);
         return editor;
     }
 

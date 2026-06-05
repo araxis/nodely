@@ -428,6 +428,19 @@ public class DiagramCanvas : Panel
     /// <summary>Whether there's an edit to redo.</summary>
     public bool CanRedo => _history?.CanRedo ?? false;
 
+    /// <summary>Rebuilds the visual layers from the current model state.</summary>
+    public void RefreshVisuals()
+    {
+        _grid.InvalidateVisual();
+        _groups.Rebuild();
+        _links.InvalidateVisual();
+        _nodes.Rebuild();
+        _ports.Rebuild();
+        _vertices.InvalidateVisual();
+        _adorners.Refresh();
+        InvalidateMeasure();
+    }
+
     /// <summary>Whether any model is currently selected.</summary>
     public bool HasSelection => Diagram?.GetSelectedModels().Any() ?? false;
 
@@ -493,6 +506,36 @@ public class DiagramCanvas : Panel
     {
         if (!IsReadOnly)
             _history?.Redo();
+    }
+
+    /// <summary>Runs a reversible metadata edit through the undo/redo stack.</summary>
+    public void RunAsUndoableEdit(Action apply, Action undo)
+    {
+        if (apply == null)
+            throw new ArgumentNullException(nameof(apply));
+        if (undo == null)
+            throw new ArgumentNullException(nameof(undo));
+        if (IsReadOnly)
+            return;
+
+        void ApplyAndRefresh()
+        {
+            apply();
+            RefreshVisuals();
+        }
+
+        void UndoAndRefresh()
+        {
+            undo();
+            RefreshVisuals();
+        }
+
+        if (_history != null)
+            _history.Execute(new EditModelCommand(ApplyAndRefresh, UndoAndRefresh));
+        else
+            ApplyAndRefresh();
+
+        OnCommandStateChanged();
     }
 
     /// <summary>

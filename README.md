@@ -148,6 +148,11 @@ canvas.CommandStateChanged += RefreshToolbar;
 copyButton.IsEnabled = canvas.CanCopySelection;
 pasteButton.IsEnabled = canvas.CanPasteClipboard;
 groupButton.IsEnabled = canvas.CanGroupSelection;
+
+// Runtime property edits
+canvas.RunAsUndoableEdit(
+    apply: () => { a.Title = "Renamed"; a.RefreshAll(); },
+    undo: () => { a.Title = "Start"; a.RefreshAll(); });
 ```
 
 ## Repository layout

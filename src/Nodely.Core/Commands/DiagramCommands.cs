@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Nodely.Geometry;
@@ -76,6 +77,26 @@ public sealed class MoveNodeCommand : IDiagramCommand
 
     /// <inheritdoc />
     public void Undo() => _node.SetPosition(_from.X, _from.Y);
+}
+
+/// <summary>Runs a reversible metadata edit that is not observed automatically by the diagram.</summary>
+public sealed class EditModelCommand : IDiagramCommand
+{
+    private readonly Action _apply;
+    private readonly Action _undo;
+
+    /// <summary>Creates the command.</summary>
+    public EditModelCommand(Action apply, Action undo)
+    {
+        _apply = apply ?? throw new ArgumentNullException(nameof(apply));
+        _undo = undo ?? throw new ArgumentNullException(nameof(undo));
+    }
+
+    /// <inheritdoc />
+    public void Execute() => _apply();
+
+    /// <inheritdoc />
+    public void Undo() => _undo();
 }
 
 /// <summary>Adds a link to the diagram.</summary>

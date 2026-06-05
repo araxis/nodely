@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>Nodely.Avalonia.Api</PackageId>
+    <Title>Nodely.Avalonia.Api</Title>
+    <Description>Optional API design node pack for Nodely Avalonia: service nodes, endpoint cards, contract nodes, typed ports, API links, renderers, and arrange helpers.</Description>
+    <PackageVersion>$(NodelyAvaloniaApiVersion)</PackageVersion>
+    <Version>$(NodelyAvaloniaApiVersion)</Version>
+    <PackageTags>avalonia;diagram;diagrams;graph;node-editor;api;service;canvas</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nodely.Avalonia\Nodely.Avalonia.csproj" />
+    <ProjectReference Include="..\Nodely.Serialization\Nodely.Serialization.csproj" />
+  </ItemGroup>
+
+</Project>

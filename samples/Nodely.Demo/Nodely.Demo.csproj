@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Nodely.Avalonia.Api\Nodely.Avalonia.Api.csproj" />
     <ProjectReference Include="..\..\src\Nodely.Avalonia.Database\Nodely.Avalonia.Database.csproj" />
     <ProjectReference Include="..\..\src\Nodely.Avalonia.MindMap\Nodely.Avalonia.MindMap.csproj" />
     <ProjectReference Include="..\..\src\Nodely.Avalonia.Network\Nodely.Avalonia.Network.csproj" />

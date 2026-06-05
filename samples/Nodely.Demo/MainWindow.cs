@@ -10,6 +10,7 @@ using Nodely.Algorithms;
 using Nodely.Anchors;
 using Nodely.Avalonia;
 using Nodely.Avalonia.Controls;
+using Nodely.Avalonia.Api;
 using Nodely.Avalonia.Database;
 using Nodely.Avalonia.MindMap;
 using Nodely.Avalonia.Network;
@@ -138,6 +139,7 @@ public sealed class MainWindow : Window
         AddScene(SceneButton("UML", BuildUml));
         AddScene(SceneButton("MindMap", BuildMindMap));
         AddScene(SceneButton("Network", BuildNetwork));
+        AddScene(SceneButton("API", BuildApi));
         AddScene(new Border { Width = 24 });
         AddScene(ToolButton("Theme", ToggleTheme));
         AddScene(ToolButton("Save", Save));
@@ -205,10 +207,11 @@ public sealed class MainWindow : Window
 
         var diagram = NewDiagram();
         DiagramSerializer.Deserialize(diagram, _savedJson, CreateSerializationRegistry());
-        _host.Content = Editor(diagram, configureCanvas: canvas => canvas.UseDatabaseNodes().UseMindMapNodes().UseNetworkNodes().UseStateMachineNodes().UseUmlNodes().UseWorkflowNodes());
+        _host.Content = Editor(diagram, configureCanvas: canvas => canvas.UseApiNodes().UseDatabaseNodes().UseMindMapNodes().UseNetworkNodes().UseStateMachineNodes().UseUmlNodes().UseWorkflowNodes());
     }
 
-    private static DiagramSerializationRegistry CreateSerializationRegistry() => DatabaseNodeFactory.CreateRegistry()
+    private static DiagramSerializationRegistry CreateSerializationRegistry() => ApiNodeFactory.CreateRegistry()
+        .UseDatabaseNodes()
         .UseMindMapNodes()
         .UseNetworkNodes()
         .UseStateMachineNodes()
@@ -1001,6 +1004,190 @@ public sealed class MainWindow : Window
             layoutAction: (canvas, targetDiagram) =>
             {
                 canvas.RunAsUndoableMove(() => NetworkLayout.Arrange(targetDiagram));
+                canvas.RefreshVisuals();
+                canvas.ZoomToFit();
+            });
+    }
+
+    private Control BuildApi()
+    {
+        var diagram = NewDiagram();
+
+        var client = diagram.Nodes.Add(new ApiClientNode(new NodelyPoint(0, 0), "Partner portal")
+        {
+            Platform = "web app",
+            Summary = "External ordering client",
+            Version = "v2",
+        });
+        var gateway = diagram.Nodes.Add(new ApiGatewayNode(new NodelyPoint(0, 0), "Public gateway")
+        {
+            Host = "api.example.test",
+            Summary = "Routes public traffic",
+            Version = "edge",
+        });
+        var auth = diagram.Nodes.Add(new ApiAuthNode(new NodelyPoint(0, 0), "Orders policy")
+        {
+            Scheme = "OAuth2",
+            Scopes = "orders:read orders:write",
+            Status = ApiEndpointStatus.Internal,
+        });
+        var group = diagram.Nodes.Add(new ApiGroupNode(new NodelyPoint(0, 0), "Orders API")
+        {
+            Summary = "Public order workflow boundary",
+            Version = "v1",
+        });
+        var service = diagram.Nodes.Add(new ApiServiceNode(new NodelyPoint(0, 0), "Orders service")
+        {
+            BaseUrl = "orders.internal",
+            Owner = "Commerce",
+            Version = "v1",
+            Summary = "Owns order creation and lookup",
+        });
+        var getOrder = diagram.Nodes.Add(new ApiEndpointNode(new NodelyPoint(0, 0), "/orders/{id}", ApiEndpointMethod.Get)
+        {
+            ResponseType = "OrderDto",
+            Status = ApiEndpointStatus.Stable,
+            Version = "v1",
+            Summary = "Fetches a single order",
+        });
+        var createOrder = diagram.Nodes.Add(new ApiEndpointNode(new NodelyPoint(0, 0), "/orders", ApiEndpointMethod.Post)
+        {
+            RequestType = "CreateOrderRequest",
+            ResponseType = "OrderDto",
+            Status = ApiEndpointStatus.Preview,
+            Version = "v1",
+            Summary = "Creates a draft order",
+        });
+        var createOperation = diagram.Nodes.Add(new ApiOperationNode(new NodelyPoint(0, 0), "Create order")
+        {
+            Input = "CreateOrderRequest",
+            Output = "OrderDto",
+            SideEffectFree = false,
+            Summary = "Validates, prices, and persists",
+        });
+        var publishOperation = diagram.Nodes.Add(new ApiOperationNode(new NodelyPoint(0, 0), "Publish event")
+        {
+            Input = "OrderDto",
+            Output = "OrderCreated",
+            SideEffectFree = false,
+            Status = ApiEndpointStatus.Internal,
+        });
+        var createRequest = diagram.Nodes.Add(new ApiContractNode(new NodelyPoint(0, 0), "CreateOrderRequest")
+        {
+            Version = "v1",
+        });
+        createRequest.Fields.Add(new ApiContractField("customerId", "string", required: true));
+        createRequest.Fields.Add(new ApiContractField("items", "OrderItem[]", required: true));
+        createRequest.Fields.Add(new ApiContractField("couponCode", "string"));
+
+        var orderDto = diagram.Nodes.Add(new ApiContractNode(new NodelyPoint(0, 0), "OrderDto")
+        {
+            Version = "v1",
+        });
+        orderDto.Fields.Add(new ApiContractField("id", "string", required: true));
+        orderDto.Fields.Add(new ApiContractField("status", "string", required: true));
+        orderDto.Fields.Add(new ApiContractField("total", "decimal", required: true));
+
+        var orderEvent = diagram.Nodes.Add(new ApiContractNode(new NodelyPoint(0, 0), "OrderCreated")
+        {
+            Version = "v1",
+            Status = ApiEndpointStatus.Internal,
+        });
+        orderEvent.Fields.Add(new ApiContractField("orderId", "string", required: true));
+        orderEvent.Fields.Add(new ApiContractField("occurredAt", "date-time", required: true));
+
+        var clientOut = client.AddPort(new ApiPortModel(client, PortAlignment.Right, ApiPortRole.Request, "request"));
+        var gatewayIn = gateway.AddPort(new ApiPortModel(gateway, PortAlignment.Left, ApiPortRole.Request, "public"));
+        var gatewayAuth = gateway.AddPort(new ApiPortModel(gateway, PortAlignment.Bottom, ApiPortRole.Auth, "auth"));
+        var gatewayOut = gateway.AddPort(new ApiPortModel(gateway, PortAlignment.Right, ApiPortRole.Request, "route"));
+        var authPort = auth.AddPort(new ApiPortModel(auth, PortAlignment.Left, ApiPortRole.Auth, "policy"));
+        var serviceIn = service.AddPort(new ApiPortModel(service, PortAlignment.Left, ApiPortRole.Request, "in"));
+        var serviceOut = service.AddPort(new ApiPortModel(service, PortAlignment.Right, ApiPortRole.Dependency, "ops"));
+        var getIn = getOrder.AddPort(new ApiPortModel(getOrder, PortAlignment.Left, ApiPortRole.Request, "GET"));
+        var getOut = getOrder.AddPort(new ApiPortModel(getOrder, PortAlignment.Right, ApiPortRole.Response, "200"));
+        var postIn = createOrder.AddPort(new ApiPortModel(createOrder, PortAlignment.Left, ApiPortRole.Request, "POST"));
+        var postOut = createOrder.AddPort(new ApiPortModel(createOrder, PortAlignment.Right, ApiPortRole.Response, "201"));
+        var postAuth = createOrder.AddPort(new ApiPortModel(createOrder, PortAlignment.Bottom, ApiPortRole.Auth, "scope"));
+        var opIn = createOperation.AddPort(new ApiPortModel(createOperation, PortAlignment.Left, ApiPortRole.Dependency, "input"));
+        var opOut = createOperation.AddPort(new ApiPortModel(createOperation, PortAlignment.Right, ApiPortRole.Event, "event"));
+        var publishIn = publishOperation.AddPort(new ApiPortModel(publishOperation, PortAlignment.Left, ApiPortRole.Event, "event"));
+        var requestPort = createRequest.AddPort(new ApiPortModel(createRequest, PortAlignment.Left, ApiPortRole.Dependency, "request"));
+        var responsePort = orderDto.AddPort(new ApiPortModel(orderDto, PortAlignment.Left, ApiPortRole.Response, "response"));
+        var eventPort = orderEvent.AddPort(new ApiPortModel(orderEvent, PortAlignment.Left, ApiPortRole.Event, "event"));
+
+        diagram.Links.Add(new ApiLink(clientOut, gatewayIn, ApiLinkKind.Request)
+        {
+            Label = "public",
+            Protocol = "HTTPS",
+            Payload = "JSON",
+        });
+        diagram.Links.Add(new ApiLink(authPort, gatewayAuth, ApiLinkKind.Secures)
+        {
+            Label = "token check",
+            Protocol = "OAuth2",
+            Status = ApiEndpointStatus.Internal,
+        });
+        diagram.Links.Add(new ApiLink(gatewayOut, serviceIn, ApiLinkKind.Request)
+        {
+            Label = "route",
+            Protocol = "HTTPS",
+        });
+        diagram.Links.Add(new ApiLink(serviceOut, getIn, ApiLinkKind.Request)
+        {
+            Label = "read",
+            Protocol = "GET",
+        });
+        diagram.Links.Add(new ApiLink(serviceOut, postIn, ApiLinkKind.Request)
+        {
+            Label = "create",
+            Protocol = "POST",
+            Status = ApiEndpointStatus.Preview,
+        });
+        diagram.Links.Add(new ApiLink(authPort, postAuth, ApiLinkKind.Secures)
+        {
+            Label = "orders:write",
+            Status = ApiEndpointStatus.Internal,
+        });
+        diagram.Links.Add(new ApiLink(postIn, requestPort, ApiLinkKind.DependsOn)
+        {
+            Label = "body",
+            Payload = "CreateOrderRequest",
+        });
+        diagram.Links.Add(new ApiLink(getOut, responsePort, ApiLinkKind.Response)
+        {
+            Label = "200",
+            Payload = "OrderDto",
+        });
+        diagram.Links.Add(new ApiLink(postOut, responsePort, ApiLinkKind.Response)
+        {
+            Label = "201",
+            Payload = "OrderDto",
+        });
+        diagram.Links.Add(new ApiLink(postOut, opIn, ApiLinkKind.DependsOn)
+        {
+            Label = "handler",
+            Payload = "Create order",
+        });
+        diagram.Links.Add(new ApiLink(opOut, publishIn, ApiLinkKind.Publishes)
+        {
+            Label = "publish",
+            Protocol = "event",
+        });
+        diagram.Links.Add(new ApiLink(publishIn, eventPort, ApiLinkKind.Publishes)
+        {
+            Label = "OrderCreated",
+            Payload = "event",
+            Status = ApiEndpointStatus.Internal,
+        });
+
+        ApiLayout.Arrange(diagram);
+
+        return Editor(
+            diagram,
+            configureCanvas: canvas => canvas.UseApiNodes(),
+            layoutAction: (canvas, targetDiagram) =>
+            {
+                canvas.RunAsUndoableMove(() => ApiLayout.Arrange(targetDiagram));
                 canvas.RefreshVisuals();
                 canvas.ZoomToFit();
             });

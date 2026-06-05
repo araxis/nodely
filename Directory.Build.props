@@ -23,6 +23,7 @@
     <RepositoryType>git</RepositoryType>
 
     <NodelyMainVersion>0.7.0</NodelyMainVersion>
+    <NodelyAvaloniaApiVersion>0.1.0</NodelyAvaloniaApiVersion>
     <NodelyAvaloniaDatabaseVersion>0.1.0</NodelyAvaloniaDatabaseVersion>
     <NodelyAvaloniaUmlVersion>0.1.0</NodelyAvaloniaUmlVersion>
     <NodelyAvaloniaWorkflowVersion>0.1.0</NodelyAvaloniaWorkflowVersion>

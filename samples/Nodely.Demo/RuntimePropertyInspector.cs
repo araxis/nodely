@@ -10,6 +10,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Nodely;
 using Nodely.Avalonia.Controls;
+using Nodely.Avalonia.Api;
 using Nodely.Avalonia.Database;
 using Nodely.Avalonia.MindMap;
 using Nodely.Avalonia.Network;
@@ -115,6 +116,9 @@ internal sealed class RuntimePropertyInspector : IDisposable
         {
             case TaskNode task:
                 BuildTaskNode(content, task);
+                break;
+            case ApiNodeBase api:
+                BuildApiNode(content, api);
                 break;
             case DatabaseObjectNode database:
                 BuildDatabaseNode(content, database);
@@ -367,6 +371,64 @@ internal sealed class RuntimePropertyInspector : IDisposable
         }
     }
 
+    private void BuildApiNode(StackPanel content, ApiNodeBase node)
+    {
+        content.Children.Add(Section("API node"));
+        content.Children.Add(TextField("Name", node.Name, value => node.Name = value, node));
+        content.Children.Add(TextField("Version", node.Version ?? "", value => node.Version = NormalizeOptional(value), node));
+        content.Children.Add(EnumField("Status", node.Status, value => node.Status = value, node));
+        content.Children.Add(TextField("Summary", node.Summary ?? "", value => node.Summary = NormalizeOptional(value), node, multiline: true));
+        content.Children.Add(TextField("Accent", node.AccentColor, value => node.AccentColor = value, node));
+        content.Children.Add(TextField("Icon", node.IconKey ?? "", value => node.IconKey = NormalizeOptional(value), node));
+
+        switch (node)
+        {
+            case ApiServiceNode service:
+                content.Children.Add(Section("Service"));
+                content.Children.Add(TextField("Base URL", service.BaseUrl ?? "", value => service.BaseUrl = NormalizeOptional(value), service));
+                content.Children.Add(TextField("Owner", service.Owner ?? "", value => service.Owner = NormalizeOptional(value), service));
+                break;
+            case ApiEndpointNode endpoint:
+                content.Children.Add(Section("Endpoint"));
+                content.Children.Add(EnumField("Method", endpoint.Method, value => endpoint.Method = value, endpoint));
+                content.Children.Add(TextField("Route", endpoint.Route, value => endpoint.Route = value, endpoint));
+                content.Children.Add(TextField("Request", endpoint.RequestType ?? "", value => endpoint.RequestType = NormalizeOptional(value), endpoint));
+                content.Children.Add(TextField("Response", endpoint.ResponseType ?? "", value => endpoint.ResponseType = NormalizeOptional(value), endpoint));
+                break;
+            case ApiOperationNode operation:
+                content.Children.Add(Section("Operation"));
+                content.Children.Add(TextField("Input", operation.Input ?? "", value => operation.Input = NormalizeOptional(value), operation));
+                content.Children.Add(TextField("Output", operation.Output ?? "", value => operation.Output = NormalizeOptional(value), operation));
+                content.Children.Add(BoolField("Read only", operation.SideEffectFree, value => operation.SideEffectFree = value, operation));
+                break;
+            case ApiClientNode client:
+                content.Children.Add(Section("Client"));
+                content.Children.Add(TextField("Platform", client.Platform ?? "", value => client.Platform = NormalizeOptional(value), client));
+                break;
+            case ApiGatewayNode gateway:
+                content.Children.Add(Section("Gateway"));
+                content.Children.Add(TextField("Host", gateway.Host ?? "", value => gateway.Host = NormalizeOptional(value), gateway));
+                break;
+            case ApiAuthNode auth:
+                content.Children.Add(Section("Auth"));
+                content.Children.Add(TextField("Scheme", auth.Scheme ?? "", value => auth.Scheme = NormalizeOptional(value), auth));
+                content.Children.Add(TextField("Scopes", auth.Scopes ?? "", value => auth.Scopes = NormalizeOptional(value), auth));
+                break;
+            case ApiContractNode contract:
+                content.Children.Add(Section("Contract"));
+                content.Children.Add(TextField("Fields", string.Join("; ", contract.Fields.Select(field => $"{field.Name}:{field.Type}")), value =>
+                {
+                    contract.Fields.Clear();
+                    foreach (var part in value.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                    {
+                        var pieces = part.Split(':', 2, StringSplitOptions.TrimEntries);
+                        contract.Fields.Add(new ApiContractField(pieces[0], pieces.Length > 1 ? pieces[1] : "string"));
+                    }
+                }, contract, multiline: true));
+                break;
+        }
+    }
+
     private void BuildLink(StackPanel content, BaseLinkModel link)
     {
         content.Children.Add(Section("Link"));
@@ -380,6 +442,15 @@ internal sealed class RuntimePropertyInspector : IDisposable
 
         switch (link)
         {
+            case ApiLink api:
+                content.Children.Add(Section("API link"));
+                content.Children.Add(EnumField("Kind", api.Kind, value => api.Kind = value, api));
+                content.Children.Add(TextField("Label", api.Label ?? "", value => api.Label = NormalizeOptional(value), api));
+                content.Children.Add(TextField("Protocol", api.Protocol ?? "", value => api.Protocol = NormalizeOptional(value), api));
+                content.Children.Add(TextField("Payload", api.Payload ?? "", value => api.Payload = NormalizeOptional(value), api));
+                content.Children.Add(EnumField("Status", api.Status, value => api.Status = value, api));
+                content.Children.Add(TextField("Accent", api.AccentColor ?? "", value => api.AccentColor = NormalizeOptional(value), api));
+                break;
             case DatabaseRelationshipLink relationship:
                 content.Children.Add(Section("Database relationship"));
                 content.Children.Add(EnumField("Kind", relationship.Kind, value => relationship.Kind = value, relationship));

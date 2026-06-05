@@ -22,6 +22,10 @@ Tick items as completed. Mirrors `development-plan.md`. `[ ]` todo, `[~]` in pro
 - [x] Add Network device nodes, typed ports, topology links, status metadata, link glyphs, and arrange helper.
 - [x] Add `UseNetworkNodes()` renderer registration, serializer registration, and `NetworkNodeFactory`.
 - [x] Add Network demo scene, documentation guide, runtime inspector fields, and focused tests.
+- [x] Add `Nodely.Avalonia.Api` as the next independent side package.
+- [x] Add API service, endpoint, contract, operation, client, gateway, auth, group nodes, typed ports, API links, and arrange helper.
+- [x] Add `UseApiNodes()` renderer registration, serializer registration, and `ApiNodeFactory`.
+- [x] Add API demo scene, documentation guide, runtime inspector fields, and focused tests.
 
 ## Post-M4 — v0.7.0 database pack
 - [x] Add `Nodely.Avalonia.Database` package targeting `net8.0;net10.0`.

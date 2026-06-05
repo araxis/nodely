@@ -18,6 +18,7 @@ on:
         options:
           - 'all'
           - 'main'
+          - 'Nodely.Avalonia.Api'
           - 'Nodely.Avalonia.Database'
           - 'Nodely.Avalonia.MindMap'
           - 'Nodely.Avalonia.Network'
@@ -69,6 +70,7 @@ jobs:
             "src/Nodely.Serialization/Nodely.Serialization.csproj"
           )
           side_package_ids=(
+            "Nodely.Avalonia.Api"
             "Nodely.Avalonia.Database"
             "Nodely.Avalonia.MindMap"
             "Nodely.Avalonia.Network"
@@ -77,6 +79,7 @@ jobs:
             "Nodely.Avalonia.Workflow"
           )
           side_package_projects=(
+            "src/Nodely.Avalonia.Api/Nodely.Avalonia.Api.csproj"
             "src/Nodely.Avalonia.Database/Nodely.Avalonia.Database.csproj"
             "src/Nodely.Avalonia.MindMap/Nodely.Avalonia.MindMap.csproj"
             "src/Nodely.Avalonia.Network/Nodely.Avalonia.Network.csproj"

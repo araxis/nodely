@@ -140,7 +140,11 @@ internal sealed class NodesLayer : Panel
         InvalidateArrange();
     }
 
-    private void OnNodeSizeChanged(NodeModel n) => InvalidateMeasure();
+    private void OnNodeSizeChanged(NodeModel n)
+    {
+        n.RefreshLinks();
+        InvalidateMeasure();
+    }
 
     // Virtualization: when VirtualizationBehavior toggles a node's Visible flag, collapse/realize its view.
     private void OnNodeVisibilityChanged(Model m)

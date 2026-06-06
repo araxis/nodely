@@ -22,7 +22,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
 
-    <NodelyMainVersion>0.8.0</NodelyMainVersion>
+    <NodelyMainVersion>0.8.1</NodelyMainVersion>
     <NodelyAvaloniaApiVersion>0.1.0</NodelyAvaloniaApiVersion>
     <NodelyAvaloniaDatabaseVersion>0.1.0</NodelyAvaloniaDatabaseVersion>
     <NodelyAvaloniaDesignerVersion>0.1.0</NodelyAvaloniaDesignerVersion>

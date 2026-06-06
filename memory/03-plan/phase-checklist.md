@@ -2,6 +2,11 @@
 
 Tick items as completed. Mirrors `development-plan.md`. `[ ]` todo, `[~]` in progress, `[x]` done.
 
+## Post-M4 - v0.8.1 initial link rendering hotfix
+- [x] Refresh direct node links when node size feedback arrives from the Avalonia node layer.
+- [x] Add headless regression coverage for node-to-node links after initial layout.
+- [x] Bump main package version to `0.8.1` while leaving side-package versions unchanged.
+
 ## Post-M4 - StateMachine layout hotfix
 - [x] Fix `StateMachineLayout.Arrange()` so retry/error cycles do not re-queue states forever.
 - [x] Bump `Nodely.Avalonia.StateMachine` side-package version to `0.1.1`.

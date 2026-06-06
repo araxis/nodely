@@ -3,6 +3,17 @@
 Durable lessons, gotchas, surprises, and reversed decisions. Add an entry the moment something is
 non-obvious — it's the cheapest insurance we have. Tag each with a date and the phase.
 
+## F-058 — Shape-anchor links need node-size feedback (2026-06-06, v0.8.1 hotfix)
+
+Node-to-node links route through `ShapeIntersectionAnchor`, which cannot return an endpoint until the node has
+measured bounds. Initial gallery diagrams added links before Avalonia measured node views, so the first path
+generation returned no route. Dragging any component later caused another refresh, making the missing links
+appear.
+
+Decision: when `NodesLayer` receives a `NodeModel.SizeChanged` event from layout feedback, refresh the links
+attached directly to that node before invalidating measure. Port links still use the port-layer refresh path
+because their endpoints depend on arranged port positions.
+
 ## F-057 — State-machine layouts must treat cycles as normal (2026-06-06, StateMachine hotfix)
 
 The gallery State machine scene includes a retry transition back to an earlier state. The first layout helper

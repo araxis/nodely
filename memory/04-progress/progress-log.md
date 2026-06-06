@@ -3,6 +3,18 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-06 — v0.8.1 initial link rendering hotfix
+
+- Versioning: bumped main packages to `0.8.1`; side packages keep their independent versions.
+- Fix: node size feedback now refreshes direct node links, so shape-anchor links generate their paths as soon
+  as both endpoints have measured bounds.
+- Tests: added an Avalonia headless regression proving node-to-node links have a generated path after initial
+  layout on both supported app runtimes.
+- **Verified:** build 0/0; `dotnet test` -> Core 111/111 + Avalonia 67/67 + API 7/7 + Database 7/7
+  + MindMap 7/7 + Network 7/7 + StateMachine 8/8 + UML 6/6 + Workflow 5/5 on both `net8.0` and
+  `net10.0`; `dotnet pack` -> main packages `0.8.1`, side packages unchanged; package inspection confirmed
+  expected target folders and dependency groups; docs install dry-run and docs build passed.
+
 ## 2026-06-06 — StateMachine layout hotfix
 
 - Package: bumped `Nodely.Avalonia.StateMachine` to side-package version `0.1.1`; main packages and the other

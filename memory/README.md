@@ -43,7 +43,7 @@ memory/
 
 ## Quick status
 
-- Phase: **StateMachine side-package hotfix.** 224 tests per app runtime currently expected across Core, side-package,
+- Phase: **Main-package link-rendering hotfix.** 225 tests per app runtime currently expected across Core, side-package,
   and Avalonia suites on both `net8.0` and `net10.0`.
 - v0.1.0: 15 phases (0–14), M1–M4. v0.2.0 (F-027…F-039): editor/interaction wave. v0.3.0 (F-041): 10 extension
   seams (render hooks for links/ports/groups, custom layers, adorners, validation delegates, behaviors,
@@ -66,5 +66,7 @@ memory/
   runtime property inspector that replaces copied demo/editor chrome.
 - StateMachine hotfix (F-057): retry/error transition cycles no longer make `StateMachineLayout.Arrange()`
   re-queue states forever.
+- v0.8.1 (F-058): node-to-node shape-anchor links refresh after first node measurement, so default gallery
+  links are visible on initial display.
 - Docs: static documentation site (F-040) + Extensibility guide; GitHub Pages pipeline.
 - Last updated: 2026-06-06

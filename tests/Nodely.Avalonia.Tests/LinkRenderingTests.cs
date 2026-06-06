@@ -53,6 +53,24 @@ public class LinkRenderingTests
     }
 
     [AvaloniaFact]
+    public void Link_between_nodes_generates_a_path_after_initial_layout()
+    {
+        var diagram = new NodelyDiagram();
+        var n1 = diagram.Nodes.Add(new NodeModel(new NodelyPoint(50, 60)) { Title = "A" });
+        var n2 = diagram.Nodes.Add(new NodeModel(new NodelyPoint(320, 60)) { Title = "B" });
+        var link = diagram.Links.Add(new LinkModel(n1, n2));
+
+        var window = new Window { Width = 600, Height = 400, Content = new DiagramCanvas { Diagram = diagram } };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+
+        n1.Size.ShouldNotBeNull();
+        n2.Size.ShouldNotBeNull();
+        link.PathGeneratorResult.ShouldNotBeNull();
+        link.PathGeneratorResult!.FullPath.Operations.Count.ShouldBeGreaterThan(1);
+    }
+
+    [AvaloniaFact]
     public void Clicking_a_link_selects_it_and_clicking_empty_space_clears_it()
     {
         var (window, diagram, p1, p2) = SetupTwoPorts(withLink: true);

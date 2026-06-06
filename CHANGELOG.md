@@ -6,6 +6,17 @@ All notable changes to Nodely are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-06-06
+
+### Added
+- **Gallery startup coverage:** the desktop gallery now has Avalonia headless startup checks for every scene,
+  proving nodes measure and visible links generate paths on first layout.
+
+### Fixed
+- **Same-node links:** shape anchors now choose distinct fallback endpoints for node-to-node links that attach
+  back to the same node, so self transitions and similar links generate an initial path instead of waiting for
+  a later refresh.
+
 ## [0.8.1] - 2026-06-06
 
 ### Fixed
@@ -274,6 +285,7 @@ No breaking API changes.
   save/load (snapshots gained an `Extra` map).
 - Documentation site gained an **Extensibility** guide (the seam map).
 
+[0.8.2]: https://github.com/araxis/nodely/releases/tag/v0.8.2
 [0.8.1]: https://github.com/araxis/nodely/releases/tag/v0.8.1
 [0.8.0]: https://github.com/araxis/nodely/releases/tag/v0.8.0
 [0.7.0]: https://github.com/araxis/nodely/releases/tag/v0.7.0

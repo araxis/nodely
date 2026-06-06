@@ -3,6 +3,19 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-06 — v0.8.2 visual reliability pass
+
+- Versioning: bumped main packages to `0.8.2`; side packages keep their independent versions.
+- Fix: same-node shape-anchor links now resolve distinct fallback endpoints, so self links generate an initial
+  path when their node has measured bounds.
+- Tests: added a core same-node link regression and a `Nodely.Demo.Tests` Avalonia headless suite that opens
+  every gallery scene and verifies measured nodes plus visible link paths on first layout.
+- **Verified:** build 0/0; `dotnet test` -> Core 112/112 + Avalonia 67/67 + API 7/7 + Database 7/7
+  + MindMap 7/7 + Network 7/7 + StateMachine 8/8 + UML 6/6 + Workflow 5/5 on both `net8.0` and
+  `net10.0`, plus Demo startup 10/10 on `net10.0`; `dotnet pack` -> main packages `0.8.2`, side packages
+  unchanged; package inspection confirmed expected target folders and dependency groups; docs install dry-run
+  and docs build passed.
+
 ## 2026-06-06 — v0.8.1 initial link rendering hotfix
 
 - Versioning: bumped main packages to `0.8.1`; side packages keep their independent versions.

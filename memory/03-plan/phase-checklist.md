@@ -2,6 +2,13 @@
 
 Tick items as completed. Mirrors `development-plan.md`. `[ ]` todo, `[~]` in progress, `[x]` done.
 
+## Post-M4 - v0.8.2 visual reliability pass
+- [x] Make same-node shape-anchor links generate an initial path after node measurement.
+- [x] Add core regression coverage for same-node shape links.
+- [x] Add demo gallery startup coverage for all scenes.
+- [x] Bump main package version to `0.8.2` while leaving side-package versions unchanged.
+- [x] Final validation: build, test, pack, package inspection, docs build, wording scan.
+
 ## Post-M4 - v0.8.1 initial link rendering hotfix
 - [x] Refresh direct node links when node size feedback arrives from the Avalonia node layer.
 - [x] Add headless regression coverage for node-to-node links after initial layout.

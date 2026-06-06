@@ -3,6 +3,19 @@
 Durable lessons, gotchas, surprises, and reversed decisions. Add an entry the moment something is
 non-obvious — it's the cheapest insurance we have. Tag each with a date and the phase.
 
+## F-059 — Same-node shape links need non-degenerate endpoints (2026-06-06, v0.8.2 visual reliability pass)
+
+The gallery startup test caught a state-machine self transition that existed in the model but had no generated
+path on first layout. Normal routing has no vertices for a node-to-node self link, so both
+`ShapeIntersectionAnchor` endpoints looked at the same node center. That produced a zero-length line into the
+shape intersection math and no drawable path.
+
+Decision: when a shape-to-shape link attaches back to the same node with an empty route,
+`ShapeIntersectionAnchor` uses distinct outside reference points before intersecting with the node shape. This
+keeps normal links unchanged while giving self links a non-degenerate initial path. Added a core regression for
+same-node shape links and a demo startup suite that checks every gallery scene for measured nodes and visible
+link paths after first layout.
+
 ## F-058 — Shape-anchor links need node-size feedback (2026-06-06, v0.8.1 hotfix)
 
 Node-to-node links route through `ShapeIntersectionAnchor`, which cannot return an endpoint until the node has

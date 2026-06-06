@@ -117,6 +117,20 @@ public sealed class GuideLayer : DiagramLayer
 
 public sealed class MainWindow : Window
 {
+    public static IReadOnlyList<string> GallerySceneNames { get; } = new[]
+    {
+        "Workflow",
+        "State machine",
+        "Inspector",
+        "Extensibility",
+        "Architecture",
+        "Database",
+        "UML",
+        "MindMap",
+        "Network",
+        "API",
+    };
+
     private readonly ContentControl _host = new();
     private NodelyPalette _palette = NodelyPalettes.Dark;
     private NodelyDiagram? _currentDiagram;
@@ -131,16 +145,16 @@ public sealed class MainWindow : Window
         Height = 760;
 
         var scenes = new WrapPanel { Margin = new Thickness(10, 10, 10, 4) };
-        AddScene(SceneButton("Workflow", BuildWorkflow));
-        AddScene(SceneButton("State machine", BuildStateMachine));
-        AddScene(SceneButton("Inspector", BuildInspector));
-        AddScene(SceneButton("Extensibility", BuildExtensibility));
-        AddScene(SceneButton("Architecture", BuildArchitecture));
-        AddScene(SceneButton("Database", BuildDatabase));
-        AddScene(SceneButton("UML", BuildUml));
-        AddScene(SceneButton("MindMap", BuildMindMap));
-        AddScene(SceneButton("Network", BuildNetwork));
-        AddScene(SceneButton("API", BuildApi));
+        AddScene(SceneButton("Workflow"));
+        AddScene(SceneButton("State machine"));
+        AddScene(SceneButton("Inspector"));
+        AddScene(SceneButton("Extensibility"));
+        AddScene(SceneButton("Architecture"));
+        AddScene(SceneButton("Database"));
+        AddScene(SceneButton("UML"));
+        AddScene(SceneButton("MindMap"));
+        AddScene(SceneButton("Network"));
+        AddScene(SceneButton("API"));
         AddScene(new Border { Width = 24 });
         AddScene(ToolButton("Theme", ToggleTheme));
         AddScene(ToolButton("Save", Save));
@@ -158,10 +172,35 @@ public sealed class MainWindow : Window
         root.Children.Add(_host);
         Content = root;
 
-        _host.Content = BuildWorkflow();
+        ShowScene("Workflow");
     }
 
-    private Button SceneButton(string text, Func<Control> build)
+    public NodelyDiagram? CurrentDiagram => _currentDiagram;
+
+    public DiagramCanvas? CurrentCanvas => _currentCanvas;
+
+    public Control ShowScene(string name)
+    {
+        var scene = name switch
+        {
+            "Workflow" => BuildWorkflow(),
+            "State machine" => BuildStateMachine(),
+            "Inspector" => BuildInspector(),
+            "Extensibility" => BuildExtensibility(),
+            "Architecture" => BuildArchitecture(),
+            "Database" => BuildDatabase(),
+            "UML" => BuildUml(),
+            "MindMap" => BuildMindMap(),
+            "Network" => BuildNetwork(),
+            "API" => BuildApi(),
+            _ => throw new ArgumentOutOfRangeException(nameof(name), name, "Unknown gallery scene."),
+        };
+
+        _host.Content = scene;
+        return scene;
+    }
+
+    private Button SceneButton(string text)
     {
         var button = new Button
         {
@@ -170,7 +209,7 @@ public sealed class MainWindow : Window
             FontSize = 14,
             Padding = new Thickness(12, 6),
         };
-        button.Click += (_, _) => _host.Content = build();
+        button.Click += (_, _) => ShowScene(text);
         return button;
     }
 

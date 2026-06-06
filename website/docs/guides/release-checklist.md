@@ -15,7 +15,9 @@ Use this checklist for each package release.
    or test count.
 3. For a main-only polish release, leave side-package version properties unchanged unless side-package package
    code changed.
-4. Run the wording scan before staging so branch names, commit messages, docs, comments, and generated files stay neutral.
+4. For rendering or gallery reliability fixes, add or update headless startup coverage that opens the affected
+   demo scenes and verifies first-layout visuals.
+5. Run the wording scan before staging so branch names, commit messages, docs, comments, and generated files stay neutral.
 
 ## Validate locally
 

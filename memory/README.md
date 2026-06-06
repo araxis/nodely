@@ -43,8 +43,8 @@ memory/
 
 ## Quick status
 
-- Phase: **Main-package link-rendering hotfix.** 225 tests per app runtime currently expected across Core, side-package,
-  and Avalonia suites on both `net8.0` and `net10.0`.
+- Phase: **Main-package visual reliability pass.** 226 tests per app runtime currently expected across Core,
+  side-package, and Avalonia suites on both `net8.0` and `net10.0`, plus 10 `net10.0` demo startup visual checks.
 - v0.1.0: 15 phases (0–14), M1–M4. v0.2.0 (F-027…F-039): editor/interaction wave. v0.3.0 (F-041): 10 extension
   seams (render hooks for links/ports/groups, custom layers, adorners, validation delegates, behaviors,
   IDiagramLayout, Tag/Data bag, serialization extras) — lean framework, not built-in features.
@@ -68,5 +68,7 @@ memory/
   re-queue states forever.
 - v0.8.1 (F-058): node-to-node shape-anchor links refresh after first node measurement, so default gallery
   links are visible on initial display.
+- v0.8.2 (F-059): same-node shape-anchor links get distinct fallback endpoints, and every gallery scene has
+  first-layout visual coverage for visible links.
 - Docs: static documentation site (F-040) + Extensibility guide; GitHub Pages pipeline.
 - Last updated: 2026-06-06

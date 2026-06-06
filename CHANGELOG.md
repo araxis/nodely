@@ -6,6 +6,14 @@ All notable changes to Nodely are documented here. The format is based on
 
 ## [Unreleased]
 
+## [Nodely.Avalonia.StateMachine 0.1.1] - 2026-06-06
+
+StateMachine side-package hotfix.
+
+### Fixed
+- **State-machine layout:** `StateMachineLayout.Arrange()` now handles retry/error cycles without repeatedly
+  re-queueing the same states, fixing the desktop gallery hang when opening the State machine scene.
+
 ## [Nodely.Avalonia.Designer 0.1.0] - 2026-06-06
 
 First Designer side-package release.

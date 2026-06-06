@@ -18,7 +18,7 @@ theming, read-only mode, serialization, undo/redo, and auto-layout — with **no
 just Avalonia's native rendering.
 
 > Status: **v0.8.0** main packages, with independent side packages. Engine + Avalonia UI are complete and
-> tested on `net8.0` and `net10.0` (223 tests per runtime across the engine, side packages, and Avalonia
+> tested on `net8.0` and `net10.0` (224 tests per runtime across the engine, side packages, and Avalonia
 > headless UI). See
 > [`CHANGELOG.md`](CHANGELOG.md) and the design notes in [`memory/`](memory/).
 

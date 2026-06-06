@@ -3,6 +3,18 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-06 — StateMachine layout hotfix
+
+- Package: bumped `Nodely.Avalonia.StateMachine` to side-package version `0.1.1`; main packages and the other
+  side packages keep their current versions.
+- Fix: `StateMachineLayout.Arrange()` now assigns each reachable state once, so retry/error cycles no longer
+  grow levels forever and the desktop gallery State machine scene no longer hangs on selection.
+- Tests: added a retry-cycle regression covering the same cyclic shape as the gallery scene.
+- **Verified:** `dotnet test tests\Nodely.StateMachine.Tests\Nodely.StateMachine.Tests.csproj --configuration
+  Release --verbosity normal --disable-build-servers /m:1 /nr:false` -> 8/8 on both `net8.0` and `net10.0`;
+  `dotnet build samples\Nodely.Demo\Nodely.Demo.csproj --configuration Release --disable-build-servers /m:1
+  /nr:false` passed with 0 warnings and 0 errors.
+
 ## 2026-06-06 — Designer side package
 
 - Package: added `Nodely.Avalonia.Designer` as an optional editor-controls package, starting at side-package

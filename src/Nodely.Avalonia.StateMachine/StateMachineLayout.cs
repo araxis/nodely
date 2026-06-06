@@ -108,7 +108,7 @@ public static class StateMachineLayout
 
             foreach (var target in targets)
             {
-                if (!levels.TryGetValue(target, out var existing) || nextLevel > existing)
+                if (!levels.ContainsKey(target))
                 {
                     levels[target] = nextLevel;
                     queue.Enqueue(target);

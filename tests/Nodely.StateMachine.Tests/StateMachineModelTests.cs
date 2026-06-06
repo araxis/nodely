@@ -201,4 +201,28 @@ public class StateMachineModelTests
         active.Position.X.ShouldBeGreaterThan(waiting.Position.X);
         final.Position.X.ShouldBeGreaterThan(active.Position.X);
     }
+
+    [Fact]
+    public void Arrange_handles_retry_cycles_without_requeueing_forever()
+    {
+        var diagram = new NodelyDiagram(null, registerDefaultBehaviors: false);
+        var initial = diagram.Nodes.Add(new StateMachineInitialNode(new Point(0, 0), "Start") { Size = new Size(64, 64) });
+        var idle = diagram.Nodes.Add(new StateMachineStateNode(new Point(0, 0), "Idle") { Size = new Size(220, 110) });
+        var running = diagram.Nodes.Add(new StateMachineStateNode(new Point(0, 0), "Running") { Size = new Size(220, 110) });
+        var delayed = diagram.Nodes.Add(new StateMachineStateNode(new Point(0, 0), "Delayed") { Size = new Size(220, 110) });
+        var final = diagram.Nodes.Add(new StateMachineFinalNode(new Point(0, 0), "Done") { Size = new Size(64, 64) });
+
+        diagram.Links.Add(new StateMachineTransitionLink(initial, idle));
+        diagram.Links.Add(new StateMachineTransitionLink(idle, running));
+        diagram.Links.Add(new StateMachineTransitionLink(running, delayed, StateMachineTransitionKind.Timeout));
+        diagram.Links.Add(new StateMachineTransitionLink(delayed, idle, StateMachineTransitionKind.Timeout));
+        diagram.Links.Add(new StateMachineTransitionLink(running, final));
+
+        StateMachineLayout.Arrange(diagram, new StateMachineLayoutOptions { OriginX = 0, OriginY = 0, ColumnSpacing = 240 });
+
+        idle.Position.X.ShouldBeGreaterThan(initial.Position.X);
+        running.Position.X.ShouldBeGreaterThan(idle.Position.X);
+        delayed.Position.X.ShouldBeGreaterThan(running.Position.X);
+        final.Position.X.ShouldBeGreaterThan(running.Position.X);
+    }
 }

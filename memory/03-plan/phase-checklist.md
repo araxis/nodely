@@ -2,6 +2,11 @@
 
 Tick items as completed. Mirrors `development-plan.md`. `[ ]` todo, `[~]` in progress, `[x]` done.
 
+## Post-M4 - StateMachine layout hotfix
+- [x] Fix `StateMachineLayout.Arrange()` so retry/error cycles do not re-queue states forever.
+- [x] Bump `Nodely.Avalonia.StateMachine` side-package version to `0.1.1`.
+- [x] Add retry-cycle regression coverage and verify the demo build.
+
 ## Post-M4 - Designer side package
 - [x] Add `Nodely.Avalonia.Designer` package targeting `net8.0;net10.0`.
 - [x] Add descriptor-driven property registry and reusable runtime inspector controls.

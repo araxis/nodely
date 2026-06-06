@@ -3,6 +3,16 @@
 Durable lessons, gotchas, surprises, and reversed decisions. Add an entry the moment something is
 non-obvious — it's the cheapest insurance we have. Tag each with a date and the phase.
 
+## F-057 — State-machine layouts must treat cycles as normal (2026-06-06, StateMachine hotfix)
+
+The gallery State machine scene includes a retry transition back to an earlier state. The first layout helper
+assigned a higher level whenever it saw a longer path, which works for acyclic graphs but never terminates when
+there is a cycle.
+
+Decision: `StateMachineLayout.Arrange()` now assigns the first reachable level for each state and does not
+re-queue already placed states. State machines are cyclic by nature, so package-local layout helpers need cycle
+coverage even when they are intentionally small.
+
 ## F-056 — Reusable editor chrome belongs in an optional package (2026-06-06, Designer side package)
 
 The runtime property editor proved the undoable metadata path, but leaving the inspector, toolbar, status bar,

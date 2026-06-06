@@ -9,8 +9,8 @@ All notable changes to Nodely are documented here. The format is based on
 ### Changed
 - **Demo gallery:** the desktop sample now opens in a richer gallery shell with scene navigation, active scene
   metadata, polished actions, and a framed live editor surface.
-- **Demo toolbox:** the desktop sample now uses scene-specific toolbox stencils with compact previews and
-  domain ports instead of one generic cross-package list.
+- **Demo stencils:** the desktop sample now uses a compact scene stencil strip with previews and domain ports,
+  keeping scene navigation as the only vertical panel on the left.
 - **Designer inspector:** runtime property editor fields now stretch to the inspector width instead of shrinking
   to their natural content width.
 

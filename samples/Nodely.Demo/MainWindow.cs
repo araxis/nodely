@@ -629,9 +629,7 @@ public sealed class MainWindow : Window
             Palette = _palette,
             IsReadOnly = readOnly,
             PropertyRegistry = CreateDesignerPropertyRegistry(),
-            ToolboxSections = CreateToolboxSections(_currentSceneName),
-            ShowToolbox = !readOnly,
-            ToolboxWidth = 266,
+            ShowToolbox = false,
             ConfigureCanvas = canvas =>
             {
                 RegisterTaskNode(canvas);
@@ -646,7 +644,204 @@ public sealed class MainWindow : Window
 
         _currentDesigner = designer;
         _currentCanvas = designer.Canvas;
-        return designer;
+        return readOnly ? designer : BuildStencilSurface(designer, diagram, CreateToolboxSections(_currentSceneName).ToArray());
+    }
+
+    private Control BuildStencilSurface(DiagramDesignerShell designer, NodelyDiagram diagram, IReadOnlyCollection<DesignerToolboxSection> sections)
+    {
+        if (sections.Count == 0 || sections.All(section => !section.Items.Any()))
+            return designer;
+
+        var root = new Grid
+        {
+            RowDefinitions = new RowDefinitions("Auto,*"),
+            Background = Paint(Color.FromRgb(0x0D, 0x12, 0x1B)),
+            Children =
+            {
+                BuildStencilStrip(diagram, sections),
+                designer,
+            },
+        };
+        Grid.SetRow(designer, 1);
+        return root;
+    }
+
+    private Control BuildStencilStrip(NodelyDiagram diagram, IEnumerable<DesignerToolboxSection> sections)
+    {
+        var items = sections.SelectMany(section => section.Items).ToArray();
+        var row = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 8,
+            Margin = new Thickness(10, 8),
+        };
+
+        foreach (var item in items)
+            row.Children.Add(StencilButton(diagram, item));
+
+        return new Border
+        {
+            Tag = "scene-stencil-bar",
+            Background = Paint(Color.FromRgb(0x0A, 0x0F, 0x18)),
+            BorderBrush = Paint(Color.FromRgb(0x25, 0x2D, 0x3B)),
+            BorderThickness = new Thickness(0, 0, 0, 1),
+            Child = new ScrollViewer
+            {
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                Content = row,
+            },
+        };
+    }
+
+    private Button StencilButton(NodelyDiagram diagram, DesignerToolboxItem item)
+    {
+        var preview = item.PreviewFactory?.Invoke() ?? DefaultStencilPreview(item);
+        var previewHost = new Border
+        {
+            Width = 82,
+            Height = 42,
+            CornerRadius = new CornerRadius(7),
+            Background = Paint(Color.FromRgb(0x12, 0x19, 0x26)),
+            BorderBrush = Paint(Color.FromRgb(0x2D, 0x35, 0x45)),
+            BorderThickness = new Thickness(1),
+            ClipToBounds = true,
+            Child = new Viewbox
+            {
+                Stretch = Stretch.Uniform,
+                Child = preview,
+            },
+        };
+
+        var text = new StackPanel
+        {
+            Width = 112,
+            Spacing = 1,
+            VerticalAlignment = VerticalAlignment.Center,
+            Children =
+            {
+                new TextBlock
+                {
+                    Text = item.Label,
+                    Foreground = Brushes.White,
+                    FontSize = 13,
+                    FontWeight = FontWeight.SemiBold,
+                    TextTrimming = TextTrimming.CharacterEllipsis,
+                },
+            },
+        };
+        if (!string.IsNullOrWhiteSpace(item.Detail))
+        {
+            text.Children.Add(new TextBlock
+            {
+                Text = item.Detail,
+                Foreground = Paint(Color.FromRgb(0xA3, 0xAD, 0xBE)),
+                FontSize = 10,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+            });
+        }
+
+        var content = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("Auto,*"),
+            ColumnSpacing = 8,
+            Children = { previewHost, text },
+        };
+        Grid.SetColumn(text, 1);
+
+        var button = new Button
+        {
+            Tag = "scene-stencil-" + item.Label,
+            Content = content,
+            Width = 214,
+            MinHeight = 60,
+            Padding = new Thickness(8, 6),
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            Background = Paint(Color.FromRgb(0x18, 0x22, 0x33)),
+            BorderBrush = item.Accent ?? Paint(Color.FromRgb(0x35, 0x40, 0x53)),
+            Foreground = Brushes.White,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(8),
+        };
+        button.Click += (_, _) => AddStencilNode(diagram, item);
+        return button;
+    }
+
+    private static Control DefaultStencilPreview(DesignerToolboxItem item)
+    {
+        var accent = item.Accent ?? Paint(Color.FromRgb(0x4D, 0x9E, 0xFF));
+        return new Border
+        {
+            Width = 92,
+            Height = 42,
+            Background = Paint(Color.FromRgb(0x13, 0x1B, 0x29)),
+            BorderBrush = accent,
+            BorderThickness = new Thickness(0, 0, 0, 3),
+            Child = new StackPanel
+            {
+                Margin = new Thickness(10, 8),
+                Spacing = 5,
+                Children =
+                {
+                    new Border
+                    {
+                        Width = 60,
+                        Height = 8,
+                        CornerRadius = new CornerRadius(4),
+                        Background = accent,
+                        HorizontalAlignment = HorizontalAlignment.Left,
+                    },
+                    new Border
+                    {
+                        Width = 42,
+                        Height = 5,
+                        CornerRadius = new CornerRadius(3),
+                        Background = Paint(Color.FromRgb(0x62, 0x71, 0x87)),
+                        HorizontalAlignment = HorizontalAlignment.Left,
+                    },
+                },
+            },
+        };
+    }
+
+    private void AddStencilNode(NodelyDiagram diagram, DesignerToolboxItem item)
+    {
+        var canvas = _currentCanvas;
+        if (canvas == null || canvas.IsReadOnly)
+            return;
+
+        var position = NextStencilPosition(diagram);
+        var node = item.CreateNode(position);
+        var afterAddApplied = false;
+
+        canvas.RunAsUndoableEdit(
+            () =>
+            {
+                diagram.Nodes.Add(node);
+                if (!afterAddApplied)
+                {
+                    item.AfterAdd?.Invoke(diagram, node);
+                    afterAddApplied = true;
+                }
+
+                diagram.UnselectAll();
+                diagram.SelectModel(node, true);
+            },
+            () =>
+            {
+                diagram.Nodes.Remove(node);
+                diagram.UnselectAll();
+            });
+        _currentDesigner?.Refresh();
+    }
+
+    private static NodelyPoint NextStencilPosition(Diagram diagram)
+    {
+        if (diagram.Container != null)
+            return diagram.GetRelativeMousePoint(diagram.Container.Width / 2, diagram.Container.Height / 2);
+
+        var offset = diagram.Nodes.Count * 28;
+        return new NodelyPoint(100 + offset, 100 + offset);
     }
 
     private static DiagramPropertyRegistry CreateDesignerPropertyRegistry() => DiagramPropertyRegistry.CreateDefault()

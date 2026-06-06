@@ -10,6 +10,8 @@ what's next.
 - Toolbox: added compact preview support to Designer toolbox items and changed the gallery to use
   scene-specific stencils with domain ports for Workflow, StateMachine, Extensibility, Architecture,
   Database, UML, MindMap, Network, and API scenes.
+- Inspector: fixed runtime property editor fields so text, number, enum, color, and collection controls stretch
+  to the inspector column instead of shrinking to natural content width.
 - Scope: kept scene diagrams and package renderers intact; the Designer toolbox addition is additive and this
   is not a package version bump.
 - **Verified:** `dotnet build Nodely.slnx --configuration Release --disable-build-servers /m:1

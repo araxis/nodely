@@ -11,6 +11,8 @@ All notable changes to Nodely are documented here. The format is based on
   metadata, polished actions, and a framed live editor surface.
 - **Demo toolbox:** the desktop sample now uses scene-specific toolbox stencils with compact previews and
   domain ports instead of one generic cross-package list.
+- **Designer inspector:** runtime property editor fields now stretch to the inspector width instead of shrinking
+  to their natural content width.
 
 ### Added
 - **Designer toolbox previews:** `DesignerToolboxItem.PreviewFactory` lets host apps provide compact custom

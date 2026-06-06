@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Nodely;
 using Nodely.Avalonia;
 using Nodely.Avalonia.Controls;
@@ -54,6 +56,33 @@ public class DesignerControlsTests
 
         Descendants(inspector).OfType<TextBox>().ShouldContain(box => Equals(box.Tag, "designer-property-Title"));
         Descendants(inspector).OfType<TextBox>().ShouldContain(box => Equals(box.Tag, "designer-property-Status"));
+    }
+
+    [AvaloniaFact]
+    public void Inspector_stretches_editor_fields_to_available_width()
+    {
+        var diagram = new NodelyDiagram();
+        var node = diagram.Nodes.Add(new DesignerTestNode(new NodelyPoint(0, 0)) { Title = "Work", Status = "Ready" });
+        var canvas = new DiagramCanvas { Diagram = diagram, Palette = NodelyPalettes.Light };
+        var registry = DiagramPropertyRegistry.CreateDefault()
+            .Register<DesignerTestNode>(
+                DiagramProperty.Text<DesignerTestNode>("Status", item => item.Status, (item, value) => item.Status = value ?? "", "Test"),
+                DiagramProperty.Number<DesignerTestNode>("Score", item => item.Score, (item, value) => item.Score = value, "Test"),
+                DiagramProperty.Enum<DesignerTestNode, DesignerTestMode>("Mode", item => item.Mode, (item, value) => item.Mode = value, "Test"));
+        var inspector = new DiagramPropertyInspector
+        {
+            Canvas = canvas,
+            Diagram = diagram,
+            Registry = registry,
+        };
+
+        diagram.SelectModel(node, true);
+        inspector.Refresh();
+
+        Descendants(inspector).OfType<ScrollViewer>().Single().HorizontalScrollBarVisibility.ShouldBe(ScrollBarVisibility.Disabled);
+        Descendants(inspector).OfType<TextBox>().Single(box => Equals(box.Tag, "designer-property-Status")).HorizontalAlignment.ShouldBe(HorizontalAlignment.Stretch);
+        Descendants(inspector).OfType<TextBox>().Single(box => Equals(box.Tag, "designer-property-Score")).HorizontalAlignment.ShouldBe(HorizontalAlignment.Stretch);
+        Descendants(inspector).OfType<ComboBox>().Single(box => Equals(box.Tag, "designer-property-Mode")).HorizontalAlignment.ShouldBe(HorizontalAlignment.Stretch);
     }
 
     [AvaloniaFact]
@@ -173,5 +202,15 @@ public class DesignerControlsTests
         }
 
         public string Status { get; set; } = "Pending";
+
+        public double Score { get; set; } = 12;
+
+        public DesignerTestMode Mode { get; set; } = DesignerTestMode.Phone;
+    }
+
+    private enum DesignerTestMode
+    {
+        Phone,
+        PostalCode,
     }
 }

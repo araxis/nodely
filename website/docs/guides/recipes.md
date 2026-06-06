@@ -116,6 +116,27 @@ void ChangeWidth(LinkModel link, double nextWidth)
 The desktop gallery includes a side-panel inspector that edits core, API, Database, MindMap, Network,
 StateMachine, UML, Workflow, and sample custom model fields at runtime.
 
+For a reusable panel instead of app-local inspector code, use `Nodely.Avalonia.Designer`:
+
+```csharp
+using Nodely.Avalonia.Designer;
+
+var registry = DiagramPropertyRegistry.CreateDefault()
+    .Register<TaskNode>(
+        DiagramProperty.Text<TaskNode>(
+            "Status",
+            node => node.Status,
+            (node, value) => node.Status = value ?? string.Empty,
+            "Task"));
+
+var inspector = new DiagramPropertyInspector
+{
+    Canvas = canvas,
+    Diagram = diagram,
+    Registry = registry,
+};
+```
+
 ## Custom overlay
 
 Use `DiagramLayer` for overlays that should pan and zoom with the diagram, such as rulers, guides, heatmaps, or

@@ -4,7 +4,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Avalonia.Threading;
 using Nodely;
 using Nodely.Algorithms;
 using Nodely.Anchors;
@@ -12,6 +11,7 @@ using Nodely.Avalonia;
 using Nodely.Avalonia.Controls;
 using Nodely.Avalonia.Api;
 using Nodely.Avalonia.Database;
+using Nodely.Avalonia.Designer;
 using Nodely.Avalonia.MindMap;
 using Nodely.Avalonia.Network;
 using Nodely.Avalonia.StateMachine;
@@ -121,7 +121,7 @@ public sealed class MainWindow : Window
     private NodelyPalette _palette = NodelyPalettes.Dark;
     private NodelyDiagram? _currentDiagram;
     private DiagramCanvas? _currentCanvas;
-    private RuntimePropertyInspector? _propertyInspector;
+    private DiagramDesignerShell? _currentDesigner;
     private string? _savedJson;
 
     public MainWindow()
@@ -190,9 +190,10 @@ public sealed class MainWindow : Window
     private void ToggleTheme()
     {
         _palette = _palette == NodelyPalettes.Dark ? NodelyPalettes.Light : NodelyPalettes.Dark;
-        if (_currentCanvas != null)
+        if (_currentDesigner != null)
+            _currentDesigner.Palette = _palette;
+        else if (_currentCanvas != null)
             _currentCanvas.Palette = _palette;
-        _propertyInspector?.Refresh();
     }
 
     private void Save()
@@ -241,105 +242,297 @@ public sealed class MainWindow : Window
         Action<DiagramCanvas>? configureCanvas = null,
         Action<DiagramCanvas, NodelyDiagram>? layoutAction = null)
     {
-        _propertyInspector?.Dispose();
-        _propertyInspector = null;
+        _currentDesigner?.Dispose();
+        _currentDesigner = null;
         _currentDiagram = diagram;
-
-        var canvas = new DiagramCanvas { Diagram = diagram, Palette = _palette, IsReadOnly = readOnly };
-        canvas.AttachedToVisualTree += (_, _) =>
-            Dispatcher.UIThread.Post(() => canvas.ZoomToFit(48), DispatcherPriority.Loaded);
-        _currentCanvas = canvas;
-        RegisterTaskNode(canvas);
-        configureCanvas?.Invoke(canvas);
-
-        var navigator = new DiagramNavigator
-        {
-            Diagram = diagram,
-            Width = 210,
-            Height = 136,
-            HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Bottom,
-            Margin = new Thickness(12),
-        };
-
-        var surface = new Grid { Children = { canvas, navigator } };
-        var inspector = new RuntimePropertyInspector(canvas, diagram, readOnly);
-        _propertyInspector = inspector;
-        var body = new Grid
-        {
-            ColumnDefinitions = new ColumnDefinitions("*,340"),
-            Children = { surface, inspector.View },
-        };
-        Grid.SetColumn(inspector.View, 1);
-
-        var toolbar = BuildEditorToolbar(canvas, diagram, readOnly, layoutAction);
-        var editor = new DockPanel();
-        DockPanel.SetDock(toolbar, Dock.Top);
-        editor.Children.Add(toolbar);
-        editor.Children.Add(body);
-        return editor;
-    }
-
-    private StackPanel BuildEditorToolbar(
-        DiagramCanvas canvas,
-        NodelyDiagram diagram,
-        bool readOnly,
-        Action<DiagramCanvas, NodelyDiagram>? layoutAction)
-    {
-        var bar = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            Spacing = 4,
-            HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(8),
-        };
-
-        bar.Children.Add(ToolButton("+", canvas.ZoomIn));
-        bar.Children.Add(ToolButton("-", canvas.ZoomOut));
-        bar.Children.Add(ToolButton("Fit", () => canvas.ZoomToFit()));
 
         layoutAction ??= (targetCanvas, targetDiagram) =>
         {
             targetCanvas.RunAsUndoableMove(() => LayeredLayout.Arrange(targetDiagram));
             targetCanvas.ZoomToFit();
         };
-        var layout = ToolButton("Layout", () => layoutAction(canvas, diagram));
-        layout.IsEnabled = !readOnly;
-        bar.Children.Add(layout);
 
-        var copy = ToolButton("Copy", canvas.CopySelection);
-        var cut = ToolButton("Cut", canvas.CutSelection);
-        var paste = ToolButton("Paste", canvas.PasteClipboard);
-        var duplicate = ToolButton("Duplicate", canvas.DuplicateSelection);
-        var group = ToolButton("Group", canvas.GroupSelection);
-        var ungroup = ToolButton("Ungroup", canvas.UngroupSelection);
-        var front = ToolButton("Front", canvas.BringSelectionToFront);
-        var back = ToolButton("Back", canvas.SendSelectionToBack);
-        var undo = ToolButton("Undo", canvas.Undo);
-        var redo = ToolButton("Redo", canvas.Redo);
-
-        foreach (var button in new[] { copy, cut, paste, duplicate, group, ungroup, front, back, undo, redo })
-            bar.Children.Add(button);
-
-        void Refresh()
+        var designer = new DiagramDesignerShell(diagram, new DiagramDesignerOptions
         {
-            copy.IsEnabled = canvas.CanCopySelection;
-            cut.IsEnabled = canvas.CanCutSelection;
-            paste.IsEnabled = canvas.CanPasteClipboard;
-            duplicate.IsEnabled = canvas.CanDuplicateSelection;
-            group.IsEnabled = canvas.CanGroupSelection;
-            ungroup.IsEnabled = canvas.CanUngroupSelection;
-            front.IsEnabled = !canvas.IsReadOnly && canvas.HasSelection;
-            back.IsEnabled = !canvas.IsReadOnly && canvas.HasSelection;
-            undo.IsEnabled = !canvas.IsReadOnly && canvas.CanUndo;
-            redo.IsEnabled = !canvas.IsReadOnly && canvas.CanRedo;
-        }
+            Palette = _palette,
+            IsReadOnly = readOnly,
+            PropertyRegistry = CreateDesignerPropertyRegistry(),
+            ToolboxSections = CreateToolboxSections(),
+            ShowToolbox = !readOnly,
+            ConfigureCanvas = canvas =>
+            {
+                RegisterTaskNode(canvas);
+                configureCanvas?.Invoke(canvas);
+            },
+            LayoutAction = (canvas, targetDiagram) =>
+            {
+                if (targetDiagram is NodelyDiagram nodelyDiagram)
+                    layoutAction(canvas, nodelyDiagram);
+            },
+        });
 
-        canvas.CommandStateChanged += Refresh;
-        Refresh();
-        return bar;
+        _currentDesigner = designer;
+        _currentCanvas = designer.Canvas;
+        return designer;
     }
+
+    private static DiagramPropertyRegistry CreateDesignerPropertyRegistry() => DiagramPropertyRegistry.CreateDefault()
+        .Register<TaskNode>(
+            DiagramProperty.Text<TaskNode>("Status", node => node.Status, (node, value) => node.Status = value ?? string.Empty, "Task"))
+        .Register<FlowLink>(
+            DiagramProperty.Boolean<FlowLink>("Critical", link => link.Critical, (link, value) => link.Critical = value, "Flow"))
+        .Register<ApiNodeBase>(
+            DiagramProperty.Text<ApiNodeBase>("Name", node => node.Name, (node, value) => node.Name = value ?? string.Empty, "API node"),
+            DiagramProperty.Text<ApiNodeBase>("Version", node => node.Version ?? string.Empty, (node, value) => node.Version = NormalizeOptional(value), "API node"),
+            DiagramProperty.Enum<ApiNodeBase, ApiEndpointStatus>("Status", node => node.Status, (node, value) => node.Status = value, "API node"),
+            DiagramProperty.Text<ApiNodeBase>("Summary", node => node.Summary ?? string.Empty, (node, value) => node.Summary = NormalizeOptional(value), "API node", multiline: true),
+            DiagramProperty.Color<ApiNodeBase>("Accent", node => node.AccentColor, (node, value) => node.AccentColor = value ?? string.Empty, "API node"),
+            DiagramProperty.Text<ApiNodeBase>("Icon", node => node.IconKey ?? string.Empty, (node, value) => node.IconKey = NormalizeOptional(value), "API node"))
+        .Register<ApiServiceNode>(
+            DiagramProperty.Text<ApiServiceNode>("Base URL", node => node.BaseUrl ?? string.Empty, (node, value) => node.BaseUrl = NormalizeOptional(value), "Service"),
+            DiagramProperty.Text<ApiServiceNode>("Owner", node => node.Owner ?? string.Empty, (node, value) => node.Owner = NormalizeOptional(value), "Service"))
+        .Register<ApiEndpointNode>(
+            DiagramProperty.Enum<ApiEndpointNode, ApiEndpointMethod>("Method", node => node.Method, (node, value) => node.Method = value, "Endpoint"),
+            DiagramProperty.Text<ApiEndpointNode>("Route", node => node.Route, (node, value) => node.Route = value ?? string.Empty, "Endpoint"),
+            DiagramProperty.Text<ApiEndpointNode>("Request", node => node.RequestType ?? string.Empty, (node, value) => node.RequestType = NormalizeOptional(value), "Endpoint"),
+            DiagramProperty.Text<ApiEndpointNode>("Response", node => node.ResponseType ?? string.Empty, (node, value) => node.ResponseType = NormalizeOptional(value), "Endpoint"))
+        .Register<ApiOperationNode>(
+            DiagramProperty.Text<ApiOperationNode>("Input", node => node.Input ?? string.Empty, (node, value) => node.Input = NormalizeOptional(value), "Operation"),
+            DiagramProperty.Text<ApiOperationNode>("Output", node => node.Output ?? string.Empty, (node, value) => node.Output = NormalizeOptional(value), "Operation"),
+            DiagramProperty.Boolean<ApiOperationNode>("Read only", node => node.SideEffectFree, (node, value) => node.SideEffectFree = value, "Operation"))
+        .Register<ApiClientNode>(
+            DiagramProperty.Text<ApiClientNode>("Platform", node => node.Platform ?? string.Empty, (node, value) => node.Platform = NormalizeOptional(value), "Client"))
+        .Register<ApiGatewayNode>(
+            DiagramProperty.Text<ApiGatewayNode>("Host", node => node.Host ?? string.Empty, (node, value) => node.Host = NormalizeOptional(value), "Gateway"))
+        .Register<ApiAuthNode>(
+            DiagramProperty.Text<ApiAuthNode>("Scheme", node => node.Scheme ?? string.Empty, (node, value) => node.Scheme = NormalizeOptional(value), "Auth"),
+            DiagramProperty.Text<ApiAuthNode>("Scopes", node => node.Scopes ?? string.Empty, (node, value) => node.Scopes = NormalizeOptional(value), "Auth"))
+        .Register<ApiContractNode>(
+            DiagramProperty.Collection<ApiContractNode, ApiContractField>(
+                "Fields",
+                node => node.Fields,
+                node => new ApiContractField("field" + (node.Fields.Count + 1), "string"),
+                field => field.Name + ": " + field.Type,
+                "Contract",
+                "Add field"))
+        .Register<DatabaseObjectNode>(
+            DiagramProperty.Text<DatabaseObjectNode>("Name", node => node.ObjectName, (node, value) => node.ObjectName = value ?? string.Empty, "Database object"),
+            DiagramProperty.Text<DatabaseObjectNode>("Schema", node => node.Schema, (node, value) => node.Schema = value ?? string.Empty, "Database object"))
+        .Register<DatabaseTableNode>(
+            DiagramProperty.Collection<DatabaseTableNode, DatabaseColumn>(
+                "Columns",
+                node => node.Columns,
+                node => new DatabaseColumn("Column" + (node.Columns.Count + 1), "nvarchar(50)"),
+                FormatColumn,
+                "Columns",
+                "Add column"))
+        .Register<DatabaseViewNode>(
+            DiagramProperty.Collection<DatabaseViewNode, DatabaseColumn>(
+                "Columns",
+                node => node.Columns,
+                node => new DatabaseColumn("Column" + (node.Columns.Count + 1), "nvarchar(50)"),
+                FormatColumn,
+                "Columns",
+                "Add column"))
+        .Register<DatabaseProcedureNode>(
+            DiagramProperty.Collection<DatabaseProcedureNode, DatabaseParameter>(
+                "Parameters",
+                node => node.Parameters,
+                node => new DatabaseParameter("@parameter" + (node.Parameters.Count + 1), "int"),
+                parameter => parameter.Name + ": " + parameter.DataType,
+                "Parameters",
+                "Add parameter"))
+        .Register<UmlNodeBase>(
+            DiagramProperty.Text<UmlNodeBase>("Name", node => node.Name, (node, value) => node.Name = value ?? string.Empty, "UML element"),
+            DiagramProperty.Text<UmlNodeBase>("Stereotypes", node => string.Join(", ", node.Stereotypes), (node, value) => ReplaceValues(node.Stereotypes, SplitComma(value)), "UML element"))
+        .Register<UmlClassNode>(
+            DiagramProperty.Boolean<UmlClassNode>("Abstract", node => node.IsAbstract, (node, value) => node.IsAbstract = value, "Class"),
+            DiagramProperty.Boolean<UmlClassNode>("Static", node => node.IsStatic, (node, value) => node.IsStatic = value, "Class"),
+            DiagramProperty.Collection<UmlClassNode, UmlMember>("Members", node => node.Members, node => new UmlMember("Member" + (node.Members.Count + 1), "string"), member => member.Name + ": " + member.Type, "Members", "Add member"),
+            DiagramProperty.Collection<UmlClassNode, UmlOperation>("Operations", node => node.Operations, node => new UmlOperation("Operation" + (node.Operations.Count + 1)), operation => operation.Name + "()", "Operations", "Add operation"))
+        .Register<UmlInterfaceNode>(
+            DiagramProperty.Collection<UmlInterfaceNode, UmlOperation>("Operations", node => node.Operations, node => new UmlOperation("Operation" + (node.Operations.Count + 1)), operation => operation.Name + "()", "Operations", "Add operation"))
+        .Register<UmlEnumNode>(
+            DiagramProperty.Text<UmlEnumNode>("Literals", node => string.Join(Environment.NewLine, node.Literals), (node, value) => ReplaceValues(node.Literals, SplitLines(value)), "Enum", multiline: true))
+        .Register<UmlNoteNode>(
+            DiagramProperty.Text<UmlNoteNode>("Text", node => node.Text, (node, value) => node.Text = value ?? string.Empty, "Note", multiline: true))
+        .Register<WorkflowNodeBase>(
+            DiagramProperty.Text<WorkflowNodeBase>("Label", node => node.Label, (node, value) => node.Label = value ?? string.Empty, "Workflow node"),
+            DiagramProperty.Text<WorkflowNodeBase>("Notes", node => node.Notes, (node, value) => node.Notes = value ?? string.Empty, "Workflow node", multiline: true))
+        .Register<WorkflowTaskNode>(
+            DiagramProperty.Enum<WorkflowTaskNode, WorkflowTaskType>("Task type", node => node.TaskType, (node, value) => node.TaskType = value, "Task"),
+            DiagramProperty.Enum<WorkflowTaskNode, WorkflowTaskStatus>("Status", node => node.Status, (node, value) => node.Status = value, "Task"))
+        .Register<WorkflowDecisionNode>(
+            DiagramProperty.Text<WorkflowDecisionNode>("Condition", node => node.Condition, (node, value) => node.Condition = value ?? string.Empty, "Decision"))
+        .Register<WorkflowGatewayNode>(
+            DiagramProperty.Enum<WorkflowGatewayNode, WorkflowGatewayKind>("Gateway", node => node.GatewayKind, (node, value) => node.GatewayKind = value, "Gateway"))
+        .Register<WorkflowEventNode>(
+            DiagramProperty.Enum<WorkflowEventNode, WorkflowEventKind>("Event", node => node.EventKind, (node, value) => node.EventKind = value, "Event"))
+        .Register<WorkflowNoteNode>(
+            DiagramProperty.Text<WorkflowNoteNode>("Text", node => node.Text, (node, value) => node.Text = value ?? string.Empty, "Note", multiline: true))
+        .Register<MindMapTopicNode>(
+            DiagramProperty.Text<MindMapTopicNode>("Topic", node => node.Topic, (node, value) => node.Topic = value ?? string.Empty, "Mind map topic"),
+            DiagramProperty.Text<MindMapTopicNode>("Notes", node => node.Notes ?? string.Empty, (node, value) => node.Notes = NormalizeOptional(value), "Mind map topic", multiline: true),
+            DiagramProperty.Color<MindMapTopicNode>("Accent", node => node.AccentColor, (node, value) => node.AccentColor = value ?? string.Empty, "Mind map topic"),
+            DiagramProperty.Text<MindMapTopicNode>("Icon", node => node.IconKey ?? string.Empty, (node, value) => node.IconKey = NormalizeOptional(value), "Mind map topic"),
+            DiagramProperty.Boolean<MindMapTopicNode>("Collapsed", node => node.Collapsed, (node, value) => node.Collapsed = value, "Mind map topic"),
+            DiagramProperty.Enum<MindMapTopicNode, MindMapTopicSide>("Side", node => node.Side, (node, value) => node.Side = value, "Mind map topic"))
+        .Register<StateMachineNodeBase>(
+            DiagramProperty.Text<StateMachineNodeBase>("Name", node => node.Name, (node, value) => node.Name = value ?? string.Empty, "State machine node"),
+            DiagramProperty.Text<StateMachineNodeBase>("Description", node => node.Description ?? string.Empty, (node, value) => node.Description = NormalizeOptional(value), "State machine node", multiline: true),
+            DiagramProperty.Color<StateMachineNodeBase>("Accent", node => node.AccentColor, (node, value) => node.AccentColor = value ?? string.Empty, "State machine node"))
+        .Register<StateMachineStateNode>(
+            DiagramProperty.Text<StateMachineStateNode>("Entry", node => node.EntryAction ?? string.Empty, (node, value) => node.EntryAction = NormalizeOptional(value), "Actions"),
+            DiagramProperty.Text<StateMachineStateNode>("Exit", node => node.ExitAction ?? string.Empty, (node, value) => node.ExitAction = NormalizeOptional(value), "Actions"))
+        .Register<StateMachineNoteNode>(
+            DiagramProperty.Text<StateMachineNoteNode>("Text", node => node.Text, (node, value) => node.Text = value ?? string.Empty, "Note", multiline: true),
+            DiagramProperty.Color<StateMachineNoteNode>("Accent", node => node.AccentColor, (node, value) => node.AccentColor = value ?? string.Empty, "Note"))
+        .Register<NetworkNodeBase>(
+            DiagramProperty.Text<NetworkNodeBase>("Name", node => node.Name, (node, value) => node.Name = value ?? string.Empty, "Network node"),
+            DiagramProperty.Text<NetworkNodeBase>("Address", node => node.Address ?? string.Empty, (node, value) => node.Address = NormalizeOptional(value), "Network node"),
+            DiagramProperty.Enum<NetworkNodeBase, NetworkStatus>("Status", node => node.Status, (node, value) => node.Status = value, "Network node"),
+            DiagramProperty.Text<NetworkNodeBase>("Role", node => node.Role, (node, value) => node.Role = value ?? string.Empty, "Network node"),
+            DiagramProperty.Text<NetworkNodeBase>("Zone", node => node.Zone ?? string.Empty, (node, value) => node.Zone = NormalizeOptional(value), "Network node"),
+            DiagramProperty.Text<NetworkNodeBase>("Notes", node => node.Notes ?? string.Empty, (node, value) => node.Notes = NormalizeOptional(value), "Network node", multiline: true),
+            DiagramProperty.Color<NetworkNodeBase>("Accent", node => node.AccentColor, (node, value) => node.AccentColor = value ?? string.Empty, "Network node"),
+            DiagramProperty.Text<NetworkNodeBase>("Icon", node => node.IconKey ?? string.Empty, (node, value) => node.IconKey = NormalizeOptional(value), "Network node"))
+        .Register<NetworkSwitchNode>(
+            DiagramProperty.Number<NetworkSwitchNode>("Total", node => node.PortCount, (node, value) => node.PortCount = Math.Max(4, (int)Math.Round(value)), "Switch ports"),
+            DiagramProperty.Number<NetworkSwitchNode>("Active", node => node.ActivePorts, (node, value) => node.ActivePorts = Math.Max(0, (int)Math.Round(value)), "Switch ports"))
+        .Register<ApiLink>(
+            DiagramProperty.Enum<ApiLink, ApiLinkKind>("Kind", link => link.Kind, (link, value) => link.Kind = value, "API link"),
+            DiagramProperty.Text<ApiLink>("Label", link => link.Label ?? string.Empty, (link, value) => link.Label = NormalizeOptional(value), "API link"),
+            DiagramProperty.Text<ApiLink>("Protocol", link => link.Protocol ?? string.Empty, (link, value) => link.Protocol = NormalizeOptional(value), "API link"),
+            DiagramProperty.Text<ApiLink>("Payload", link => link.Payload ?? string.Empty, (link, value) => link.Payload = NormalizeOptional(value), "API link"),
+            DiagramProperty.Enum<ApiLink, ApiEndpointStatus>("Status", link => link.Status, (link, value) => link.Status = value, "API link"),
+            DiagramProperty.Color<ApiLink>("Accent", link => link.AccentColor ?? string.Empty, (link, value) => link.AccentColor = NormalizeOptional(value), "API link"))
+        .Register<DatabaseRelationshipLink>(
+            DiagramProperty.Enum<DatabaseRelationshipLink, RelationshipKind>("Kind", link => link.Kind, (link, value) => link.Kind = value, "Database relationship"),
+            DiagramProperty.Text<DatabaseRelationshipLink>("Source", link => link.SourceCardinality ?? string.Empty, (link, value) => link.SourceCardinality = NormalizeOptional(value), "Database relationship"),
+            DiagramProperty.Text<DatabaseRelationshipLink>("Target", link => link.TargetCardinality ?? string.Empty, (link, value) => link.TargetCardinality = NormalizeOptional(value), "Database relationship"))
+        .Register<UmlRelationshipLink>(
+            DiagramProperty.Enum<UmlRelationshipLink, UmlRelationshipKind>("Kind", link => link.Kind, (link, value) => link.Kind = value, "UML relationship"),
+            DiagramProperty.Text<UmlRelationshipLink>("Label", link => link.Label ?? string.Empty, (link, value) => link.Label = NormalizeOptional(value), "UML relationship"),
+            DiagramProperty.Text<UmlRelationshipLink>("Source", link => link.SourceMultiplicity ?? string.Empty, (link, value) => link.SourceMultiplicity = NormalizeOptional(value), "UML relationship"),
+            DiagramProperty.Text<UmlRelationshipLink>("Target", link => link.TargetMultiplicity ?? string.Empty, (link, value) => link.TargetMultiplicity = NormalizeOptional(value), "UML relationship"))
+        .Register<WorkflowLink>(
+            DiagramProperty.Enum<WorkflowLink, WorkflowLinkKind>("Kind", link => link.Kind, (link, value) => link.Kind = value, "Workflow link"),
+            DiagramProperty.Text<WorkflowLink>("Label", link => link.Label ?? string.Empty, (link, value) => link.Label = NormalizeOptional(value), "Workflow link"),
+            DiagramProperty.Text<WorkflowLink>("Condition", link => link.Condition ?? string.Empty, (link, value) => link.Condition = NormalizeOptional(value), "Workflow link"))
+        .Register<MindMapLink>(
+            DiagramProperty.Enum<MindMapLink, MindMapLinkKind>("Kind", link => link.Kind, (link, value) => link.Kind = value, "Mind map link"),
+            DiagramProperty.Text<MindMapLink>("Label", link => link.Label ?? string.Empty, (link, value) => link.Label = NormalizeOptional(value), "Mind map link"),
+            DiagramProperty.Color<MindMapLink>("Accent", link => link.AccentColor ?? string.Empty, (link, value) => link.AccentColor = NormalizeOptional(value), "Mind map link"))
+        .Register<StateMachineTransitionLink>(
+            DiagramProperty.Enum<StateMachineTransitionLink, StateMachineTransitionKind>("Kind", link => link.Kind, (link, value) => link.Kind = value, "State machine transition"),
+            DiagramProperty.Text<StateMachineTransitionLink>("Trigger", link => link.Trigger ?? string.Empty, (link, value) => link.Trigger = NormalizeOptional(value), "State machine transition"),
+            DiagramProperty.Text<StateMachineTransitionLink>("Guard", link => link.Guard ?? string.Empty, (link, value) => link.Guard = NormalizeOptional(value), "State machine transition"),
+            DiagramProperty.Text<StateMachineTransitionLink>("Action", link => link.Action ?? string.Empty, (link, value) => link.Action = NormalizeOptional(value), "State machine transition"),
+            DiagramProperty.Number<StateMachineTransitionLink>("Priority", link => link.Priority, (link, value) => link.Priority = Math.Max(0, (int)Math.Round(value)), "State machine transition"),
+            DiagramProperty.Color<StateMachineTransitionLink>("Accent", link => link.AccentColor ?? string.Empty, (link, value) => link.AccentColor = NormalizeOptional(value), "State machine transition"))
+        .Register<NetworkLink>(
+            DiagramProperty.Enum<NetworkLink, NetworkLinkKind>("Kind", link => link.Kind, (link, value) => link.Kind = value, "Network link"),
+            DiagramProperty.Text<NetworkLink>("Label", link => link.Label ?? string.Empty, (link, value) => link.Label = NormalizeOptional(value), "Network link"),
+            DiagramProperty.Text<NetworkLink>("Protocol", link => link.Protocol ?? string.Empty, (link, value) => link.Protocol = NormalizeOptional(value), "Network link"),
+            DiagramProperty.Text<NetworkLink>("Bandwidth", link => link.Bandwidth ?? string.Empty, (link, value) => link.Bandwidth = NormalizeOptional(value), "Network link"),
+            DiagramProperty.Text<NetworkLink>("Latency", link => link.Latency ?? string.Empty, (link, value) => link.Latency = NormalizeOptional(value), "Network link"),
+            DiagramProperty.Enum<NetworkLink, NetworkStatus>("Status", link => link.Status, (link, value) => link.Status = value, "Network link"),
+            DiagramProperty.Enum<NetworkLink, NetworkLinkDirection>("Direction", link => link.Direction, (link, value) => link.Direction = value, "Network link"),
+            DiagramProperty.Color<NetworkLink>("Accent", link => link.AccentColor ?? string.Empty, (link, value) => link.AccentColor = NormalizeOptional(value), "Network link"));
+
+    private static IEnumerable<DesignerToolboxSection> CreateToolboxSections() => new[]
+    {
+        new DesignerToolboxSection("Core", new[]
+        {
+            new DesignerToolboxItem("Task", point => new TaskNode(point, "Task") { Status = "Pending" })
+            {
+                Detail = "Sample custom node",
+                Accent = new SolidColorBrush(Color.FromRgb(0x4D, 0x9E, 0xFF)),
+            },
+        }),
+        new DesignerToolboxSection("Side packages", new[]
+        {
+            new DesignerToolboxItem("API endpoint", point =>
+            {
+                var node = new ApiEndpointNode(point, "/resource", ApiEndpointMethod.Get);
+                node.AddPort(new ApiPortModel(node, PortAlignment.Left, ApiPortRole.Request, "in"));
+                node.AddPort(new ApiPortModel(node, PortAlignment.Right, ApiPortRole.Response, "out"));
+                return node;
+            })
+            {
+                Detail = "Endpoint card",
+                Accent = new SolidColorBrush(Color.FromRgb(0x2D, 0x7D, 0xE0)),
+            },
+            new DesignerToolboxItem("Database table", point =>
+            {
+                var node = new DatabaseTableNode(point, "Table", "dbo");
+                node.Columns.Add(new DatabaseColumn("Id", "int", isPrimaryKey: true, isNullable: false));
+                node.AddPort(new DatabasePortModel(node, PortAlignment.Right, DatabasePortKind.Relationship, "Id"));
+                return node;
+            })
+            {
+                Detail = "Rows and relationship port",
+                Accent = new SolidColorBrush(Color.FromRgb(0x37, 0x8A, 0x63)),
+            },
+            new DesignerToolboxItem("Workflow task", point => new WorkflowTaskNode(point, "Task"))
+            {
+                Detail = "Process step",
+                Accent = new SolidColorBrush(Color.FromRgb(0xC6, 0x85, 0x21)),
+            },
+            new DesignerToolboxItem("State", point => new StateMachineStateNode(point, "State"))
+            {
+                Detail = "Lifecycle state",
+                Accent = new SolidColorBrush(Color.FromRgb(0x8B, 0x68, 0xB8)),
+            },
+            new DesignerToolboxItem("Network router", point => new NetworkRouterNode(point, "Router"))
+            {
+                Detail = "Topology device",
+                Accent = new SolidColorBrush(Color.FromRgb(0x54, 0x9B, 0xC5)),
+            },
+            new DesignerToolboxItem("UML class", point => new UmlClassNode(point, "Class"))
+            {
+                Detail = "Structural type",
+                Accent = new SolidColorBrush(Color.FromRgb(0x7C, 0x8A, 0x9A)),
+            },
+            new DesignerToolboxItem("Mind map topic", point => new MindMapBranchNode(point, "Topic"))
+            {
+                Detail = "Planning branch",
+                Accent = new SolidColorBrush(Color.FromRgb(0xD4, 0x6A, 0x6A)),
+            },
+        }),
+    };
+
+    private static string FormatColumn(DatabaseColumn column)
+    {
+        var flags = new List<string>();
+        if (column.IsPrimaryKey)
+            flags.Add("PK");
+        if (column.IsForeignKey)
+            flags.Add("FK");
+        if (!column.IsNullable)
+            flags.Add("required");
+
+        var suffix = flags.Count == 0 ? string.Empty : " (" + string.Join(", ", flags) + ")";
+        return column.Name + ": " + column.DataType + suffix;
+    }
+
+    private static void ReplaceValues(IList<string> collection, IEnumerable<string> values)
+    {
+        collection.Clear();
+        foreach (var value in values)
+            if (!string.IsNullOrWhiteSpace(value))
+                collection.Add(value.Trim());
+    }
+
+    private static string[] SplitComma(string? value) => (value ?? string.Empty)
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    private static string[] SplitLines(string? value) => (value ?? string.Empty)
+        .Replace("\r\n", "\n", StringComparison.Ordinal)
+        .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    private static string? NormalizeOptional(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private static void RegisterTaskNode(DiagramCanvas canvas) => canvas.RegisterNode<TaskNode>(node => new Border
     {

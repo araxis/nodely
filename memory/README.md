@@ -43,7 +43,7 @@ memory/
 
 ## Quick status
 
-- Phase: **v0.8.0 package cohesion polish.** 218 tests per app runtime currently expected across Core, side-package,
+- Phase: **Designer side-package polish.** 223 tests per app runtime currently expected across Core, side-package,
   and Avalonia suites on both `net8.0` and `net10.0`.
 - v0.1.0: 15 phases (0–14), M1–M4. v0.2.0 (F-027…F-039): editor/interaction wave. v0.3.0 (F-041): 10 extension
   seams (render hooks for links/ports/groups, custom layers, adorners, validation delegates, behaviors,
@@ -62,5 +62,7 @@ memory/
 - API side package (F-054): seventh optional domain pack with endpoints, contracts, traffic links, and API layout.
 - v0.8.0 (F-055): package cohesion polish with a mixed Architecture gallery scene, shared package composition
   docs, and cross-package renderer/serializer/runtime-edit tests.
+- Designer side package (F-056): reusable editor shell, toolbox, command bar, status bar, and descriptor-driven
+  runtime property inspector that replaces copied demo/editor chrome.
 - Docs: static documentation site (F-040) + Extensibility guide; GitHub Pages pipeline.
-- Last updated: 2026-06-05
+- Last updated: 2026-06-06

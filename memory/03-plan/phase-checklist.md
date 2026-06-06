@@ -2,6 +2,14 @@
 
 Tick items as completed. Mirrors `development-plan.md`. `[ ]` todo, `[~]` in progress, `[x]` done.
 
+## Post-M4 - Designer side package
+- [x] Add `Nodely.Avalonia.Designer` package targeting `net8.0;net10.0`.
+- [x] Add descriptor-driven property registry and reusable runtime inspector controls.
+- [x] Add designer shell, toolbox, command bar, status bar, and navigator composition.
+- [x] Wire the desktop gallery to use Designer instead of copied runtime editor patterns.
+- [x] Add Designer package workflow map entry, documentation guide, memory notes, and focused tests.
+- [x] Final validation: build, test, pack, package inspection, docs build, wording scan.
+
 ## Post-M4 - v0.8.0 package cohesion polish
 - [x] Bump main package version to `0.8.0` while leaving side-package version properties unchanged.
 - [x] Add Architecture gallery scene combining API, Database, Network, and Workflow packs.

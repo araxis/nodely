@@ -50,6 +50,7 @@ Nodely ships as focused NuGet packages so you only take what you use:
 | --- | --- | --- |
 | `Nodely.Core` | netstandard2.0, net8.0, net10.0 | The UI-agnostic engine: geometry, models, behaviors, routers, path generators, commands |
 | `Nodely.Avalonia` | net8.0, net10.0 | The `DiagramCanvas`, node/port/link/group rendering, adorners, the minimap, theming |
+| `Nodely.Avalonia.Designer` | net8.0, net10.0 | Optional editor controls: designer shell, toolbox, command bar, property inspector, navigator, status bar |
 | `Nodely.Avalonia.Api` | net8.0, net10.0 | Optional side package: API service nodes, endpoint cards, contract nodes, typed ports, links, and arrange helpers |
 | `Nodely.Avalonia.Database` | net8.0, net10.0 | Optional side package: database table/view/procedure renderers, row-aware ports, and relationship links |
 | `Nodely.Avalonia.MindMap` | net8.0, net10.0 | Optional side package: root, branch, and leaf topics, branch ports, curved links, collapse state, and arrange helpers |
@@ -67,6 +68,8 @@ service, endpoint, contract, request, and response shapes; database diagrams use
 relationships; network diagrams use devices, zones, status, and capacity; workflow and state-machine diagrams
 use their own task and transition vocabulary. Multiple side packages can register on the same canvas and
 serializer registry. See [Package composition](./guides/package-composition.md) for the setup pattern.
+Use [Designer controls](./guides/designer.md) when the editor also needs reusable toolbox, command, status, and
+runtime property panels.
 
 ## Where to go next
 
@@ -75,6 +78,7 @@ rather start from a complete tiny app, run `samples/Nodely.QuickStart`. If you'd
 pieces fit before writing code, the [Architecture](./architecture.md) page lays out the design. And when you're
 ready to make Nodely your own, the guides cover [custom nodes](./guides/custom-nodes.md),
 [links](./guides/links.md), [package composition](./guides/package-composition.md),
+[Designer controls](./guides/designer.md),
 [the API pack](./guides/api.md), [the database pack](./guides/database.md), [the UML pack](./guides/uml.md),
 [the Workflow pack](./guides/workflow.md), [the MindMap pack](./guides/mindmap.md),
 [the StateMachine pack](./guides/statemachine.md), [the Network pack](./guides/network.md),

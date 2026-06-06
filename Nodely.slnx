@@ -11,6 +11,7 @@
     <Project Path="src/Nodely.Avalonia/Nodely.Avalonia.csproj" />
     <Project Path="src/Nodely.Avalonia.Api/Nodely.Avalonia.Api.csproj" />
     <Project Path="src/Nodely.Avalonia.Database/Nodely.Avalonia.Database.csproj" />
+    <Project Path="src/Nodely.Avalonia.Designer/Nodely.Avalonia.Designer.csproj" />
     <Project Path="src/Nodely.Avalonia.MindMap/Nodely.Avalonia.MindMap.csproj" />
     <Project Path="src/Nodely.Avalonia.Network/Nodely.Avalonia.Network.csproj" />
     <Project Path="src/Nodely.Avalonia.StateMachine/Nodely.Avalonia.StateMachine.csproj" />

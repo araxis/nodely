@@ -3,6 +3,24 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-06 — Designer side package
+
+- Package: added `Nodely.Avalonia.Designer` as an optional editor-controls package, starting at side-package
+  version `0.1.0` while main packages remain on `0.8.0`.
+- Controls: added `DiagramDesignerShell`, `DiagramPropertyInspector`, `DiagramPropertyRegistry`,
+  `DiagramCommandBar`, `DiagramToolbox`, `DiagramStatusBar`, toolbox sections/items, and property descriptor
+  helpers for text, multiline text, number, boolean, enum, color, and collection fields.
+- Demo/docs: gallery scenes now use the Designer shell and package-owned inspector/toolbox instead of copied
+  runtime editor controls; README and the documentation site include a Designer controls guide, package matrix
+  entries, release checklist updates, and runtime-inspector recipe updates.
+- Tests: added Avalonia headless coverage for descriptor composition, inspector creation, toolbox insertion
+  through history, command-bar state, and shell palette refresh on both supported app runtimes.
+- **Verified:** build 0/0; `dotnet test` -> Core 111/111 + Avalonia 66/66 + API 7/7 + Database 7/7
+  + MindMap 7/7 + Network 7/7 + StateMachine 7/7 + UML 6/6 + Workflow 5/5 on both `net8.0` and
+  `net10.0`; `dotnet pack` -> main packages `0.8.0`, side packages `0.1.0`; Designer package inspection
+  confirmed `lib/net8.0`, `lib/net10.0`, symbol package assets, and main-package `0.8.0` dependency groups;
+  docs install dry-run and docs build passed; `git diff --check` and neutral wording scan passed.
+
 ## 2026-06-05 — v0.8.0 package cohesion polish
 
 - Versioning: main packages move to `0.8.0`; side packages stay on independent `0.1.0` version properties

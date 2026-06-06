@@ -22,6 +22,7 @@ If you need to save diagrams or arrange them automatically, add those packages t
 ```bash
 dotnet add package Nodely.Serialization   # JSON save / load
 dotnet add package Nodely.Algorithms      # auto-layout & graph queries
+dotnet add package Nodely.Avalonia.Designer  # toolbox, command bar, inspector, and shell
 dotnet add package Nodely.Avalonia.Api       # API services, endpoints, contracts, and links
 dotnet add package Nodely.Avalonia.Database  # database nodes and relationship links
 dotnet add package Nodely.Avalonia.MindMap   # mind-map topics and branch links
@@ -98,4 +99,5 @@ custom overlays, see [Recipes](./guides/recipes.md). For ready-made domain shape
 [API pack](./guides/api.md), [Database pack](./guides/database.md), [MindMap pack](./guides/mindmap.md),
 [StateMachine pack](./guides/statemachine.md), [Network pack](./guides/network.md), [UML pack](./guides/uml.md), and
 [Workflow pack](./guides/workflow.md). If one editor needs several vocabularies at once, use the
-[Package composition](./guides/package-composition.md) guide.
+[Package composition](./guides/package-composition.md) guide. If the editor needs shared toolbox, command bar,
+status, navigator, and runtime property panels, use [Designer controls](./guides/designer.md).

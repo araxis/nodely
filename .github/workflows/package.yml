@@ -20,6 +20,7 @@ on:
           - 'main'
           - 'Nodely.Avalonia.Api'
           - 'Nodely.Avalonia.Database'
+          - 'Nodely.Avalonia.Designer'
           - 'Nodely.Avalonia.MindMap'
           - 'Nodely.Avalonia.Network'
           - 'Nodely.Avalonia.StateMachine'
@@ -72,6 +73,7 @@ jobs:
           side_package_ids=(
             "Nodely.Avalonia.Api"
             "Nodely.Avalonia.Database"
+            "Nodely.Avalonia.Designer"
             "Nodely.Avalonia.MindMap"
             "Nodely.Avalonia.Network"
             "Nodely.Avalonia.StateMachine"
@@ -81,6 +83,7 @@ jobs:
           side_package_projects=(
             "src/Nodely.Avalonia.Api/Nodely.Avalonia.Api.csproj"
             "src/Nodely.Avalonia.Database/Nodely.Avalonia.Database.csproj"
+            "src/Nodely.Avalonia.Designer/Nodely.Avalonia.Designer.csproj"
             "src/Nodely.Avalonia.MindMap/Nodely.Avalonia.MindMap.csproj"
             "src/Nodely.Avalonia.Network/Nodely.Avalonia.Network.csproj"
             "src/Nodely.Avalonia.StateMachine/Nodely.Avalonia.StateMachine.csproj"

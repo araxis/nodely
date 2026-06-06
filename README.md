@@ -17,9 +17,9 @@ architecture to Avalonia. Pan/zoom canvas, custom nodes, interactive links, grou
 theming, read-only mode, serialization, undo/redo, and auto-layout — with **no SVG, no JS, no WebView**,
 just Avalonia's native rendering.
 
-> Status: **v0.8.1** main packages, with independent side packages. Engine + Avalonia UI are complete and
-> tested on `net8.0` and `net10.0` (225 tests per runtime across the engine, side packages, and Avalonia
-> headless UI). See
+> Status: **v0.8.2** main packages, with independent side packages. Engine + Avalonia UI are complete and
+> tested on `net8.0` and `net10.0` (226 tests per runtime across the engine, side packages, and Avalonia
+> headless UI, plus 10 `net10.0` demo startup visual checks). See
 > [`CHANGELOG.md`](CHANGELOG.md) and the design notes in [`memory/`](memory/).
 
 ## Why
@@ -228,7 +228,7 @@ canvas.RunAsUndoableEdit(
 ```
 src/        Nodely.Core, Nodely.Avalonia, side packages, Nodely.Algorithms, Nodely.Serialization
 samples/    Nodely.Demo (Avalonia desktop gallery), Nodely.QuickStart (minimal copyable app)
-tests/      Nodely.Core.Tests, side-package tests, Nodely.Avalonia.Tests (Avalonia headless)
+tests/      Nodely.Core.Tests, side-package tests, Nodely.Avalonia.Tests, Nodely.Demo.Tests
 bench/      Nodely.Benchmarks (engine throughput)
 memory/     Design decisions (ADRs), research, the development plan, progress, learnings
 ```

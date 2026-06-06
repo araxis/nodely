@@ -63,6 +63,21 @@ public class LinkTests
     }
 
     [Fact]
+    public void Same_node_shape_intersection_link_generates_a_path()
+    {
+        var d = new NodelyDiagram();
+        var node = d.Nodes.Add(new NodeModel(new Point(20, 30)) { Size = new Size(120, 60) });
+
+        var link = d.Links.Add(new LinkModel(node, node));
+
+        var result = link.PathGeneratorResult.ShouldNotBeNull();
+        result.FullPath.Operations.Count.ShouldBeGreaterThan(1);
+        var start = result.FullPath.Operations[0].Point.ShouldNotBeNull();
+        var end = result.FullPath.Operations[result.FullPath.Operations.Count - 1].Point.ShouldNotBeNull();
+        start.ShouldNotBe(end);
+    }
+
+    [Fact]
     public void Position_anchor_makes_link_unattached()
     {
         var n1 = new NodeModel(new Point(0, 0)) { Size = new Size(10, 10) };

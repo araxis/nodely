@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Nodely;
@@ -120,6 +121,27 @@ public sealed class MainWindow : Window
 {
     private sealed record GallerySceneInfo(string Name, string Focus, string Detail, string Package, Color Accent);
 
+    private enum ToolboxPreviewKind
+    {
+        Card,
+        Capsule,
+        Diamond,
+        Circle,
+        Note,
+        Table,
+        Procedure,
+        UmlClass,
+        UmlPackage,
+        Topic,
+        Leaf,
+        Device,
+        Switch,
+        Endpoint,
+        Contract,
+        Operation,
+        Shield,
+    }
+
     private static IReadOnlyList<GallerySceneInfo> GalleryScenes { get; } = new[]
     {
         new GallerySceneInfo("Workflow", "Process builder", "Tasks, decisions, events, and message paths", "Workflow pack", Color.FromRgb(0xC6, 0x85, 0x21)),
@@ -171,6 +193,7 @@ public sealed class MainWindow : Window
     public Control ShowScene(string name)
     {
         var definition = FindScene(name);
+        _currentSceneName = definition.Name;
         var scene = name switch
         {
             "Workflow" => BuildWorkflow(),
@@ -186,7 +209,6 @@ public sealed class MainWindow : Window
             _ => throw new ArgumentOutOfRangeException(nameof(name), name, "Unknown gallery scene."),
         };
 
-        _currentSceneName = definition.Name;
         _host.Content = scene;
         UpdateSceneChrome(definition);
         return scene;
@@ -607,8 +629,9 @@ public sealed class MainWindow : Window
             Palette = _palette,
             IsReadOnly = readOnly,
             PropertyRegistry = CreateDesignerPropertyRegistry(),
-            ToolboxSections = CreateToolboxSections(),
+            ToolboxSections = CreateToolboxSections(_currentSceneName),
             ShowToolbox = !readOnly,
+            ToolboxWidth = 266,
             ConfigureCanvas = canvas =>
             {
                 RegisterTaskNode(canvas);
@@ -790,67 +813,860 @@ public sealed class MainWindow : Window
             DiagramProperty.Enum<NetworkLink, NetworkLinkDirection>("Direction", link => link.Direction, (link, value) => link.Direction = value, "Network link"),
             DiagramProperty.Color<NetworkLink>("Accent", link => link.AccentColor ?? string.Empty, (link, value) => link.AccentColor = NormalizeOptional(value), "Network link"));
 
-    private static IEnumerable<DesignerToolboxSection> CreateToolboxSections() => new[]
+    private static IEnumerable<DesignerToolboxSection> CreateToolboxSections(string sceneName) => sceneName switch
     {
-        new DesignerToolboxSection("Core", new[]
+        "Workflow" => WorkflowToolbox(),
+        "State machine" => StateMachineToolbox(),
+        "Extensibility" => ExtensibilityToolbox(),
+        "Architecture" => ArchitectureToolbox(),
+        "Database" => DatabaseToolbox(),
+        "UML" => UmlToolbox(),
+        "MindMap" => MindMapToolbox(),
+        "Network" => NetworkToolbox(),
+        "API" => ApiToolbox(),
+        _ => OverviewToolbox(),
+    };
+
+    private static IEnumerable<DesignerToolboxSection> WorkflowToolbox() => new[]
+    {
+        new DesignerToolboxSection("Workflow", new[]
         {
-            new DesignerToolboxItem("Task", point => new TaskNode(point, "Task") { Status = "Pending" })
-            {
-                Detail = "Sample custom node",
-                Accent = new SolidColorBrush(Color.FromRgb(0x4D, 0x9E, 0xFF)),
-            },
-        }),
-        new DesignerToolboxSection("Side packages", new[]
-        {
-            new DesignerToolboxItem("API endpoint", point =>
-            {
-                var node = new ApiEndpointNode(point, "/resource", ApiEndpointMethod.Get);
-                node.AddPort(new ApiPortModel(node, PortAlignment.Left, ApiPortRole.Request, "in"));
-                node.AddPort(new ApiPortModel(node, PortAlignment.Right, ApiPortRole.Response, "out"));
-                return node;
-            })
-            {
-                Detail = "Endpoint card",
-                Accent = new SolidColorBrush(Color.FromRgb(0x2D, 0x7D, 0xE0)),
-            },
-            new DesignerToolboxItem("Database table", point =>
-            {
-                var node = new DatabaseTableNode(point, "Table", "dbo");
-                node.Columns.Add(new DatabaseColumn("Id", "int", isPrimaryKey: true, isNullable: false));
-                node.AddPort(new DatabasePortModel(node, PortAlignment.Right, DatabasePortKind.Relationship, "Id"));
-                return node;
-            })
-            {
-                Detail = "Rows and relationship port",
-                Accent = new SolidColorBrush(Color.FromRgb(0x37, 0x8A, 0x63)),
-            },
-            new DesignerToolboxItem("Workflow task", point => new WorkflowTaskNode(point, "Task"))
-            {
-                Detail = "Process step",
-                Accent = new SolidColorBrush(Color.FromRgb(0xC6, 0x85, 0x21)),
-            },
-            new DesignerToolboxItem("State", point => new StateMachineStateNode(point, "State"))
-            {
-                Detail = "Lifecycle state",
-                Accent = new SolidColorBrush(Color.FromRgb(0x8B, 0x68, 0xB8)),
-            },
-            new DesignerToolboxItem("Network router", point => new NetworkRouterNode(point, "Router"))
-            {
-                Detail = "Topology device",
-                Accent = new SolidColorBrush(Color.FromRgb(0x54, 0x9B, 0xC5)),
-            },
-            new DesignerToolboxItem("UML class", point => new UmlClassNode(point, "Class"))
-            {
-                Detail = "Structural type",
-                Accent = new SolidColorBrush(Color.FromRgb(0x7C, 0x8A, 0x9A)),
-            },
-            new DesignerToolboxItem("Mind map topic", point => new MindMapBranchNode(point, "Topic"))
-            {
-                Detail = "Planning branch",
-                Accent = new SolidColorBrush(Color.FromRgb(0xD4, 0x6A, 0x6A)),
-            },
+            ToolboxItem("Start", "Entry capsule", Color.FromRgb(0x49, 0xA3, 0x72), ToolboxPreviewKind.Capsule,
+                point => new WorkflowStartNode(point, "Start"), "START", "Request"),
+            ToolboxItem("Task", "User or service step", Color.FromRgb(0x4E, 0x8D, 0xC8), ToolboxPreviewKind.Card,
+                point => new WorkflowTaskNode(point, "Task") { TaskType = WorkflowTaskType.User, Status = WorkflowTaskStatus.Ready }, "TASK", "Ready"),
+            ToolboxItem("Decision", "Condition branch", Color.FromRgb(0xC6, 0x9A, 0x36), ToolboxPreviewKind.Diamond,
+                point => new WorkflowDecisionNode(point, "Decision") { Condition = "condition" }, "?", "Condition"),
+            ToolboxItem("Gateway", "Parallel routing", Color.FromRgb(0x8B, 0x68, 0xB8), ToolboxPreviewKind.Diamond,
+                point => new WorkflowGatewayNode(point, "Gateway") { GatewayKind = WorkflowGatewayKind.Parallel }, "+", "Parallel"),
+            ToolboxItem("Event", "Timer or message", Color.FromRgb(0x3C, 0xA3, 0xAC), ToolboxPreviewKind.Circle,
+                point => new WorkflowEventNode(point, "Event") { EventKind = WorkflowEventKind.Message }, "EVT", "Message"),
+            ToolboxItem("End", "Completion capsule", Color.FromRgb(0xC6, 0x5B, 0x56), ToolboxPreviewKind.Capsule,
+                point => new WorkflowEndNode(point, "End"), "END", "Complete"),
+            ToolboxItem("Note", "Process annotation", Color.FromRgb(0xE0, 0xC9, 0x72), ToolboxPreviewKind.Note,
+                point => new WorkflowNoteNode(point, "Workflow note"), "NOTE", "Context"),
         }),
     };
+
+    private static IEnumerable<DesignerToolboxSection> StateMachineToolbox() => new[]
+    {
+        new DesignerToolboxSection("State machine", new[]
+        {
+            ToolboxItem("Initial", "Start state", Color.FromRgb(0x3D, 0xB9, 0x7C), ToolboxPreviewKind.Circle,
+                point =>
+                {
+                    var node = new StateMachineInitialNode(point, "Start");
+                    node.AddPort(new StateMachinePortModel(node, PortAlignment.Right, StateMachinePortRole.Exit, "start"));
+                    return node;
+                }, "INIT", "Exit"),
+            ToolboxItem("State", "Entry and exit actions", Color.FromRgb(0x8B, 0x68, 0xB8), ToolboxPreviewKind.Card,
+                point =>
+                {
+                    var node = new StateMachineStateNode(point, "State") { EntryAction = "enter", ExitAction = "leave" };
+                    node.AddPort(new StateMachinePortModel(node, PortAlignment.Left, StateMachinePortRole.Entry, "in"));
+                    node.AddPort(new StateMachinePortModel(node, PortAlignment.Right, StateMachinePortRole.Exit, "out"));
+                    return node;
+                }, "STATE", "entry / exit"),
+            ToolboxItem("Choice", "Guard split", Color.FromRgb(0xD1, 0x9A, 0x3E), ToolboxPreviewKind.Diamond,
+                point =>
+                {
+                    var node = new StateMachineChoiceNode(point, "Choice");
+                    node.AddPort(new StateMachinePortModel(node, PortAlignment.Left, StateMachinePortRole.Entry, "in"));
+                    node.AddPort(new StateMachinePortModel(node, PortAlignment.Right, StateMachinePortRole.Exit, "ok"));
+                    node.AddPort(new StateMachinePortModel(node, PortAlignment.Bottom, StateMachinePortRole.Exit, "fallback"));
+                    return node;
+                }, "?", "Guard"),
+            ToolboxItem("Final", "Terminal state", Color.FromRgb(0xC6, 0x5B, 0x56), ToolboxPreviewKind.Circle,
+                point =>
+                {
+                    var node = new StateMachineFinalNode(point, "Done");
+                    node.AddPort(new StateMachinePortModel(node, PortAlignment.Left, StateMachinePortRole.Entry, "finish"));
+                    return node;
+                }, "END", "Entry"),
+            ToolboxItem("Note", "Lifecycle note", Color.FromRgb(0xD8, 0xC4, 0x6A), ToolboxPreviewKind.Note,
+                point => new StateMachineNoteNode(point, "State note"), "NOTE", "Guard text"),
+        }),
+    };
+
+    private static IEnumerable<DesignerToolboxSection> ExtensibilityToolbox() => new[]
+    {
+        new DesignerToolboxSection("Custom nodes", new[]
+        {
+            ToolboxItem("Task", "Custom node with signal ports", Color.FromRgb(0x4D, 0x9E, 0xFF), ToolboxPreviewKind.Card,
+                point => DemoTaskTool(point, "Task", "Pending"), "TASK", "signal ports"),
+            ToolboxItem("Review", "Custom status variant", Color.FromRgb(0xD1, 0x9A, 0x3E), ToolboxPreviewKind.Card,
+                point => DemoTaskTool(point, "Review", "Needs review"), "REVIEW", "status"),
+            ToolboxItem("Note", "Plain diagram note", Color.FromRgb(0xE0, 0xC9, 0x72), ToolboxPreviewKind.Note,
+                point => new WorkflowNoteNode(point, "Custom overlay note"), "NOTE", "Overlay"),
+        }),
+    };
+
+    private static IEnumerable<DesignerToolboxSection> ArchitectureToolbox() => new[]
+    {
+        new DesignerToolboxSection("Composed packs", new[]
+        {
+            ToolboxItem("API service", "Service boundary", Color.FromRgb(0x2D, 0x7D, 0xE0), ToolboxPreviewKind.Endpoint,
+                point =>
+                {
+                    var node = new ApiServiceNode(point, "Service") { Version = "v1", Summary = "Application service" };
+                    node.AddPort(new ApiPortModel(node, PortAlignment.Left, ApiPortRole.Request, "in"));
+                    node.AddPort(new ApiPortModel(node, PortAlignment.Right, ApiPortRole.Dependency, "deps"));
+                    return node;
+                }, "API", "Service"),
+            ToolboxItem("Database table", "Persistence component", Color.FromRgb(0x37, 0x8A, 0x63), ToolboxPreviewKind.Table,
+                DatabaseTableTool, "TABLE", "Rows"),
+            ToolboxItem("Network service", "Runtime endpoint", Color.FromRgb(0x54, 0x9B, 0xC5), ToolboxPreviewKind.Device,
+                point =>
+                {
+                    var node = new NetworkServiceNode(point, "Service") { Address = "443", Status = NetworkStatus.Online };
+                    node.AddPort(new NetworkPortModel(node, PortAlignment.Left, NetworkPortRole.Service, "in"));
+                    return node;
+                }, "SVC", "443"),
+            ToolboxItem("Workflow task", "Process touchpoint", Color.FromRgb(0xC6, 0x85, 0x21), ToolboxPreviewKind.Card,
+                point => new WorkflowTaskNode(point, "Task") { TaskType = WorkflowTaskType.Service, Status = WorkflowTaskStatus.Ready }, "TASK", "Service"),
+        }),
+    };
+
+    private static IEnumerable<DesignerToolboxSection> DatabaseToolbox() => new[]
+    {
+        new DesignerToolboxSection("Database objects", new[]
+        {
+            ToolboxItem("Table", "Columns and relationship ports", Color.FromRgb(0x37, 0x8A, 0x63), ToolboxPreviewKind.Table,
+                DatabaseTableTool, "TABLE", "PK / FK"),
+            ToolboxItem("View", "Projection rows", Color.FromRgb(0x5E, 0xA8, 0xB8), ToolboxPreviewKind.Table,
+                point =>
+                {
+                    var node = new DatabaseViewNode(point, "View", "reporting");
+                    node.Columns.Add(new DatabaseColumn("Name", "nvarchar(120)"));
+                    node.Columns.Add(new DatabaseColumn("Total", "decimal(12,2)"));
+                    node.AddPort(new DatabasePortModel(node, PortAlignment.Left, DatabasePortKind.Dependency, "Name"));
+                    node.AddPort(new DatabasePortModel(node, PortAlignment.Right, DatabasePortKind.Dependency, "Total"));
+                    return node;
+                }, "VIEW", "Projection"),
+            ToolboxItem("Procedure", "Input and output ports", Color.FromRgb(0xC6, 0x85, 0x21), ToolboxPreviewKind.Procedure,
+                point =>
+                {
+                    var node = new DatabaseProcedureNode(point, "Procedure", "dbo");
+                    node.Parameters.Add(new DatabaseParameter("@id", "int"));
+                    node.Parameters.Add(new DatabaseParameter("@result", "int", "Out"));
+                    node.AddPort(new DatabasePortModel(node, PortAlignment.Left, DatabasePortKind.Input, "@id"));
+                    node.AddPort(new DatabasePortModel(node, PortAlignment.Right, DatabasePortKind.Output, "@result"));
+                    return node;
+                }, "PROC", "Parameters"),
+        }),
+    };
+
+    private static IEnumerable<DesignerToolboxSection> UmlToolbox() => new[]
+    {
+        new DesignerToolboxSection("UML structure", new[]
+        {
+            ToolboxItem("Class", "Members and operations", Color.FromRgb(0x7C, 0x8A, 0x9A), ToolboxPreviewKind.UmlClass,
+                point =>
+                {
+                    var node = new UmlClassNode(point, "Class");
+                    node.Members.Add(new UmlMember("Id", "Guid"));
+                    node.Operations.Add(new UmlOperation("Save"));
+                    node.AddPort(new UmlPortModel(node, PortAlignment.Left, UmlPortKind.Association, "Id"));
+                    node.AddPort(new UmlPortModel(node, PortAlignment.Top, UmlPortKind.Inheritance));
+                    return node;
+                }, "CLASS", "Fields"),
+            ToolboxItem("Interface", "Contract operations", Color.FromRgb(0x4E, 0x8D, 0xC8), ToolboxPreviewKind.UmlClass,
+                point =>
+                {
+                    var node = new UmlInterfaceNode(point, "Interface");
+                    node.Stereotypes.Add("interface");
+                    node.Operations.Add(new UmlOperation("Execute"));
+                    node.AddPort(new UmlPortModel(node, PortAlignment.Bottom, UmlPortKind.Realization, "Execute"));
+                    return node;
+                }, "INTERFACE", "Ops"),
+            ToolboxItem("Enum", "Named literals", Color.FromRgb(0x8B, 0x68, 0xB8), ToolboxPreviewKind.UmlClass,
+                point =>
+                {
+                    var node = new UmlEnumNode(point, "Enum");
+                    node.Literals.Add("Draft");
+                    node.Literals.Add("Ready");
+                    node.AddPort(new UmlPortModel(node, PortAlignment.Left, UmlPortKind.Association, "Draft"));
+                    return node;
+                }, "ENUM", "Literals"),
+            ToolboxItem("Package", "Grouped namespace", Color.FromRgb(0x58, 0x91, 0xB3), ToolboxPreviewKind.UmlPackage,
+                point =>
+                {
+                    var node = new UmlPackageNode(point, "Package");
+                    node.AddPort(new UmlPortModel(node, PortAlignment.Bottom, UmlPortKind.Dependency));
+                    return node;
+                }, "PKG", "Namespace"),
+            ToolboxItem("Note", "Model annotation", Color.FromRgb(0xE0, 0xC9, 0x72), ToolboxPreviewKind.Note,
+                point => new UmlNoteNode(point, "UML note"), "NOTE", "Constraint"),
+        }),
+    };
+
+    private static IEnumerable<DesignerToolboxSection> MindMapToolbox() => new[]
+    {
+        new DesignerToolboxSection("Mind map topics", new[]
+        {
+            ToolboxItem("Root topic", "Central capsule", Color.FromRgb(0xD4, 0x6A, 0x6A), ToolboxPreviewKind.Topic,
+                point =>
+                {
+                    var node = new MindMapRootNode(point, "Central topic") { IconKey = "ROOT" };
+                    node.AddPort(new MindMapPortModel(node, PortAlignment.Left, MindMapPortRole.Branch, "left"));
+                    node.AddPort(new MindMapPortModel(node, PortAlignment.Right, MindMapPortRole.Branch, "right"));
+                    return node;
+                }, "ROOT", "Center"),
+            ToolboxItem("Branch topic", "Expanded branch", Color.FromRgb(0x4E, 0x8D, 0xC8), ToolboxPreviewKind.Topic,
+                point =>
+                {
+                    var node = new MindMapBranchNode(point, "Branch") { Side = MindMapTopicSide.Right, IconKey = "BR" };
+                    node.AddPort(new MindMapPortModel(node, PortAlignment.Left, MindMapPortRole.Branch, "in"));
+                    node.AddPort(new MindMapPortModel(node, PortAlignment.Right, MindMapPortRole.Branch, "out"));
+                    node.AddPort(new MindMapPortModel(node, PortAlignment.Bottom, MindMapPortRole.Association, "ref"));
+                    return node;
+                }, "BRANCH", "Ports"),
+            ToolboxItem("Collapsed branch", "Hidden descendants marker", Color.FromRgb(0x8B, 0x68, 0xB8), ToolboxPreviewKind.Topic,
+                point =>
+                {
+                    var node = new MindMapBranchNode(point, "Collapsed") { Collapsed = true, Side = MindMapTopicSide.Left, IconKey = "COL" };
+                    node.AddPort(new MindMapPortModel(node, PortAlignment.Left, MindMapPortRole.Branch, "in"));
+                    node.AddPort(new MindMapPortModel(node, PortAlignment.Right, MindMapPortRole.Branch, "out"));
+                    return node;
+                }, "BRANCH", "+3"),
+            ToolboxItem("Leaf topic", "Compact child chip", Color.FromRgb(0x6E, 0xB3, 0x79), ToolboxPreviewKind.Leaf,
+                point =>
+                {
+                    var node = new MindMapLeafNode(point, "Leaf") { IconKey = "LEAF" };
+                    node.AddPort(new MindMapPortModel(node, PortAlignment.Left, MindMapPortRole.Branch, "in"));
+                    return node;
+                }, "LEAF", "Detail"),
+        }),
+    };
+
+    private static IEnumerable<DesignerToolboxSection> NetworkToolbox() => new[]
+    {
+        new DesignerToolboxSection("Network devices", new[]
+        {
+            ToolboxItem("Cloud", "External zone", Color.FromRgb(0x6A, 0x9D, 0xC9), ToolboxPreviewKind.Device,
+                point =>
+                {
+                    var node = new NetworkCloudNode(point, "Cloud") { Status = NetworkStatus.Online };
+                    node.AddPort(new NetworkPortModel(node, PortAlignment.Right, NetworkPortRole.Wan, "wan"));
+                    return node;
+                }, "WAN", "Cloud"),
+            ToolboxItem("Router", "WAN and LAN ports", Color.FromRgb(0x54, 0x9B, 0xC5), ToolboxPreviewKind.Device,
+                point =>
+                {
+                    var node = new NetworkRouterNode(point, "Router") { Address = "10.0.0.1", Status = NetworkStatus.Online };
+                    node.AddPort(new NetworkPortModel(node, PortAlignment.Left, NetworkPortRole.Wan, "wan0"));
+                    node.AddPort(new NetworkPortModel(node, PortAlignment.Right, NetworkPortRole.Lan, "lan0"));
+                    return node;
+                }, "RTR", "wan / lan"),
+            ToolboxItem("Firewall", "Policy boundary", Color.FromRgb(0xC6, 0x5B, 0x56), ToolboxPreviewKind.Shield,
+                point =>
+                {
+                    var node = new NetworkFirewallNode(point, "Firewall") { Status = NetworkStatus.Warning };
+                    node.AddPort(new NetworkPortModel(node, PortAlignment.Left, NetworkPortRole.Wan, "outside"));
+                    node.AddPort(new NetworkPortModel(node, PortAlignment.Right, NetworkPortRole.Lan, "inside"));
+                    return node;
+                }, "FW", "Policy"),
+            ToolboxItem("Switch", "Port grid", Color.FromRgb(0x37, 0xA7, 0x79), ToolboxPreviewKind.Switch,
+                point =>
+                {
+                    var node = new NetworkSwitchNode(point, "Switch") { PortCount = 24, ActivePorts = 14 };
+                    node.AddPort(new NetworkPortModel(node, PortAlignment.Left, NetworkPortRole.Uplink, "uplink", index: 0));
+                    node.AddPort(new NetworkPortModel(node, PortAlignment.Right, NetworkPortRole.Downlink, "port1", index: 1));
+                    return node;
+                }, "SW", "24 ports"),
+            ToolboxItem("Service", "Hosted endpoint", Color.FromRgb(0x8B, 0x68, 0xB8), ToolboxPreviewKind.Device,
+                point =>
+                {
+                    var node = new NetworkServiceNode(point, "Service") { Address = "443", Status = NetworkStatus.Online };
+                    node.AddPort(new NetworkPortModel(node, PortAlignment.Left, NetworkPortRole.Service, "443"));
+                    return node;
+                }, "SVC", "443"),
+        }),
+    };
+
+    private static IEnumerable<DesignerToolboxSection> ApiToolbox() => new[]
+    {
+        new DesignerToolboxSection("API design", new[]
+        {
+            ToolboxItem("Client", "Consumer boundary", Color.FromRgb(0x6A, 0x9D, 0xC9), ToolboxPreviewKind.Card,
+                point =>
+                {
+                    var node = new ApiClientNode(point, "Client") { Platform = "Web", Summary = "Consumer" };
+                    node.AddPort(new ApiPortModel(node, PortAlignment.Right, ApiPortRole.Request, "request"));
+                    return node;
+                }, "CLIENT", "Request"),
+            ToolboxItem("Gateway", "Public route", Color.FromRgb(0x2D, 0x7D, 0xE0), ToolboxPreviewKind.Endpoint,
+                point =>
+                {
+                    var node = new ApiGatewayNode(point, "Gateway") { Host = "api.local" };
+                    node.AddPort(new ApiPortModel(node, PortAlignment.Left, ApiPortRole.Request, "public"));
+                    node.AddPort(new ApiPortModel(node, PortAlignment.Right, ApiPortRole.Request, "route"));
+                    node.AddPort(new ApiPortModel(node, PortAlignment.Bottom, ApiPortRole.Auth, "auth"));
+                    return node;
+                }, "GW", "Route"),
+            ToolboxItem("Endpoint", "Method and contracts", Color.FromRgb(0x37, 0xA7, 0x79), ToolboxPreviewKind.Endpoint,
+                point =>
+                {
+                    var node = new ApiEndpointNode(point, "/resource", ApiEndpointMethod.Get) { ResponseType = "ResourceDto" };
+                    node.AddPort(new ApiPortModel(node, PortAlignment.Left, ApiPortRole.Request, "GET"));
+                    node.AddPort(new ApiPortModel(node, PortAlignment.Right, ApiPortRole.Response, "200"));
+                    return node;
+                }, "GET", "/resource"),
+            ToolboxItem("Operation", "Application action", Color.FromRgb(0x8B, 0x68, 0xB8), ToolboxPreviewKind.Operation,
+                point =>
+                {
+                    var node = new ApiOperationNode(point, "Operation") { Input = "Request", Output = "Result" };
+                    node.AddPort(new ApiPortModel(node, PortAlignment.Left, ApiPortRole.Dependency, "input"));
+                    node.AddPort(new ApiPortModel(node, PortAlignment.Right, ApiPortRole.Event, "event"));
+                    return node;
+                }, "OP", "Input / output"),
+            ToolboxItem("Contract", "Typed payload", Color.FromRgb(0x7C, 0x8A, 0x9A), ToolboxPreviewKind.Contract,
+                point =>
+                {
+                    var node = new ApiContractNode(point, "Contract");
+                    node.Fields.Add(new ApiContractField("id", "Guid", required: true));
+                    node.Fields.Add(new ApiContractField("name", "string"));
+                    node.AddPort(new ApiPortModel(node, PortAlignment.Left, ApiPortRole.Dependency, "schema"));
+                    return node;
+                }, "DTO", "Fields"),
+            ToolboxItem("Auth", "Security policy", Color.FromRgb(0xC6, 0x85, 0x21), ToolboxPreviewKind.Shield,
+                point =>
+                {
+                    var node = new ApiAuthNode(point, "Auth") { Scheme = "Bearer", Scopes = "read write" };
+                    node.AddPort(new ApiPortModel(node, PortAlignment.Left, ApiPortRole.Auth, "policy"));
+                    return node;
+                }, "AUTH", "Scopes"),
+        }),
+    };
+
+    private static IEnumerable<DesignerToolboxSection> OverviewToolbox() => new[]
+    {
+        new DesignerToolboxSection("Scene starters", new[]
+        {
+            ToolboxItem("Task", "Custom node with signal ports", Color.FromRgb(0x4D, 0x9E, 0xFF), ToolboxPreviewKind.Card,
+                point => DemoTaskTool(point, "Task", "Pending"), "TASK", "Custom"),
+            ToolboxItem("API endpoint", "Request and response ports", Color.FromRgb(0x2D, 0x7D, 0xE0), ToolboxPreviewKind.Endpoint,
+                point =>
+                {
+                    var node = new ApiEndpointNode(point, "/resource", ApiEndpointMethod.Get);
+                    node.AddPort(new ApiPortModel(node, PortAlignment.Left, ApiPortRole.Request, "in"));
+                    node.AddPort(new ApiPortModel(node, PortAlignment.Right, ApiPortRole.Response, "out"));
+                    return node;
+                }, "GET", "/resource"),
+            ToolboxItem("Database table", "Rows and relationship port", Color.FromRgb(0x37, 0x8A, 0x63), ToolboxPreviewKind.Table,
+                DatabaseTableTool, "TABLE", "Rows"),
+            ToolboxItem("UML class", "Structural type", Color.FromRgb(0x7C, 0x8A, 0x9A), ToolboxPreviewKind.UmlClass,
+                point => new UmlClassNode(point, "Class"), "CLASS", "Type"),
+            ToolboxItem("Mind map topic", "Planning branch", Color.FromRgb(0xD4, 0x6A, 0x6A), ToolboxPreviewKind.Topic,
+                point => new MindMapBranchNode(point, "Topic"), "TOPIC", "Branch"),
+        }),
+    };
+
+    private static DesignerToolboxItem ToolboxItem(
+        string label,
+        string detail,
+        Color accent,
+        ToolboxPreviewKind previewKind,
+        Func<NodelyPoint, NodeModel> createNode,
+        string previewTitle,
+        string previewDetail)
+        => new(label, createNode)
+        {
+            Detail = detail,
+            Accent = Paint(accent),
+            PreviewFactory = () => ToolboxPreview(previewKind, accent, previewTitle, previewDetail),
+        };
+
+    private static TaskNode DemoTaskTool(NodelyPoint point, string title, string status)
+    {
+        var node = new TaskNode(point, title) { Status = status };
+        node.AddPort(new SignalPort(node, PortAlignment.Left, "in"));
+        node.AddPort(new SignalPort(node, PortAlignment.Right, "out"));
+        return node;
+    }
+
+    private static DatabaseTableNode DatabaseTableTool(NodelyPoint point)
+    {
+        var node = new DatabaseTableNode(point, "Table", "dbo");
+        node.Columns.Add(new DatabaseColumn("Id", "int", isPrimaryKey: true, isNullable: false));
+        node.Columns.Add(new DatabaseColumn("Name", "nvarchar(120)"));
+        node.Columns.Add(new DatabaseColumn("ParentId", "int") { IsForeignKey = true });
+        node.AddPort(new DatabasePortModel(node, PortAlignment.Left, DatabasePortKind.Relationship, "ParentId"));
+        node.AddPort(new DatabasePortModel(node, PortAlignment.Right, DatabasePortKind.Relationship, "Id"));
+        return node;
+    }
+
+    private static Control ToolboxPreview(ToolboxPreviewKind kind, Color accent, string title, string detail)
+    {
+        var child = kind switch
+        {
+            ToolboxPreviewKind.Capsule => CapsulePreview(accent, title, detail),
+            ToolboxPreviewKind.Diamond => DiamondPreview(accent, title, detail),
+            ToolboxPreviewKind.Circle => CirclePreview(accent, title, detail),
+            ToolboxPreviewKind.Note => NotePreview(title, detail),
+            ToolboxPreviewKind.Table => RowsPreview(accent, title, detail, "Id", "Name"),
+            ToolboxPreviewKind.Procedure => RowsPreview(accent, title, detail, "@id", "@result"),
+            ToolboxPreviewKind.UmlClass => UmlPreview(accent, title, detail),
+            ToolboxPreviewKind.UmlPackage => PackagePreview(accent, title, detail),
+            ToolboxPreviewKind.Topic => TopicPreview(accent, title, detail),
+            ToolboxPreviewKind.Leaf => LeafPreview(accent, title, detail),
+            ToolboxPreviewKind.Device => DevicePreview(accent, title, detail),
+            ToolboxPreviewKind.Switch => SwitchPreview(accent, title, detail),
+            ToolboxPreviewKind.Endpoint => EndpointPreview(accent, title, detail),
+            ToolboxPreviewKind.Contract => RowsPreview(accent, title, detail, "id: Guid", "name: string"),
+            ToolboxPreviewKind.Operation => OperationPreview(accent, title, detail),
+            ToolboxPreviewKind.Shield => ShieldPreview(accent, title, detail),
+            _ => CardPreview(accent, title, detail),
+        };
+
+        return new Border
+        {
+            Background = Paint(Color.FromRgb(0x12, 0x17, 0x22)),
+            Child = child,
+        };
+    }
+
+    private static Control CardPreview(Color accent, string title, string detail) => new Border
+    {
+        Margin = new Thickness(10, 8),
+        CornerRadius = new CornerRadius(7),
+        BorderBrush = Paint(accent),
+        BorderThickness = new Thickness(1),
+        Background = Paint(Color.FromRgb(0x26, 0x2B, 0x36)),
+        Child = new StackPanel
+        {
+            Children =
+            {
+                new Border { Height = 18, Background = Paint(accent), CornerRadius = new CornerRadius(6, 6, 0, 0) },
+                new StackPanel
+                {
+                    Margin = new Thickness(8, 4, 8, 5),
+                    Spacing = 2,
+                    Children =
+                    {
+                        PreviewText(title, Brushes.White, 10, FontWeight.Bold),
+                        PreviewText(detail, Paint(Color.FromRgb(0xB8, 0xC0, 0xCE)), 9),
+                    },
+                },
+            },
+        },
+    };
+
+    private static Control CapsulePreview(Color accent, string title, string detail) => new Grid
+    {
+        Margin = new Thickness(8),
+        Children =
+        {
+            new Border
+            {
+                Width = 118,
+                Height = 34,
+                CornerRadius = new CornerRadius(17),
+                BorderBrush = Paint(accent),
+                BorderThickness = new Thickness(1),
+                Background = Paint(accent, 70),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Child = new StackPanel
+                {
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Children =
+                    {
+                        PreviewText(title, Brushes.White, 10, FontWeight.Bold),
+                        PreviewText(detail, Paint(Color.FromRgb(0xD5, 0xDA, 0xE5)), 8),
+                    },
+                },
+            },
+        },
+    };
+
+    private static Control DiamondPreview(Color accent, string title, string detail) => new Grid
+    {
+        Margin = new Thickness(8),
+        Children =
+        {
+            new Border
+            {
+                Width = 42,
+                Height = 42,
+                CornerRadius = new CornerRadius(5),
+                Background = Paint(accent, 90),
+                BorderBrush = Paint(accent),
+                BorderThickness = new Thickness(1),
+                RenderTransform = new RotateTransform(45),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(14, 0, 0, 0),
+            },
+            new StackPanel
+            {
+                Margin = new Thickness(70, 9, 8, 0),
+                Spacing = 2,
+                Children =
+                {
+                    PreviewText(title, Brushes.White, 11, FontWeight.Bold),
+                    PreviewText(detail, Paint(Color.FromRgb(0xB8, 0xC0, 0xCE)), 9),
+                },
+            },
+        },
+    };
+
+    private static Control CirclePreview(Color accent, string title, string detail) => new Grid
+    {
+        Margin = new Thickness(8),
+        Children =
+        {
+            new Border
+            {
+                Width = 42,
+                Height = 42,
+                CornerRadius = new CornerRadius(21),
+                Background = Paint(accent, 90),
+                BorderBrush = Paint(accent),
+                BorderThickness = new Thickness(2),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(10, 0, 0, 0),
+            },
+            new StackPanel
+            {
+                Margin = new Thickness(68, 9, 8, 0),
+                Spacing = 2,
+                Children =
+                {
+                    PreviewText(title, Brushes.White, 11, FontWeight.Bold),
+                    PreviewText(detail, Paint(Color.FromRgb(0xB8, 0xC0, 0xCE)), 9),
+                },
+            },
+        },
+    };
+
+    private static Control NotePreview(string title, string detail) => new Border
+    {
+        Margin = new Thickness(14, 8),
+        CornerRadius = new CornerRadius(4),
+        BorderBrush = Paint(Color.FromRgb(0xD5, 0xA6, 0x2C)),
+        BorderThickness = new Thickness(1),
+        Background = Paint(Color.FromRgb(0xFF, 0xF2, 0xB8)),
+        Child = new StackPanel
+        {
+            Margin = new Thickness(8, 6),
+            Spacing = 2,
+            Children =
+            {
+                PreviewText(title, Brushes.Black, 10, FontWeight.Bold),
+                PreviewText(detail, Brushes.Black, 9),
+            },
+        },
+    };
+
+    private static Control RowsPreview(Color accent, string title, string detail, string firstRow, string secondRow)
+    {
+        var body = new StackPanel
+        {
+            Spacing = 3,
+            Margin = new Thickness(8, 4),
+            Children =
+            {
+                PreviewText(firstRow, Paint(Color.FromRgb(0xD8, 0xDE, 0xE8)), 8),
+                PreviewText(secondRow, Paint(Color.FromRgb(0xA8, 0xB1, 0xC2)), 8),
+            },
+        };
+
+        return new Border
+        {
+            Margin = new Thickness(10, 7),
+            CornerRadius = new CornerRadius(6),
+            BorderBrush = Paint(accent),
+            BorderThickness = new Thickness(1),
+            Background = Paint(Color.FromRgb(0x21, 0x27, 0x32)),
+            Child = new StackPanel
+            {
+                Children =
+                {
+                    new Border
+                    {
+                        Height = 17,
+                        Background = Paint(accent),
+                        Child = PreviewText(title, Brushes.White, 9, FontWeight.Bold),
+                    },
+                    body,
+                },
+            },
+        };
+    }
+
+    private static Control UmlPreview(Color accent, string title, string detail) => new Border
+    {
+        Margin = new Thickness(10, 6),
+        CornerRadius = new CornerRadius(4),
+        BorderBrush = Paint(accent),
+        BorderThickness = new Thickness(1),
+        Background = Paint(Color.FromRgb(0x22, 0x27, 0x30)),
+        Child = new StackPanel
+        {
+            Children =
+            {
+                new Border
+                {
+                    Height = 18,
+                    Background = Paint(accent, 82),
+                    Child = PreviewText(title, Brushes.White, 9, FontWeight.Bold),
+                },
+                new Border { Height = 1, Background = Paint(accent, 170) },
+                PreviewText("+ Id: Guid", Paint(Color.FromRgb(0xD8, 0xDE, 0xE8)), 8),
+                new Border { Height = 1, Background = Paint(accent, 120) },
+                PreviewText("+ " + detail + "()", Paint(Color.FromRgb(0xA8, 0xB1, 0xC2)), 8),
+            },
+        },
+    };
+
+    private static Control PackagePreview(Color accent, string title, string detail) => new Grid
+    {
+        Margin = new Thickness(10, 8),
+        Children =
+        {
+            new Border
+            {
+                Width = 58,
+                Height = 13,
+                CornerRadius = new CornerRadius(4, 4, 0, 0),
+                Background = Paint(accent),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(6, 0, 0, 0),
+            },
+            new Border
+            {
+                Margin = new Thickness(0, 10, 0, 0),
+                CornerRadius = new CornerRadius(5),
+                BorderBrush = Paint(accent),
+                BorderThickness = new Thickness(1),
+                Background = Paint(Color.FromRgb(0x22, 0x27, 0x30)),
+                Child = new StackPanel
+                {
+                    Margin = new Thickness(9, 7, 9, 5),
+                    Children =
+                    {
+                        PreviewText(title, Brushes.White, 10, FontWeight.Bold),
+                        PreviewText(detail, Paint(Color.FromRgb(0xA8, 0xB1, 0xC2)), 8),
+                    },
+                },
+            },
+        },
+    };
+
+    private static Control TopicPreview(Color accent, string title, string detail) => new StackPanel
+    {
+        Margin = new Thickness(10, 8),
+        Spacing = 5,
+        Children =
+        {
+            new Border
+            {
+                Height = 25,
+                CornerRadius = new CornerRadius(13),
+                Background = Paint(accent, 118),
+                BorderBrush = Paint(accent),
+                BorderThickness = new Thickness(1),
+                Child = PreviewText(title, Brushes.White, 10, FontWeight.Bold),
+            },
+            new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 6,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Children =
+                {
+                    TopicChip(accent, "Left"),
+                    TopicChip(accent, detail),
+                },
+            },
+        },
+    };
+
+    private static Control LeafPreview(Color accent, string title, string detail) => new StackPanel
+    {
+        Margin = new Thickness(12, 10),
+        Spacing = 6,
+        Children =
+        {
+            TopicChip(accent, title),
+            TopicChip(Color.FromRgb(0x6E, 0xB3, 0x79), detail),
+        },
+    };
+
+    private static Control DevicePreview(Color accent, string title, string detail) => new Border
+    {
+        Margin = new Thickness(10, 8),
+        CornerRadius = new CornerRadius(7),
+        BorderBrush = Paint(accent),
+        BorderThickness = new Thickness(1),
+        Background = Paint(Color.FromRgb(0x20, 0x27, 0x34)),
+        Child = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 8,
+            Margin = new Thickness(9, 7),
+            Children =
+            {
+                new Border
+                {
+                    Width = 28,
+                    Height = 28,
+                    CornerRadius = new CornerRadius(6),
+                    Background = Paint(accent, 110),
+                    Child = PreviewText(title.Length > 3 ? title[..3] : title, Brushes.White, 9, FontWeight.Bold),
+                },
+                new StackPanel
+                {
+                    Spacing = 2,
+                    Children =
+                    {
+                        PreviewText(title, Brushes.White, 10, FontWeight.Bold),
+                        PreviewText(detail, Paint(Color.FromRgb(0xA8, 0xB1, 0xC2)), 8),
+                    },
+                },
+            },
+        },
+    };
+
+    private static Control SwitchPreview(Color accent, string title, string detail)
+    {
+        var ports = new UniformGrid { Columns = 8, Rows = 2, Margin = new Thickness(8, 5), };
+        for (var i = 0; i < 16; i++)
+        {
+            ports.Children.Add(new Border
+            {
+                Width = 8,
+                Height = 5,
+                Margin = new Thickness(1),
+                CornerRadius = new CornerRadius(1),
+                Background = i < 10 ? Paint(accent) : Paint(Color.FromRgb(0x4B, 0x56, 0x67)),
+            });
+        }
+
+        return new Border
+        {
+            Margin = new Thickness(10, 8),
+            CornerRadius = new CornerRadius(6),
+            BorderBrush = Paint(accent),
+            BorderThickness = new Thickness(1),
+            Background = Paint(Color.FromRgb(0x20, 0x27, 0x34)),
+            Child = new StackPanel
+            {
+                Spacing = 2,
+                Children =
+                {
+                    PreviewText(title + "  " + detail, Brushes.White, 9, FontWeight.Bold),
+                    ports,
+                },
+            },
+        };
+    }
+
+    private static Control EndpointPreview(Color accent, string title, string detail) => new Border
+    {
+        Margin = new Thickness(10, 8),
+        CornerRadius = new CornerRadius(7),
+        BorderBrush = Paint(accent),
+        BorderThickness = new Thickness(1),
+        Background = Paint(Color.FromRgb(0x20, 0x27, 0x34)),
+        Child = new StackPanel
+        {
+            Margin = new Thickness(8, 6),
+            Spacing = 5,
+            Children =
+            {
+                new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Spacing = 5,
+                    Children =
+                    {
+                        new Border
+                        {
+                            CornerRadius = new CornerRadius(4),
+                            Background = Paint(accent),
+                            Padding = new Thickness(5, 2),
+                            Child = PreviewText(title, Brushes.White, 8, FontWeight.Bold),
+                        },
+                        PreviewText(detail, Paint(Color.FromRgb(0xD8, 0xDE, 0xE8)), 9, FontWeight.SemiBold),
+                    },
+                },
+                new Border { Height = 5, Width = 86, CornerRadius = new CornerRadius(3), Background = Paint(Color.FromRgb(0x5A, 0x65, 0x78)) },
+            },
+        },
+    };
+
+    private static Control OperationPreview(Color accent, string title, string detail) => new Border
+    {
+        Margin = new Thickness(12, 9),
+        CornerRadius = new CornerRadius(8),
+        Background = Paint(accent, 72),
+        BorderBrush = Paint(accent),
+        BorderThickness = new Thickness(1),
+        Child = new StackPanel
+        {
+            Margin = new Thickness(10, 7),
+            Children =
+            {
+                PreviewText(title, Brushes.White, 10, FontWeight.Bold),
+                PreviewText(detail, Paint(Color.FromRgb(0xD8, 0xDE, 0xE8)), 8),
+            },
+        },
+    };
+
+    private static Control ShieldPreview(Color accent, string title, string detail) => new Grid
+    {
+        Margin = new Thickness(10, 7),
+        Children =
+        {
+            new Border
+            {
+                Width = 48,
+                Height = 42,
+                CornerRadius = new CornerRadius(16, 16, 8, 8),
+                Background = Paint(accent, 88),
+                BorderBrush = Paint(accent),
+                BorderThickness = new Thickness(1),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(12, 0, 0, 0),
+                Child = PreviewText(title, Brushes.White, 10, FontWeight.Bold),
+            },
+            new StackPanel
+            {
+                Margin = new Thickness(72, 10, 8, 0),
+                Children =
+                {
+                    PreviewText(title, Brushes.White, 10, FontWeight.Bold),
+                    PreviewText(detail, Paint(Color.FromRgb(0xB8, 0xC0, 0xCE)), 8),
+                },
+            },
+        },
+    };
+
+    private static Control TopicChip(Color accent, string text) => new Border
+    {
+        CornerRadius = new CornerRadius(10),
+        Background = Paint(accent, 80),
+        BorderBrush = Paint(accent, 180),
+        BorderThickness = new Thickness(1),
+        Padding = new Thickness(7, 3),
+        Child = PreviewText(text, Brushes.White, 8, FontWeight.SemiBold),
+    };
+
+    private static TextBlock PreviewText(string text, IBrush foreground, double fontSize, FontWeight fontWeight = FontWeight.Normal)
+        => new()
+        {
+            Text = text,
+            Foreground = foreground,
+            FontSize = fontSize,
+            FontWeight = fontWeight,
+            TextAlignment = TextAlignment.Center,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
 
     private static string FormatColumn(DatabaseColumn column)
     {

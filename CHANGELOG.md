@@ -9,6 +9,12 @@ All notable changes to Nodely are documented here. The format is based on
 ### Changed
 - **Demo gallery:** the desktop sample now opens in a richer gallery shell with scene navigation, active scene
   metadata, polished actions, and a framed live editor surface.
+- **Demo toolbox:** the desktop sample now uses scene-specific toolbox stencils with compact previews and
+  domain ports instead of one generic cross-package list.
+
+### Added
+- **Designer toolbox previews:** `DesignerToolboxItem.PreviewFactory` lets host apps provide compact custom
+  visuals for toolbox stencils.
 
 ## [0.8.2] - 2026-06-06
 

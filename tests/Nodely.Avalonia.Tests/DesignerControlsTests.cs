@@ -82,6 +82,27 @@ public class DesignerControlsTests
     }
 
     [AvaloniaFact]
+    public void Toolbox_renders_custom_item_preview()
+    {
+        var diagram = new NodelyDiagram();
+        var canvas = new DiagramCanvas { Diagram = diagram };
+        var toolbox = new DiagramToolbox { Canvas = canvas };
+        toolbox.AddSections(new[]
+        {
+            new DesignerToolboxSection("Nodes", new[]
+            {
+                new DesignerToolboxItem("Preview task", point => new DesignerTestNode(point))
+                {
+                    PreviewFactory = () => new Border { Tag = "custom-toolbox-preview" },
+                },
+            }),
+        });
+
+        Descendants(toolbox)
+            .ShouldContain(control => Equals(control.Tag, "custom-toolbox-preview"));
+    }
+
+    [AvaloniaFact]
     public void Command_bar_tracks_selection_state()
     {
         var diagram = new NodelyDiagram();

@@ -7,8 +7,11 @@ what's next.
 
 - Demo: replaced the plain top button strip with a richer app shell, left scene rail, active scene metadata,
   styled actions, and a framed live editor surface.
-- Scope: kept scene diagrams and package renderers intact; this is sample-app presentation polish, not a
-  package version bump.
+- Toolbox: added compact preview support to Designer toolbox items and changed the gallery to use
+  scene-specific stencils with domain ports for Workflow, StateMachine, Extensibility, Architecture,
+  Database, UML, MindMap, Network, and API scenes.
+- Scope: kept scene diagrams and package renderers intact; the Designer toolbox addition is additive and this
+  is not a package version bump.
 - **Verified:** `dotnet build Nodely.slnx --configuration Release --disable-build-servers /m:1
   /nr:false` -> 0/0; `dotnet test Nodely.slnx --configuration Release --no-build --verbosity normal
   --disable-build-servers /m:1 /nr:false` -> all tests passed, including Demo startup 10/10.

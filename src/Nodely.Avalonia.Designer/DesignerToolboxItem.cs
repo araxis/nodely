@@ -1,4 +1,5 @@
 using System;
+using Avalonia.Controls;
 using Avalonia.Media;
 using Nodely.Models;
 using NodelyPoint = Nodely.Geometry.Point;
@@ -23,6 +24,9 @@ public sealed class DesignerToolboxItem
 
     /// <summary>Optional accent brush for the item swatch.</summary>
     public IBrush? Accent { get; init; }
+
+    /// <summary>Optional compact visual preview shown above the item label.</summary>
+    public Func<Control>? PreviewFactory { get; init; }
 
     /// <summary>Creates a node at the requested position.</summary>
     public Func<NodelyPoint, NodeModel> CreateNode { get; }

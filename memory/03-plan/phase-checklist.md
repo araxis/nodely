@@ -4,6 +4,7 @@ Tick items as completed. Mirrors `development-plan.md`. `[ ]` todo, `[~]` in pro
 
 ## Post-M4 - demo gallery showcase polish
 - [x] Replace the plain scene button strip with a richer app shell and scene rail.
+- [x] Replace the generic toolbox list with scene-specific stencils and compact previews.
 - [x] Keep every scene as a live editable diagram.
 - [x] Final validation: build, demo startup tests, wording scan.
 

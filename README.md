@@ -2,6 +2,7 @@
 
 [![Package](https://img.shields.io/nuget/v/Nodely.Avalonia?label=package)](https://www.nuget.org/packages/Nodely.Avalonia)
 [![Downloads](https://img.shields.io/nuget/dt/Nodely.Avalonia?label=downloads)](https://www.nuget.org/packages/Nodely.Avalonia)
+[![Designer](https://img.shields.io/nuget/v/Nodely.Avalonia.Designer?label=designer)](https://www.nuget.org/packages/Nodely.Avalonia.Designer)
 [![API](https://img.shields.io/nuget/v/Nodely.Avalonia.Api?label=api)](https://www.nuget.org/packages/Nodely.Avalonia.Api)
 [![Database](https://img.shields.io/nuget/v/Nodely.Avalonia.Database?label=database)](https://www.nuget.org/packages/Nodely.Avalonia.Database)
 [![MindMap](https://img.shields.io/nuget/v/Nodely.Avalonia.MindMap?label=mindmap)](https://www.nuget.org/packages/Nodely.Avalonia.MindMap)
@@ -17,7 +18,7 @@ theming, read-only mode, serialization, undo/redo, and auto-layout — with **no
 just Avalonia's native rendering.
 
 > Status: **v0.8.0** main packages, with independent side packages. Engine + Avalonia UI are complete and
-> tested on `net8.0` and `net10.0` (218 tests per runtime across the engine, side packages, and Avalonia
+> tested on `net8.0` and `net10.0` (223 tests per runtime across the engine, side packages, and Avalonia
 > headless UI). See
 > [`CHANGELOG.md`](CHANGELOG.md) and the design notes in [`memory/`](memory/).
 
@@ -42,6 +43,7 @@ Optional packages:
 ```powershell
 dotnet add package Nodely.Algorithms
 dotnet add package Nodely.Serialization
+dotnet add package Nodely.Avalonia.Designer
 dotnet add package Nodely.Avalonia.Api
 dotnet add package Nodely.Avalonia.Database
 dotnet add package Nodely.Avalonia.MindMap
@@ -57,6 +59,7 @@ Use `Nodely.Core` directly for headless engine scenarios; it is included transit
 |---|---|---|
 | [`Nodely.Core`](https://www.nuget.org/packages/Nodely.Core) | `netstandard2.0`, `net8.0`, `net10.0` | UI-agnostic engine: models, behaviors, geometry, routers, path generators, commands. |
 | [`Nodely.Avalonia`](https://www.nuget.org/packages/Nodely.Avalonia) | `net8.0`, `net10.0` | Avalonia controls: `DiagramCanvas`, `DiagramNavigator`, theming, adorners. |
+| [`Nodely.Avalonia.Designer`](https://www.nuget.org/packages/Nodely.Avalonia.Designer) | `net8.0`, `net10.0` | Optional editor controls: designer shell, toolbox, command bar, inspector, navigator, and status bar. |
 | [`Nodely.Avalonia.Api`](https://www.nuget.org/packages/Nodely.Avalonia.Api) | `net8.0`, `net10.0` | Optional side package: API service nodes, endpoint cards, contract nodes, typed ports, links, and arrange helpers. |
 | [`Nodely.Avalonia.Database`](https://www.nuget.org/packages/Nodely.Avalonia.Database) | `net8.0`, `net10.0` | Optional side package: database table/view/procedure renderers, row-aware ports, and relationship links. |
 | [`Nodely.Avalonia.MindMap`](https://www.nuget.org/packages/Nodely.Avalonia.MindMap) | `net8.0`, `net10.0` | Optional side package: root, branch, and leaf topics, branch ports, curved links, collapse state, and arrange helpers. |
@@ -71,6 +74,7 @@ Use `Nodely.Core` directly for headless engine scenarios; it is included transit
 
 Pick the package that matches the vocabulary your users expect:
 
+- `Nodely.Avalonia.Designer` for reusable editor chrome around any Nodely canvas.
 - `Nodely.Avalonia.Api` for service maps, endpoint cards, contracts, and request/response/event links.
 - `Nodely.Avalonia.Database` for schemas, tables, views, procedures, row-aware ports, and relationships.
 - `Nodely.Avalonia.Network` for topology diagrams, devices, zones, status, and protocol/capacity links.
@@ -135,6 +139,15 @@ canvas.ZoomToFit();  canvas.ZoomIn();  canvas.ResetView();
 
 // Overview minimap (bind to the same diagram, place anywhere)
 var navigator = new DiagramNavigator { Diagram = diagram };
+
+// Designer shell (Nodely.Avalonia.Designer)
+var designer = new Nodely.Avalonia.Designer.DiagramDesignerShell(
+    diagram,
+    new Nodely.Avalonia.Designer.DiagramDesignerOptions
+    {
+        ConfigureCanvas = canvas => canvas.UseDatabaseNodes(),
+        PropertyRegistry = Nodely.Avalonia.Designer.DiagramPropertyRegistry.CreateDefault(),
+    });
 
 // Snap-to-grid
 diagram.Options.GridSize = 24;

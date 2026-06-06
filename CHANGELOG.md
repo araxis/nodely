@@ -6,6 +6,30 @@ All notable changes to Nodely are documented here. The format is based on
 
 ## [Unreleased]
 
+## [Nodely.Avalonia.Designer 0.1.0] - 2026-06-06
+
+First Designer side-package release.
+
+### Added
+- **Designer package:** `Nodely.Avalonia.Designer` adds reusable editor controls for toolbox stencils,
+  command state, runtime property inspection, canvas status, navigator hosting, and full shell composition.
+- **Descriptor-driven inspector:** `DiagramPropertyRegistry` and `DiagramProperty` helpers let apps explicitly
+  register text, multiline text, number, boolean, enum, color, and collection fields for runtime edits.
+- **Toolbox stencils:** `DesignerToolboxSection` and `DesignerToolboxItem` add node creation actions that place
+  new nodes on the current canvas and route insertion through the undo/redo stack.
+- **Designer shell:** `DiagramDesignerShell` composes the canvas, toolbox, command bar, navigator, inspector,
+  and status bar while still exposing the hosted canvas for renderer registration and app coordination.
+- **Package workflow:** side-package selection now includes `Nodely.Avalonia.Designer` with independent version
+  metadata starting at `0.1.0`.
+
+### Changed
+- **Demo gallery:** the desktop gallery now uses `Nodely.Avalonia.Designer` instead of carrying a copied runtime
+  property inspector and local editor chrome pattern.
+- **Docs and recipes:** README and the documentation site now include Designer install guidance, package matrix
+  entries, a Designer controls guide, and runtime-inspector recipes that point to the reusable package.
+- **Test coverage:** Avalonia headless tests now cover descriptor registration, inspector creation, toolbox
+  insertion through history, command-bar state, and shell palette refresh on both supported app runtimes.
+
 ## [0.8.0] - 2026-06-05
 
 ### Added

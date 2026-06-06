@@ -3,6 +3,18 @@
 Durable lessons, gotchas, surprises, and reversed decisions. Add an entry the moment something is
 non-obvious — it's the cheapest insurance we have. Tag each with a date and the phase.
 
+## F-056 — Reusable editor chrome belongs in an optional package (2026-06-06, Designer side package)
+
+The runtime property editor proved the undoable metadata path, but leaving the inspector, toolbar, status bar,
+and toolbox only in the demo would make every app copy the same editor chrome before customizing it. Putting
+that code in the main Avalonia package would also make all consumers take a property-inspector opinion even
+when they only need a canvas.
+
+Decision: add `Nodely.Avalonia.Designer` as an optional side package for reusable editor controls. It keeps
+field choices explicit through `DiagramPropertyRegistry`, uses `DiagramCanvas.RunAsUndoableEdit()` for runtime
+mutations, composes with every domain package through normal `UseXNodes()` renderer registration, and lets the
+desktop gallery prove the copied inspector pattern can be removed.
+
 ## F-055 — Multi-pack polish belongs in the main release line (2026-06-05, v0.8.0 polish)
 
 After seven side packages, adding another vocabulary was less valuable than proving the existing packages

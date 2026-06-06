@@ -25,6 +25,7 @@
     <NodelyMainVersion>0.8.0</NodelyMainVersion>
     <NodelyAvaloniaApiVersion>0.1.0</NodelyAvaloniaApiVersion>
     <NodelyAvaloniaDatabaseVersion>0.1.0</NodelyAvaloniaDatabaseVersion>
+    <NodelyAvaloniaDesignerVersion>0.1.0</NodelyAvaloniaDesignerVersion>
     <NodelyAvaloniaUmlVersion>0.1.0</NodelyAvaloniaUmlVersion>
     <NodelyAvaloniaWorkflowVersion>0.1.0</NodelyAvaloniaWorkflowVersion>
     <NodelyAvaloniaMindMapVersion>0.1.0</NodelyAvaloniaMindMapVersion>

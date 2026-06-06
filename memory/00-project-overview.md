@@ -36,7 +36,7 @@ Then: precise, mature, well-designed, SOLID/KISS, vertical-slice, testable, sour
 - C#-only UI (no XAML required to build or consume), per project convention.
 - Multi-package: a reusable headless brain (`Nodely.Core`) + Avalonia controls (`Nodely.Avalonia`) +
   optional `Nodely.Algorithms`, `Nodely.Serialization`, and side packages such as Database, UML, Workflow,
-  MindMap, StateMachine, Network, and API.
+  MindMap, StateMachine, Network, API, and Designer editor controls.
 - Strong test coverage: pure unit tests for the brain, Avalonia headless tests for controls/interaction.
 
 ## Non-goals (initially)

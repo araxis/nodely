@@ -21,10 +21,12 @@ Start with the vocabulary your users recognize:
 | `Nodely.Avalonia.StateMachine` | Lifecycle diagrams, state transitions, guards, self loops |
 | `Nodely.Avalonia.Uml` | Structural type diagrams, class/interface/enum/package relationships |
 | `Nodely.Avalonia.MindMap` | Planning maps, root/branch/leaf topics, curved branch links |
+| `Nodely.Avalonia.Designer` | Reusable editor shell, toolbox, command bar, inspector, navigator, status |
 
 Install only the packages your app needs:
 
 ```powershell
+dotnet add package Nodely.Avalonia.Designer
 dotnet add package Nodely.Avalonia.Api
 dotnet add package Nodely.Avalonia.Database
 dotnet add package Nodely.Avalonia.Network
@@ -134,6 +136,10 @@ canvas.RunAsUndoableEdit(
 ```
 
 Call `RefreshVisuals()` after layout or batch changes when the current visuals should be rebuilt immediately.
+
+If you want that inspector as reusable UI instead of copied app-local controls, use
+`Nodely.Avalonia.Designer`. Its `DiagramPropertyRegistry` composes with the same model types registered by
+side packages, while the canvas registrations still come from each package's `UseXNodes()` method.
 
 ## Visual standard
 

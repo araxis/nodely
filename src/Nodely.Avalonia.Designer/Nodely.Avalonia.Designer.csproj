@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>Nodely.Avalonia.Designer</PackageId>
+    <Title>Nodely.Avalonia.Designer</Title>
+    <Description>Optional designer controls for Nodely Avalonia: editor shell, toolbox, command bar, status bar, and descriptor-driven property inspector.</Description>
+    <PackageVersion>$(NodelyAvaloniaDesignerVersion)</PackageVersion>
+    <Version>$(NodelyAvaloniaDesignerVersion)</Version>
+    <PackageTags>avalonia;diagram;diagrams;graph;node-editor;designer;toolbox;inspector</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nodely.Avalonia\Nodely.Avalonia.csproj" />
+    <ProjectReference Include="..\Nodely.Serialization\Nodely.Serialization.csproj" />
+  </ItemGroup>
+
+</Project>

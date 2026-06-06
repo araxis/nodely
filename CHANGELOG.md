@@ -6,6 +6,12 @@ All notable changes to Nodely are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-06-06
+
+### Fixed
+- **Initial node links:** node-to-node links now route as soon as node sizes are measured, so gallery scenes
+  show their default links on first display without waiting for a drag or another canvas interaction.
+
 ## [Nodely.Avalonia.StateMachine 0.1.1] - 2026-06-06
 
 StateMachine side-package hotfix.
@@ -268,7 +274,8 @@ No breaking API changes.
   save/load (snapshots gained an `Extra` map).
 - Documentation site gained an **Extensibility** guide (the seam map).
 
-[0.8.0]: /araxis/nodely/releases/tag/v0.8.0
+[0.8.1]: https://github.com/araxis/nodely/releases/tag/v0.8.1
+[0.8.0]: https://github.com/araxis/nodely/releases/tag/v0.8.0
 [0.7.0]: https://github.com/araxis/nodely/releases/tag/v0.7.0
 [0.6.0]: https://github.com/araxis/nodely/releases/tag/v0.6.0
 [0.5.0]: https://github.com/araxis/nodely/releases/tag/v0.5.0

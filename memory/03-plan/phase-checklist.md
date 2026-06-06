@@ -2,6 +2,11 @@
 
 Tick items as completed. Mirrors `development-plan.md`. `[ ]` todo, `[~]` in progress, `[x]` done.
 
+## Post-M4 - demo gallery showcase polish
+- [x] Replace the plain scene button strip with a richer app shell and scene rail.
+- [x] Keep every scene as a live editable diagram.
+- [x] Final validation: build, demo startup tests, wording scan.
+
 ## Post-M4 - v0.8.2 visual reliability pass
 - [x] Make same-node shape-anchor links generate an initial path after node measurement.
 - [x] Add core regression coverage for same-node shape links.

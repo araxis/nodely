@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
@@ -117,60 +118,48 @@ public sealed class GuideLayer : DiagramLayer
 
 public sealed class MainWindow : Window
 {
-    public static IReadOnlyList<string> GallerySceneNames { get; } = new[]
+    private sealed record GallerySceneInfo(string Name, string Focus, string Detail, string Package, Color Accent);
+
+    private static IReadOnlyList<GallerySceneInfo> GalleryScenes { get; } = new[]
     {
-        "Workflow",
-        "State machine",
-        "Inspector",
-        "Extensibility",
-        "Architecture",
-        "Database",
-        "UML",
-        "MindMap",
-        "Network",
-        "API",
+        new GallerySceneInfo("Workflow", "Process builder", "Tasks, decisions, events, and message paths", "Workflow pack", Color.FromRgb(0xC6, 0x85, 0x21)),
+        new GallerySceneInfo("State machine", "Lifecycle model", "States, guards, retry loops, and final states", "StateMachine pack", Color.FromRgb(0x8B, 0x68, 0xB8)),
+        new GallerySceneInfo("Inspector", "Review surface", "Read-only canvas, navigator, and runtime metadata", "Designer controls", Color.FromRgb(0x73, 0x9D, 0xC7)),
+        new GallerySceneInfo("Extensibility", "Custom building blocks", "Custom nodes, ports, overlays, groups, and links", "Core extension points", Color.FromRgb(0x4D, 0x9E, 0xFF)),
+        new GallerySceneInfo("Architecture", "System map", "API, data, network, and workflow in one canvas", "Package composition", Color.FromRgb(0x76, 0xB7, 0x88)),
+        new GallerySceneInfo("Database", "Schema designer", "Tables, views, procedures, rows, and relationships", "Database pack", Color.FromRgb(0x37, 0x8A, 0x63)),
+        new GallerySceneInfo("UML", "Type model", "Classes, interfaces, packages, notes, and relationships", "UML pack", Color.FromRgb(0x7C, 0x8A, 0x9A)),
+        new GallerySceneInfo("MindMap", "Planning map", "Root, branches, leaf topics, curved links, and collapse", "MindMap pack", Color.FromRgb(0xD4, 0x6A, 0x6A)),
+        new GallerySceneInfo("Network", "Topology board", "Devices, zones, status badges, and capacity links", "Network pack", Color.FromRgb(0x54, 0x9B, 0xC5)),
+        new GallerySceneInfo("API", "Service map", "Endpoints, contracts, gateways, clients, and traffic", "API pack", Color.FromRgb(0x2D, 0x7D, 0xE0)),
     };
 
+    public static IReadOnlyList<string> GallerySceneNames { get; } = GalleryScenes.Select(scene => scene.Name).ToArray();
+
     private readonly ContentControl _host = new();
+    private readonly Dictionary<string, Button> _sceneButtons = new(StringComparer.Ordinal);
+    private readonly TextBlock _sceneTitle = new();
+    private readonly TextBlock _sceneFocus = new();
+    private readonly TextBlock _sceneDetail = new();
+    private readonly TextBlock _scenePackage = new();
+    private readonly TextBlock _sceneStats = new();
+    private readonly Border _sceneAccent = new();
     private NodelyPalette _palette = NodelyPalettes.Dark;
     private NodelyDiagram? _currentDiagram;
     private DiagramCanvas? _currentCanvas;
     private DiagramDesignerShell? _currentDesigner;
     private string? _savedJson;
+    private string _currentSceneName = GalleryScenes[0].Name;
 
     public MainWindow()
     {
         Title = "Nodely Gallery";
-        Width = 1180;
-        Height = 760;
-
-        var scenes = new WrapPanel { Margin = new Thickness(10, 10, 10, 4) };
-        AddScene(SceneButton("Workflow"));
-        AddScene(SceneButton("State machine"));
-        AddScene(SceneButton("Inspector"));
-        AddScene(SceneButton("Extensibility"));
-        AddScene(SceneButton("Architecture"));
-        AddScene(SceneButton("Database"));
-        AddScene(SceneButton("UML"));
-        AddScene(SceneButton("MindMap"));
-        AddScene(SceneButton("Network"));
-        AddScene(SceneButton("API"));
-        AddScene(new Border { Width = 24 });
-        AddScene(ToolButton("Theme", ToggleTheme));
-        AddScene(ToolButton("Save", Save));
-        AddScene(ToolButton("Load", Load));
-
-        void AddScene(Control control)
-        {
-            control.Margin = new Thickness(0, 0, 6, 6);
-            scenes.Children.Add(control);
-        }
-
-        var root = new DockPanel();
-        DockPanel.SetDock(scenes, Dock.Top);
-        root.Children.Add(scenes);
-        root.Children.Add(_host);
-        Content = root;
+        Width = 1360;
+        Height = 860;
+        MinWidth = 1040;
+        MinHeight = 700;
+        Background = Paint(Color.FromRgb(0x08, 0x0B, 0x11));
+        Content = BuildShell();
 
         ShowScene("Workflow");
     }
@@ -181,6 +170,7 @@ public sealed class MainWindow : Window
 
     public Control ShowScene(string name)
     {
+        var definition = FindScene(name);
         var scene = name switch
         {
             "Workflow" => BuildWorkflow(),
@@ -196,20 +186,307 @@ public sealed class MainWindow : Window
             _ => throw new ArgumentOutOfRangeException(nameof(name), name, "Unknown gallery scene."),
         };
 
+        _currentSceneName = definition.Name;
         _host.Content = scene;
+        UpdateSceneChrome(definition);
         return scene;
     }
 
-    private Button SceneButton(string text)
+    private Control BuildShell()
     {
+        var root = new Grid
+        {
+            RowDefinitions = new RowDefinitions("Auto,*"),
+            Background = Paint(Color.FromRgb(0x08, 0x0B, 0x11)),
+        };
+
+        root.Children.Add(BuildHeader());
+
+        var body = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("286,*"),
+            Background = Paint(Color.FromRgb(0x0A, 0x0E, 0x16)),
+        };
+        Grid.SetRow(body, 1);
+
+        body.Children.Add(BuildSceneRail());
+
+        var liveSurface = new Border
+        {
+            Margin = new Thickness(0, 0, 14, 14),
+            Background = Paint(Color.FromRgb(0x10, 0x14, 0x1D)),
+            BorderBrush = Paint(Color.FromRgb(0x2D, 0x35, 0x45)),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(8),
+            ClipToBounds = true,
+            Child = _host,
+        };
+        Grid.SetColumn(liveSurface, 1);
+        body.Children.Add(liveSurface);
+
+        root.Children.Add(body);
+        return root;
+    }
+
+    private Control BuildHeader()
+    {
+        _sceneTitle.Foreground = Brushes.White;
+        _sceneTitle.FontSize = 22;
+        _sceneTitle.FontWeight = FontWeight.SemiBold;
+
+        _sceneFocus.Foreground = Paint(Color.FromRgb(0xB8, 0xC0, 0xCE));
+        _sceneFocus.FontSize = 13;
+
+        _sceneDetail.Foreground = Paint(Color.FromRgb(0x8F, 0x98, 0xA8));
+        _sceneDetail.FontSize = 12;
+        _sceneDetail.TextWrapping = TextWrapping.Wrap;
+
+        _scenePackage.Foreground = Paint(Color.FromRgb(0xD8, 0xDE, 0xE8));
+        _scenePackage.FontSize = 12;
+        _scenePackage.FontWeight = FontWeight.SemiBold;
+
+        _sceneStats.Foreground = Paint(Color.FromRgb(0x9D, 0xA6, 0xB7));
+        _sceneStats.FontSize = 12;
+
+        _sceneAccent.Width = 6;
+        _sceneAccent.CornerRadius = new CornerRadius(3);
+
+        var titleStack = new StackPanel
+        {
+            Spacing = 2,
+            Children =
+            {
+                new TextBlock
+                {
+                    Text = "Nodely",
+                    Foreground = Brushes.White,
+                    FontSize = 24,
+                    FontWeight = FontWeight.Bold,
+                },
+                new TextBlock
+                {
+                    Text = "Gallery",
+                    Foreground = Paint(Color.FromRgb(0x94, 0xA0, 0xB6)),
+                    FontSize = 12,
+                    FontWeight = FontWeight.SemiBold,
+                },
+            },
+        };
+
+        var brand = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("Auto,*"),
+            ColumnSpacing = 12,
+            VerticalAlignment = VerticalAlignment.Center,
+            Children =
+            {
+                new Border
+                {
+                    Width = 44,
+                    Height = 44,
+                    CornerRadius = new CornerRadius(8),
+                    Background = Paint(Color.FromRgb(0x1D, 0x55, 0x92)),
+                    BorderBrush = Paint(Color.FromRgb(0x5E, 0xB9, 0xFF)),
+                    BorderThickness = new Thickness(1),
+                    Child = new TextBlock
+                    {
+                        Text = "N",
+                        Foreground = Brushes.White,
+                        FontSize = 23,
+                        FontWeight = FontWeight.Bold,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center,
+                    },
+                },
+                titleStack,
+            },
+        };
+        Grid.SetColumn(titleStack, 1);
+
+        var sceneBlock = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("Auto,*"),
+            ColumnSpacing = 12,
+            VerticalAlignment = VerticalAlignment.Center,
+            Children =
+            {
+                _sceneAccent,
+                new StackPanel
+                {
+                    Spacing = 3,
+                    Children =
+                    {
+                        _sceneTitle,
+                        _sceneFocus,
+                        _sceneDetail,
+                        new StackPanel
+                        {
+                            Orientation = Orientation.Horizontal,
+                            Spacing = 10,
+                            Children = { _scenePackage, _sceneStats },
+                        },
+                    },
+                },
+            },
+        };
+        Grid.SetColumn(sceneBlock.Children[1], 1);
+
+        var actions = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 8,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Center,
+            Children =
+            {
+                ToolButton("Theme", ToggleTheme),
+                ToolButton("Save", Save),
+                ToolButton("Load", Load),
+            },
+        };
+
+        var header = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"),
+            ColumnSpacing = 24,
+            Margin = new Thickness(18, 12),
+            Children = { brand, sceneBlock, actions },
+        };
+        Grid.SetColumn(sceneBlock, 1);
+        Grid.SetColumn(actions, 2);
+
+        return new Border
+        {
+            Background = Paint(Color.FromRgb(0x0D, 0x12, 0x1B)),
+            BorderBrush = Paint(Color.FromRgb(0x25, 0x2D, 0x3B)),
+            BorderThickness = new Thickness(0, 0, 0, 1),
+            Child = header,
+        };
+    }
+
+    private Control BuildSceneRail()
+    {
+        var content = new StackPanel
+        {
+            Margin = new Thickness(14, 16, 14, 14),
+            Spacing = 8,
+        };
+
+        content.Children.Add(new TextBlock
+        {
+            Text = "Scenes",
+            Foreground = Brushes.White,
+            FontSize = 16,
+            FontWeight = FontWeight.SemiBold,
+            Margin = new Thickness(2, 0, 0, 6),
+        });
+
+        foreach (var scene in GalleryScenes)
+            content.Children.Add(SceneButton(scene));
+
+        content.Children.Add(new Border { Height = 8 });
+        content.Children.Add(BuildRailFooter());
+
+        return new Border
+        {
+            Background = Paint(Color.FromRgb(0x0D, 0x12, 0x1B)),
+            BorderBrush = Paint(Color.FromRgb(0x25, 0x2D, 0x3B)),
+            BorderThickness = new Thickness(0, 0, 1, 0),
+            Child = new ScrollViewer
+            {
+                VerticalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+                Content = content,
+            },
+        };
+    }
+
+    private Control BuildRailFooter()
+    {
+        var grid = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("*,*"),
+            ColumnSpacing = 8,
+            Children =
+            {
+                MetricTile("10", "scenes"),
+                MetricTile("8", "packs"),
+            },
+        };
+        Grid.SetColumn(grid.Children[1], 1);
+        return grid;
+    }
+
+    private static Control MetricTile(string value, string label) => new Border
+    {
+        Background = Paint(Color.FromRgb(0x14, 0x1B, 0x29)),
+        BorderBrush = Paint(Color.FromRgb(0x2D, 0x35, 0x45)),
+        BorderThickness = new Thickness(1),
+        CornerRadius = new CornerRadius(8),
+        Padding = new Thickness(10, 8),
+        Child = new StackPanel
+        {
+            Spacing = 1,
+            Children =
+            {
+                new TextBlock { Text = value, Foreground = Brushes.White, FontSize = 18, FontWeight = FontWeight.Bold },
+                new TextBlock { Text = label, Foreground = Paint(Color.FromRgb(0x94, 0xA0, 0xB6)), FontSize = 11 },
+            },
+        },
+    };
+
+    private Button SceneButton(GallerySceneInfo scene)
+    {
+        var title = new TextBlock
+        {
+            Text = scene.Name,
+            Foreground = Brushes.White,
+            FontWeight = FontWeight.SemiBold,
+            FontSize = 13,
+        };
+        var detail = new TextBlock
+        {
+            Text = scene.Focus,
+            Foreground = Paint(Color.FromRgb(0x9B, 0xA5, 0xB6)),
+            FontSize = 11,
+            TextWrapping = TextWrapping.Wrap,
+        };
+        var grid = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("Auto,*"),
+            ColumnSpacing = 10,
+            Children =
+            {
+                new Border
+                {
+                    Width = 9,
+                    Height = 34,
+                    CornerRadius = new CornerRadius(4),
+                    Background = Paint(scene.Accent),
+                    VerticalAlignment = VerticalAlignment.Center,
+                },
+                new StackPanel
+                {
+                    Spacing = 1,
+                    Children = { title, detail },
+                },
+            },
+        };
+        Grid.SetColumn(grid.Children[1], 1);
+
         var button = new Button
         {
-            Content = text,
-            MinWidth = 72,
-            FontSize = 14,
-            Padding = new Thickness(12, 6),
+            Content = grid,
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Padding = new Thickness(10, 8),
+            Background = Brushes.Transparent,
+            BorderBrush = Brushes.Transparent,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(8),
+            Tag = "scene-" + scene.Name,
         };
-        button.Click += (_, _) => ShowScene(text);
+        button.Click += (_, _) => ShowScene(scene.Name);
+        _sceneButtons[scene.Name] = button;
         return button;
     }
 
@@ -218,13 +495,47 @@ public sealed class MainWindow : Window
         var button = new Button
         {
             Content = text,
-            MinWidth = 40,
-            FontSize = 14,
-            Padding = new Thickness(10, 6),
+            MinWidth = 72,
+            FontSize = 13,
+            FontWeight = FontWeight.SemiBold,
+            Padding = new Thickness(12, 7),
+            Background = Paint(Color.FromRgb(0x19, 0x22, 0x32)),
+            BorderBrush = Paint(Color.FromRgb(0x35, 0x40, 0x53)),
+            Foreground = Brushes.White,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(8),
         };
         button.Click += (_, _) => onClick();
         return button;
     }
+
+    private void UpdateSceneChrome(GallerySceneInfo scene)
+    {
+        _sceneTitle.Text = scene.Name;
+        _sceneFocus.Text = scene.Focus;
+        _sceneDetail.Text = scene.Detail;
+        _scenePackage.Text = scene.Package;
+        _sceneAccent.Background = Paint(scene.Accent);
+
+        var diagram = _currentDiagram;
+        _sceneStats.Text = diagram == null
+            ? string.Empty
+            : $"{diagram.Nodes.Count} nodes / {diagram.Links.Count} links / {diagram.Groups.Count} groups";
+
+        foreach (var entry in _sceneButtons)
+        {
+            var isActive = entry.Key == scene.Name;
+            entry.Value.Background = isActive ? Paint(scene.Accent, 54) : Brushes.Transparent;
+            entry.Value.BorderBrush = isActive ? Paint(scene.Accent, 190) : Brushes.Transparent;
+        }
+    }
+
+    private static GallerySceneInfo FindScene(string name)
+        => GalleryScenes.FirstOrDefault(scene => scene.Name == name) ??
+           throw new ArgumentOutOfRangeException(nameof(name), name, "Unknown gallery scene.");
+
+    private static IBrush Paint(Color color, byte alpha = 255)
+        => new SolidColorBrush(Color.FromArgb(alpha, color.R, color.G, color.B));
 
     private void ToggleTheme()
     {

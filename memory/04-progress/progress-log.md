@@ -3,6 +3,16 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-06 — Demo gallery showcase polish
+
+- Demo: replaced the plain top button strip with a richer app shell, left scene rail, active scene metadata,
+  styled actions, and a framed live editor surface.
+- Scope: kept scene diagrams and package renderers intact; this is sample-app presentation polish, not a
+  package version bump.
+- **Verified:** `dotnet build Nodely.slnx --configuration Release --disable-build-servers /m:1
+  /nr:false` -> 0/0; `dotnet test Nodely.slnx --configuration Release --no-build --verbosity normal
+  --disable-build-servers /m:1 /nr:false` -> all tests passed, including Demo startup 10/10.
+
 ## 2026-06-06 — v0.8.2 visual reliability pass
 
 - Versioning: bumped main packages to `0.8.2`; side packages keep their independent versions.

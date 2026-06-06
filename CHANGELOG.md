@@ -6,6 +6,10 @@ All notable changes to Nodely are documented here. The format is based on
 
 ## [Unreleased]
 
+### Changed
+- **Demo gallery:** the desktop sample now opens in a richer gallery shell with scene navigation, active scene
+  metadata, polished actions, and a framed live editor surface.
+
 ## [0.8.2] - 2026-06-06
 
 ### Added

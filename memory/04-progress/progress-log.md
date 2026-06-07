@@ -3,6 +3,21 @@
 Newest first. One entry per working session or notable change. Keep it factual: what changed, why,
 what's next.
 
+## 2026-06-06 — Demo gallery showcase polish
+
+- Demo: replaced the plain top button strip with a richer app shell, left scene rail, active scene metadata,
+  styled actions, and a framed live editor surface.
+- Stencils: added compact preview support to Designer toolbox items and changed the gallery to use a
+  horizontal scene strip with domain ports for Workflow, StateMachine, Extensibility, Architecture, Database,
+  UML, MindMap, Network, and API scenes.
+- Inspector: fixed runtime property editor fields so text, number, enum, color, and collection controls stretch
+  to the inspector column instead of shrinking to natural content width.
+- Scope: kept scene diagrams and package renderers intact; the Designer toolbox addition is additive and this
+  is not a package version bump.
+- **Verified:** `dotnet build Nodely.slnx --configuration Release --disable-build-servers /m:1
+  /nr:false` -> 0/0; `dotnet test Nodely.slnx --configuration Release --no-build --verbosity normal
+  --disable-build-servers /m:1 /nr:false` -> all tests passed, including Demo startup 10/10.
+
 ## 2026-06-06 — v0.8.2 visual reliability pass
 
 - Versioning: bumped main packages to `0.8.2`; side packages keep their independent versions.

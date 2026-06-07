@@ -3,6 +3,16 @@
 Durable lessons, gotchas, surprises, and reversed decisions. Add an entry the moment something is
 non-obvious — it's the cheapest insurance we have. Tag each with a date and the phase.
 
+## F-060 — Gallery chrome needs one vertical owner (2026-06-06, demo gallery showcase polish)
+
+The richer gallery shell introduced a left scene rail, then editable scenes mounted the Designer toolbox beside
+the canvas. That made the sample look like two sidebars were competing for the same job, especially in dense
+side-package scenes.
+
+Decision: keep `DiagramToolbox` available in the reusable Designer package, but disable that left toolbox in
+the desktop gallery. The gallery now uses a compact horizontal scene stencil strip above the editor surface, so
+the left rail only changes scenes while the strip adds scene-specific nodes.
+
 ## F-059 — Same-node shape links need non-degenerate endpoints (2026-06-06, v0.8.2 visual reliability pass)
 
 The gallery startup test caught a state-machine self transition that existed in the model but had no generated

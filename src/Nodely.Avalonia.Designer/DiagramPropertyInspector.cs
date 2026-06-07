@@ -85,6 +85,7 @@ public sealed class DiagramPropertyInspector : UserControl, IDisposable
         _panel.Child = new ScrollViewer
         {
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             Content = content,
         };
     }
@@ -129,6 +130,7 @@ public sealed class DiagramPropertyInspector : UserControl, IDisposable
             AcceptsReturn = multiline,
             TextWrapping = multiline ? TextWrapping.Wrap : TextWrapping.NoWrap,
             MinHeight = multiline ? 78 : 0,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
             Tag = "designer-property-" + descriptor.Label,
         };
         var committed = false;
@@ -163,6 +165,7 @@ public sealed class DiagramPropertyInspector : UserControl, IDisposable
         {
             ColumnDefinitions = new ColumnDefinitions("18,*"),
             ColumnSpacing = 8,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
             Children =
             {
                 new Border
@@ -189,6 +192,7 @@ public sealed class DiagramPropertyInspector : UserControl, IDisposable
         {
             Text = original.ToString("0.###", CultureInfo.InvariantCulture),
             IsEnabled = CanEdit,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
             Tag = "designer-property-" + descriptor.Label,
         };
         var committed = false;
@@ -260,7 +264,11 @@ public sealed class DiagramPropertyInspector : UserControl, IDisposable
 
     private Control CollectionField(Model model, DiagramPropertyDescriptor descriptor)
     {
-        var panel = new StackPanel { Spacing = 6 };
+        var panel = new StackPanel
+        {
+            Spacing = 6,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+        };
         var rows = descriptor.GetCollectionItems?.Invoke(model) ?? Array.Empty<DiagramCollectionItem>();
         foreach (var row in rows)
         {
@@ -269,6 +277,7 @@ public sealed class DiagramPropertyInspector : UserControl, IDisposable
             {
                 ColumnDefinitions = new ColumnDefinitions("*,Auto"),
                 ColumnSpacing = 8,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
                 Children =
                 {
                     new TextBlock
@@ -370,21 +379,26 @@ public sealed class DiagramPropertyInspector : UserControl, IDisposable
         }
     }
 
-    private Control Field(string label, Control control) => new StackPanel
+    private Control Field(string label, Control control)
     {
-        Spacing = 4,
-        Children =
+        control.HorizontalAlignment = HorizontalAlignment.Stretch;
+        return new StackPanel
         {
-            new TextBlock
+            Spacing = 4,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Children =
             {
-                Text = label,
-                Foreground = Palette.NodeText,
-                Opacity = 0.72,
-                FontSize = 12,
+                new TextBlock
+                {
+                    Text = label,
+                    Foreground = Palette.NodeText,
+                    Opacity = 0.72,
+                    FontSize = 12,
+                },
+                control,
             },
-            control,
-        },
-    };
+        };
+    }
 
     private TextBlock Title(string text) => new()
     {

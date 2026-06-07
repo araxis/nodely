@@ -17,7 +17,6 @@ public sealed class DiagramToolbox : UserControl
 {
     private readonly Border _panel = new()
     {
-        Width = 220,
         BorderThickness = new Thickness(0, 0, 1, 0),
     };
 
@@ -44,8 +43,8 @@ public sealed class DiagramToolbox : UserControl
 
         var content = new StackPanel
         {
-            Margin = new Thickness(12),
-            Spacing = 10,
+            Margin = new Thickness(12, 14),
+            Spacing = 11,
         };
         content.Children.Add(new TextBlock
         {
@@ -87,14 +86,18 @@ public sealed class DiagramToolbox : UserControl
 
     private Control ItemButton(DesignerToolboxItem item, NodelyPalette palette)
     {
-        var swatch = new Border
+        var preview = item.PreviewFactory?.Invoke() ?? DefaultPreview(item, palette);
+        var previewHost = new Border
         {
-            Width = 10,
-            Height = 28,
-            CornerRadius = new CornerRadius(4),
-            Background = item.Accent ?? palette.Selection,
-            VerticalAlignment = VerticalAlignment.Stretch,
+            Height = 58,
+            CornerRadius = new CornerRadius(7),
+            Background = palette.CanvasBackground,
+            BorderBrush = palette.NodeBorder,
+            BorderThickness = new Thickness(1),
+            ClipToBounds = true,
+            Child = preview,
         };
+
         var text = new StackPanel
         {
             Spacing = 1,
@@ -115,24 +118,72 @@ public sealed class DiagramToolbox : UserControl
             });
         }
 
-        var grid = new Grid
+        var content = new StackPanel
         {
-            ColumnDefinitions = new ColumnDefinitions("Auto,*"),
-            ColumnSpacing = 8,
-            Children = { swatch, text },
+            Spacing = 7,
+            Children = { previewHost, text },
         };
-        Grid.SetColumn(text, 1);
 
         var button = new Button
         {
-            Content = grid,
+            Content = content,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Stretch,
-            Padding = new Thickness(8, 7),
+            Padding = new Thickness(8),
+            Background = palette.GroupBackground,
+            BorderBrush = palette.NodeBorder,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(8),
             Tag = "designer-toolbox-" + item.Label,
         };
         button.Click += (_, _) => AddNode(item);
         return button;
+    }
+
+    private static Control DefaultPreview(DesignerToolboxItem item, NodelyPalette palette)
+    {
+        var accent = item.Accent ?? palette.Selection;
+        var rows = new StackPanel
+        {
+            Spacing = 4,
+            Margin = new Thickness(10),
+            Children =
+            {
+                new Border
+                {
+                    Height = 12,
+                    Width = 92,
+                    CornerRadius = new CornerRadius(4),
+                    Background = accent,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                },
+                new Border
+                {
+                    Height = 6,
+                    Width = 62,
+                    CornerRadius = new CornerRadius(3),
+                    Background = palette.NodeBorder,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                },
+                new Border
+                {
+                    Height = 6,
+                    Width = 44,
+                    CornerRadius = new CornerRadius(3),
+                    Background = palette.NodeBorder,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    Opacity = 0.72,
+                },
+            },
+        };
+
+        return new Border
+        {
+            Background = palette.NodeBackground,
+            BorderBrush = accent,
+            BorderThickness = new Thickness(0, 0, 0, 3),
+            Child = rows,
+        };
     }
 
     private void AddNode(DesignerToolboxItem item)
